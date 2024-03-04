@@ -34,7 +34,7 @@ by
   simp [*] at *
   simp [*]
 
-structure _Event (M) [Machine CTX M] (α) (β)
+structure _Event (M) [Machine CTX M] (α) (β : Type)
   extends _EventRoot M α where
 
   action: M → α → (β × M)
@@ -50,45 +50,12 @@ by
   simp [*] at *
   simp [*]
 
-structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
-  safety (m : M) (x : α):
-    Machine.invariant m
-    → ev.guard m x
-    → Machine.invariant (ev.action m x).snd
-
-structure OrdinaryEvent (M) [Machine CTX M] (α) (β) where
-  event : _Event M α β
-  po : _EventPO event (EventKind.TransDet Convergence.Ordinary)
-
-structure EventSpec (M) [Machine CTX M] (α) (β) where
-  guard (m : M) (x : α) : Prop
-  action (m : M) (x : α) : β × M
-  safety (m : M) (x : α) :
-    Machine.invariant m
-    → guard m x
-    → Machine.invariant (action m x).snd
-
-@[simp]
-def _Event_from_EventSpec [Machine CTX M] (ev : EventSpec M α β) : _Event M α β :=
-  { guard := ev.guard
-    action := ev.action
-  }
-
-@[simp]
-def newEvent {M} [Machine CTX M] (ev : EventSpec M α β) : OrdinaryEvent M α β :=
-  { event := _Event_from_EventSpec ev
-    po := { safety := fun m x => by simp
-                                    intros Hinv Hgrd
-                                    apply ev.safety <;> assumption
-    }
-  }
-
-def Skip_Event [Machine CTX M] (α) : _Event M α α :=
+def skip_Event [Machine CTX M] (α) : _Event M α α :=
   { guard := fun _ _ => True
     action := fun m x => (x, m)
   }
 
-def Fun_Event  [Machine CTX M] (f : α → β) : _Event M α β :=
+def fun_Event  [Machine CTX M] (f : α → β) : _Event M α β :=
 {
   guard := fun _ _ => True
   action := fun m x => (f x, m)
@@ -191,3 +158,73 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
                    simp [bind, bind_Event]
                    funext
                    apply And_eq_assoc
+
+structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
+  safety (m : M) (x : α):
+    Machine.invariant m
+    → ev.guard m x
+    → Machine.invariant (ev.action m x).snd
+
+structure OrdinaryEvent (M) [Machine CTX M] (α) (β) where
+  event : _Event M α β
+  po : _EventPO event (EventKind.TransDet Convergence.Ordinary)
+
+structure EventSpec (M) [Machine CTX M] (α) (β) where
+  guard (m : M) (x : α) : Prop
+  action (m : M) (x : α) : β × M
+  safety (m : M) (x : α) :
+    Machine.invariant m
+    → guard m x
+    → Machine.invariant (action m x).snd
+
+@[simp]
+def _Event_from_EventSpec [Machine CTX M] (ev : EventSpec M α β) : _Event M α β :=
+  { guard := ev.guard
+    action := ev.action
+  }
+
+@[simp]
+def newEvent {M} [Machine CTX M] (ev : EventSpec M α β) : OrdinaryEvent M α β :=
+  { event := _Event_from_EventSpec ev
+    po := { safety := fun m x => by simp
+                                    intros Hinv Hgrd
+                                    apply ev.safety <;> assumption
+    }
+  }
+
+def EventSpec_from_Event [Machine CTX M]
+  (ev : _Event M α β)
+  (Hsafe : (m : M) → (x : α) →  Machine.invariant m
+                           → ev.guard m x
+                           → Machine.invariant (ev.action m x).snd) : EventSpec M α β :=
+  { guard := ev.guard
+    action := ev.action
+    safety := Hsafe
+  }
+
+def skipEventSpec [Machine CTX M] : EventSpec M α α := {
+  guard := fun _ _ => True
+  action := fun m x => (x, m)
+  safety := fun m x => by simp ; intro ; assumption
+}
+
+def skipEvent [Machine CTX M] : OrdinaryEvent M α α := newEvent skipEventSpec
+
+def funEventSpec [Machine CTX M] (f : α → β) : EventSpec M α β :=
+{
+  guard := fun _ _ => True
+  action := fun m x => (f x, m)
+  safety := fun m x => by simp ; intro ; assumption
+}
+
+def mapEvent [Machine CTX M] (f : α → β) (ev : OrdinaryEvent M γ α) : OrdinaryEvent M γ β :=
+{
+  event := Functor.map f ev.event
+  po := { safety := fun m x => by intros Hinv Hgrd
+                                  simp [Functor.map, map_Event] at *
+                                  apply ev.po.safety m x Hinv Hgrd
+  }
+}
+
+instance [Machine CTX M] : Functor (OrdinaryEvent M γ) where
+  map := mapEvent
