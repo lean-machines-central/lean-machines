@@ -1,4 +1,5 @@
 import EventSystems.Prelude
+import EventSystems.Classes
 
 def hello := "world"
 
@@ -22,7 +23,7 @@ inductive EventKind where
 open EventKind
 
 structure _EventRoot (M) [Machine CTX M] (α : Type 0) where
-  guard : M → α → Prop
+  guard : M → α → Prop := fun _ _ => True
 
 theorem ext_EventRoot [Machine CTX M] (ev1 ev2 : _EventRoot M α):
   ev1.guard = ev2.guard
@@ -51,13 +52,12 @@ by
   simp [*]
 
 def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
-  { guard := fun _ _ => True
-    action := fun m x => (x, m)
-  }
+{
+  action := fun m x => (x, m)
+}
 
 def fun_Event  (M) [Machine CTX M] (f : α → β) : _Event M α β :=
 {
-  guard := fun _ _ => True
   action := fun m x => (f x, m)
 }
 
@@ -153,6 +153,19 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
                    simp [bind, bind_Event]
                    funext
                    apply And_eq_assoc
+
+/- Contravariant functor -/
+
+def _CoEvent (M) [Machine CTX M] (α) (β) :=
+  _Event M β α
+
+instance [Machine CTX M] : Contravariant (_CoEvent M β) where
+  contramap f ev := { guard := fun m x => ev.guard m (f x)
+                      action := fun m x => ev.action m (f x)
+                    }
+
+
+/- Ordinary events -/
 
 structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
   safety (m : M) (x : α):
