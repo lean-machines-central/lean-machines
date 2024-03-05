@@ -281,7 +281,6 @@ instance [Machine CTX M]: LawfulApplicative (OrdinaryEvent M γ) where
                  simp [applyEvent, mapEvent]
                  constructor
                  · apply seq_pure
-                 · apply cast_heq
                  · apply heq_of_eqRec_eq
                    · simp
                    · simp [Seq.seq, apply_Event]
@@ -297,3 +296,57 @@ instance [Machine CTX M]: LawfulApplicative (OrdinaryEvent M γ) where
                     have Hsa := seq_assoc ev.event g.event h.event
                     simp [Seq.seq, Functor.map] at Hsa
                     rw [Hsa]
+
+def bindEvent [Machine CTX M] (ev : OrdinaryEvent M γ α) (f : α → OrdinaryEvent M γ β) : OrdinaryEvent M γ β :=
+  {
+    event := bind_Event ev.event (fun x => (f x).event)
+    po := {
+      safety := fun m x => by intros Hinv Hgrd
+                              simp [bind_Event] at *
+                              have Hsafe₁ := ev.po.safety m x Hinv
+                              simp [Hgrd] at Hsafe₁
+                              have Hsafe₂ := (f (ev.event.2 m x).fst).po.safety (ev.event.2 m x).snd x Hsafe₁
+                              simp [Hgrd] at Hsafe₂
+                              assumption
+    }
+  }
+
+
+instance [Machine CTX M]: Monad (OrdinaryEvent M γ) where
+  bind := bindEvent
+
+instance [Machine CTX M]: LawfulMonad (OrdinaryEvent M γ) where
+  bind_pure_comp := by intros α β f ev
+                       simp [pure, Functor.map, pureEvent, mapEvent, bind, bindEvent]
+                       constructor
+                       · apply bind_pure_comp
+                       · apply cast_heq
+                         have H := bind_pure_comp  f ev.event
+                         simp [bind, pure, Functor.map] at H
+                         rw [H]
+
+  bind_map := by simp [bind] ; intros ; rfl
+  pure_bind := by intros α β x f
+                  simp only [pure]
+                  simp [bind, bindEvent]
+                  simp only [pure]
+                  have H := pure_bind x (fun x => (f x).event)
+                  simp only [pure, bind] at H
+                  revert H
+                  cases (f x)
+                  case mk ev po =>
+                    simp
+                    intro H
+                    constructor
+                    · assumption
+                    · apply cast_heq
+                      rw [←H]
+
+  bind_assoc := by intros α β γ' ev f g
+                   simp [bind, bindEvent]
+                   constructor
+                   · apply bind_assoc ev.event
+                   apply cast_heq
+                   have H := bind_assoc ev.event (fun x => (f x).event) (fun x => (g x).event)
+                   simp [bind] at H
+                   rw [H]
