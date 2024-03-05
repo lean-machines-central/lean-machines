@@ -50,12 +50,12 @@ by
   simp [*] at *
   simp [*]
 
-def skip_Event [Machine CTX M] (α) : _Event M α α :=
+def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
   { guard := fun _ _ => True
     action := fun m x => (x, m)
   }
 
-def fun_Event  [Machine CTX M] (f : α → β) : _Event M α β :=
+def fun_Event  (M) [Machine CTX M] (f : α → β) : _Event M α β :=
 {
   guard := fun _ _ => True
   action := fun m x => (f x, m)
@@ -139,11 +139,6 @@ def bind_Event [Machine CTX M] (ev : _Event M γ α) (f : α → _Event M γ β)
                          ev'.action m' x
   }
 
-theorem pure_bind_Event [Machine CTX M] (x : α) (f : α → _Event M γ β) :
-  bind_Event (pure_Event x) f = f x :=
-by
-  simp [pure_Event, bind_Event]
-
 
 instance [Machine CTX M]: Monad (_Event M γ) where
   bind := bind_Event
@@ -202,20 +197,20 @@ def EventSpec_from_Event [Machine CTX M]
     safety := Hsafe
   }
 
-def skipEventSpec [Machine CTX M] : EventSpec M α α := {
-  guard := fun _ _ => True
-  action := fun m x => (x, m)
-  safety := fun m x => by simp ; intro ; assumption
-}
-
-def skipEvent [Machine CTX M] : OrdinaryEvent M α α := newEvent skipEventSpec
+def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
+  newEvent (EventSpec_from_Event (skip_Event M α)
+                                 (by intros ; simp [skip_Event] ; assumption))
 
 def funEventSpec [Machine CTX M] (f : α → β) : EventSpec M α β :=
 {
   guard := fun _ _ => True
   action := fun m x => (f x, m)
-  safety := fun m x => by simp ; intro ; assumption
+  safety := fun m x => by simp
 }
+
+def funEvent (M) [Machine CTX M] (f : α → β) : OrdinaryEvent M α β :=
+  newEvent (EventSpec_from_Event (fun_Event M f)
+                                 (fun m x Hinv _ => by simp [fun_Event] ; assumption))
 
 def mapEvent [Machine CTX M] (f : α → β) (ev : OrdinaryEvent M γ α) : OrdinaryEvent M γ β :=
 {
@@ -228,3 +223,77 @@ def mapEvent [Machine CTX M] (f : α → β) (ev : OrdinaryEvent M γ α) : Ordi
 
 instance [Machine CTX M] : Functor (OrdinaryEvent M γ) where
   map := mapEvent
+
+instance [Machine CTX M] : LawfulFunctor (OrdinaryEvent M γ) where
+  map_const := by intros ; rfl
+  id_map := by intros ; rfl
+  comp_map := by intros ; rfl
+
+/- Applicative Functor -/
+
+@[simp]
+def pureEvent [Machine CTX M] (y : α) : OrdinaryEvent M γ α :=
+  { event := pure y
+    po := {
+      safety := fun m _ => by simp [pure]
+    }
+  }
+
+instance [Machine CTX M]: Pure (OrdinaryEvent M γ) where
+  pure := pureEvent
+
+def applyEvent [Machine CTX M] ( ef : OrdinaryEvent M γ (α → β)) (ev : OrdinaryEvent M γ α) : OrdinaryEvent M γ β :=
+  { event := ef.event <*> ev.event
+    po := {
+      safety := fun m x => by simp [Seq.seq, apply_Event]
+                              intros Hinv Hgrd₁ Hgrd₂
+                              have Hsafe₁ := ef.po.safety m x Hinv Hgrd₁
+                              apply ev.po.safety (ef.event.action m x).snd
+                              <;> assumption
+    }
+  }
+
+instance [Machine CTX M]: Applicative (OrdinaryEvent M γ) where
+  seq ef ev := applyEvent ef (ev ())
+
+instance [Machine CTX M]: LawfulApplicative (OrdinaryEvent M γ) where
+  map_const := by intros ; rfl
+  id_map := by intros ; rfl
+  seqLeft_eq := by intros ; rfl
+  seqRight_eq := by intros ; rfl
+  pure_seq := by intros α β g ev
+                 cases ev
+                 case mk ev po =>
+                   simp [Seq.seq, pure, Functor.map]
+                   simp [applyEvent, mapEvent]
+                   constructor
+                   · apply pure_seq
+                   · apply heq_of_eqRec_eq
+                     · simp
+                     · simp [Seq.seq, apply_Event]
+                       cases ev
+                       case mk evr act =>
+                         simp [Functor.map, map_Event]
+
+  map_pure := by intros α β g x ; rfl
+  seq_pure := by intros α β ev x
+                 simp [Seq.seq, pure, Functor.map]
+                 simp [applyEvent, mapEvent]
+                 constructor
+                 · apply seq_pure
+                 · apply cast_heq
+                 · apply heq_of_eqRec_eq
+                   · simp
+                   · simp [Seq.seq, apply_Event]
+                     cases ev
+                     case mk evr act =>
+                       simp [Functor.map, map_Event]
+
+  seq_assoc := by intros α β γ' ev g h
+                  simp [Seq.seq, Functor.map, mapEvent, applyEvent]
+                  constructor
+                  · apply seq_assoc
+                  · apply cast_heq
+                    have Hsa := seq_assoc ev.event g.event h.event
+                    simp [Seq.seq, Functor.map] at Hsa
+                    rw [Hsa]
