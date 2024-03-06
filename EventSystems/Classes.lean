@@ -49,3 +49,14 @@ class LawfulProfunctor (pf : Type u → Type v → Type w) [Profunctor pf] : Pro
     (f : β → α') (f' : α' → α) (g : γ' → δ) (g' : γ → γ') (x : pf α γ):
     dimap (pf:=pf) (f' ∘ f) (g ∘ g') x
     = ((dimap f g) ∘ (dimap f' g')) x
+
+section ProFun
+
+instance: Profunctor (·→·) where
+  dimap f h g := h ∘ g ∘ f
+
+instance: LawfulProfunctor (·→·) where
+  dimap_id f := by rfl
+  dimap_comp f f' g g' x := by rfl
+
+end ProFun

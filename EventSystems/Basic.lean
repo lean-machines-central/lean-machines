@@ -77,26 +77,25 @@ instance [Machine CTX M]: LawfulFunctor (_Event M γ) where
                   simp [Functor.mapConst, Functor.map]
   id_map := by intros α ev
                simp [Functor.map, map_Event]
-  comp_map := by intros α β γ g h x
+  comp_map := by intros α _ γ g h x
                  simp [Functor.map, map_Event]
 
 /- Applicative Functor -/
 
 @[simp]
 def pure_Event [Machine CTX M] (y : α) : _Event M γ α :=
-  { guard := fun m x => True
-    action := fun m x => (y, m)
+  {
+    action := fun m _ => (y, m)
   }
 
 instance [Machine CTX M]: Pure (_Event M γ) where
   pure := pure_Event
 
 /- XXX : this one does not respect seq_pure -/
-@[simp]
 def apply_Event_bad [Machine CTX M] (ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
   {
     guard := fun m x => ef.guard m x ∧ ev.guard m x
-    action := fun m x => let (f, m') := ef.action m x
+    action := fun m x => let (f, _) := ef.action m x
                          let (y, m'') := ev.action m x
                          (f y, m'')
   }
@@ -147,7 +146,7 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
   bind_pure_comp := by intros α β f ev
                        simp [pure, Functor.map, pure_Event, map_Event, bind, bind_Event]
   bind_map := by simp [bind] ; intros ; rfl
-  pure_bind := by intros α β x f
+  pure_bind := by intros _ β x f
                   simp [pure, bind, bind_Event]
   bind_assoc := by intros β γ' x f g h
                    simp [bind, bind_Event]
@@ -156,7 +155,7 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
 
 /- Contravariant functor -/
 
-def _CoEvent (M) [Machine CTX M] (α) (β) :=
+abbrev _CoEvent (M) [Machine CTX M] (α) (β) :=
   _Event M β α
 
 instance [Machine CTX M] : Contravariant (_CoEvent M β) where
@@ -178,7 +177,7 @@ structure OrdinaryEvent (M) [Machine CTX M] (α) (β) where
   po : _EventPO event (EventKind.TransDet Convergence.Ordinary)
 
 structure EventSpec (M) [Machine CTX M] (α) (β) where
-  guard (m : M) (x : α) : Prop
+  guard (m : M) (x : α) : Prop := True
   action (m : M) (x : α) : β × M
   safety (m : M) (x : α) :
     Machine.invariant m
@@ -213,13 +212,6 @@ def EventSpec_from_Event [Machine CTX M]
 def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   newEvent (EventSpec_from_Event (skip_Event M α)
                                  (by intros ; simp [skip_Event] ; assumption))
-
-def funEventSpec [Machine CTX M] (f : α → β) : EventSpec M α β :=
-{
-  guard := fun _ _ => True
-  action := fun m x => (f x, m)
-  safety := fun m x => by simp
-}
 
 def funEvent (M) [Machine CTX M] (f : α → β) : OrdinaryEvent M α β :=
   newEvent (EventSpec_from_Event (fun_Event M f)
@@ -312,10 +304,10 @@ instance [Machine CTX M]: LawfulApplicative (OrdinaryEvent M γ) where
 
 def bindEvent [Machine CTX M] (ev : OrdinaryEvent M γ α) (f : α → OrdinaryEvent M γ β) : OrdinaryEvent M γ β :=
   {
-    event := bind_Event ev.event (fun x => (f x).event)
+    event := ev.event >>= (fun x => (f x).event)
     po := {
       safety := fun m x => by intros Hinv Hgrd
-                              simp [bind_Event] at *
+                              simp [bind, bind_Event] at *
                               have Hsafe₁ := ev.po.safety m x Hinv
                               simp [Hgrd] at Hsafe₁
                               have Hsafe₂ := (f (ev.event.2 m x).fst).po.safety (ev.event.2 m x).snd x Hsafe₁
@@ -323,7 +315,6 @@ def bindEvent [Machine CTX M] (ev : OrdinaryEvent M γ α) (f : α → OrdinaryE
                               assumption
     }
   }
-
 
 instance [Machine CTX M]: Monad (OrdinaryEvent M γ) where
   bind := bindEvent
