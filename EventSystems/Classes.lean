@@ -36,7 +36,7 @@ class Profunctor (pf : Type u → Type v → Type w) where
   dimap {α β : Type u} {γ δ : Type v}:
           (β → α) → (γ → δ) → pf α γ → pf β δ
   lmap {α β : Type u} {γ : Type v}:
-          (α → β) → pf α γ → pf β γ := fun f => dimap f id
+          (β → α) → pf α γ → pf β γ := fun f => dimap f id
   rmap {α β : Type v} {γ : Type u}:
           (α → β) → pf γ α → pf γ β := dimap id
 
