@@ -158,11 +158,20 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
 abbrev _CoEvent (M) [Machine CTX M] (α) (β) :=
   _Event M β α
 
+def coEvent_from_Event [Machine CTX M] (ev : _Event M α β) : _CoEvent M β α :=
+ ev
+
+def Event_from_CoEvent [Machine CTX M] (ev : _CoEvent M β α) : _Event M α β :=
+ ev
+
 instance [Machine CTX M] : Contravariant (_CoEvent M β) where
   contramap f ev := { guard := fun m x => ev.guard m (f x)
                       action := fun m x => ev.action m (f x)
                     }
 
+instance [Machine CTX M] : LawfullContravariant (_CoEvent M β) where
+  cmap_id _ := by rfl
+  cmap_comp _ _ := by rfl
 
 /- Ordinary events -/
 
@@ -354,3 +363,22 @@ instance [Machine CTX M]: LawfulMonad (OrdinaryEvent M γ) where
                    have H := bind_assoc ev.event (fun x => (f x).event) (fun x => (g x).event)
                    simp [bind] at H
                    rw [H]
+
+/- Contravariant functor -/
+
+abbrev CoEvent (M) [Machine CTX M] (α) (β) :=
+   OrdinaryEvent M β α
+
+instance [Machine CTX M]: Contravariant (CoEvent M γ) where
+  contramap {α β} (f : β → α) (ev : CoEvent M α γ) :=
+  { event := by let ev' := coEvent_from_Event ev.event
+                let ev'' := Contravariant.contramap f ev'
+                sorry
+    --po := {
+    --  safety := fun m x => by sorry
+    --}
+  }
+
+instance [Machine CTX M] : LawfullContravariant (_CoEvent M β) where
+  cmap_id _ := by rfl
+  cmap_comp _ _ := by rfl
