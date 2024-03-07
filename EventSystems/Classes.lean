@@ -1,6 +1,7 @@
 
 
--- Contravariant functors
+/- Contravariant functors -/
+
 -- cf. https://blog.ocharles.org.uk/blog/guest-posts/2013-12-21-24-days-of-hackage-contravariant.html
 
 class Contravariant (cf : Type u → Type v) where
@@ -29,7 +30,8 @@ instance : LawfullContravariant (CoFun γ) where
 
 end ContraFun
 
--- Profunctor and optics from
+/- Profunctor and optics -/
+
 -- cf. https://github.com/hablapps/DontFearTheProfunctorOptics
 
 class Profunctor (pf : Type u → Type v → Type w) where
@@ -60,3 +62,126 @@ instance: LawfulProfunctor (·→·) where
   dimap_comp f f' g g' x := by rfl
 
 end ProFun
+
+/- Category and Arrow -/
+-- ==> Haskell folklore
+
+class Category (cat : Type u → Type u → Type v) where
+  id : cat α α
+  comp : {α β γ : Type u} → cat β γ → cat α β → cat α γ
+
+infixr:90 " (.) " => Category.comp
+
+class LawfulCategory (cat : Type u → Type u → Type v) [instC: Category cat] where
+  id_right (f : cat α β): f (.) Category.id = f
+  id_left (f : cat α β): Category.id (.) f = f
+  id_assoc (f : cat γ δ) (g : cat β γ) (h : cat α β):
+    f (.) (g (.) h) = (f (.) g) (.) h
+
+infixr:10 " (<<<) " => Category.comp
+
+def Category.rcomp [Category cat] (f : cat α β) (g : cat β γ) : cat α γ := g (.) f
+
+infixr:10 " (>>>) " => Category.rcomp
+
+section CatFun
+
+instance: Category (·→·) where
+  id := id
+  comp := (·∘·)
+
+instance: LawfulCategory (·→·) where
+  id_right _ := rfl
+  id_left _ := rfl
+  id_assoc _ _ _ := rfl
+
+end CatFun
+
+class Arrow (arr : Type u → Type u → Type v) extends Category arr where
+  arrow : (α → β) → arr α β
+  split {α α' β β' : Type u}: arr α β → arr α' β' → arr (α × α') (β × β')
+
+  first {α β γ : Type u} (x : arr α β) : arr (α × γ) (β × γ) :=
+    let cid : arr γ γ := id
+    split x cid
+
+  second {α β γ : Type u} (x : arr α β): arr (γ × α) (γ × β) :=
+    let cid : arr γ γ := id
+    split cid x
+
+  fanout {α β β' : Type u} (f : arr α β) (g : arr α β') : arr α (β × β') :=
+    let l : arr α (α × α) := arrow (fun x => (x, x))
+    let r : arr (α × α) (β × β') := split f g
+    l (>>>) r
+
+open Arrow
+
+def fun_split (f : α → β) (g : α' → β') : (α × α') → (β × β') :=
+  fun (x,x') => (f x, g x')
+
+def pair_first {α β} (p : α × β) : α := p.1
+
+def fun_first (f : α → β) : (α × γ) → (β × γ) :=
+  fun (x,z) => (f x, z)
+
+def fun_assoc {α β γ}: ((α × β) × γ) → (α × (β × γ)) :=
+  fun ((a, b), c) => (a, (b, c))
+
+class LawfulArrow (arr : Type u → Type u → Type v) [Arrow arr] extends LawfulCategory arr where
+  arrow_id :  -- (arrow id) = id
+    let cid : arr α α := Category.id
+    arrow id = cid
+
+  arrow_ext (f : α → β): -- first (arrow f) = arrow (fun_split f id)
+    let afs : arr (α × γ) (β × γ):= arrow (fun_split f id)
+    first (arrow f) = afs
+
+  arrow_fun (f : α → β) (g : β → γ): -- arrow (f >>> g) = (arrow f) >>> (arrow g)
+    let agof : arr α γ := arrow (g ∘ f)
+    let af : arr α β := arrow f
+    let ag : arr β γ := arrow g
+    let af_ag := af (>>>) ag
+    agof = af_ag
+
+  arrow_xcg (f : arr α β) (g : β → α): -- first f >>> arr (id ⋆⋆⋆ g) = arr (id ⋆⋆⋆ g) >>> first f
+    let lg : arr (α × β) (α × α) := arrow (fun_split id g)
+    let lf : arr (α × α) (β × α) := first f
+    let l : arr (α × β) (β × α) := lg (>>>) lf
+    let rf : arr (α × β) (β × β) := first f
+    let rg : arr (β × β) (β × α) := arrow (fun_split id g)
+    let r : arr (α × β) (β × α) := rf (>>>) rg
+    l = r
+
+  arrow_unit (f : arr α β) : -- first f >>> arr fst = arr fst >>> f
+    let lafst : arr (β × β) β := arrow pair_first
+    let lf : arr (α × β) (β × β) := first f
+    let l : arr (α × β) β := lf (>>>) lafst
+    let rafst : arr (α × β) α := arrow pair_first
+    let r : arr (α × β) β := rafst (>>>) f
+    l = r
+
+  arrow_assoc {α β γ δ : Type u} (f : arr α β): -- first (first f) >>> arr assoc = arr assoc >>> first f
+    let lf : arr (α × γ) (β × γ) := first f
+    let lff : arr ((α × γ) × δ)  ((β × γ) × δ) := first lf
+    let lassoc : arr ((β × γ) × δ) (β × (γ × δ)) := arrow fun_assoc
+    let l := lff (>>>) lassoc
+    let rassoc : arr ((α × γ) × δ) (α × (γ × δ)) := arrow fun_assoc
+    let rf : arr (α × (γ × δ)) (β × (γ × δ)) := first f
+    let r := rassoc (>>>) rf
+    l = r
+
+section ArrowFun
+
+instance: Arrow (·→·) where
+ arrow := id
+ split := fun_split
+
+instance : LawfulArrow (·→·) where
+  arrow_id := rfl
+  arrow_ext _ := rfl
+  arrow_fun _ _ := rfl
+  arrow_xcg _ _ := rfl
+  arrow_unit _ := rfl
+  arrow_assoc _ := rfl
+
+end ArrowFun
