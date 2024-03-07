@@ -185,3 +185,28 @@ instance : LawfulArrow (·→·) where
   arrow_assoc _ := rfl
 
 end ArrowFun
+
+abbrev Kleisli (m : Type u → Type v) α β := α → m β
+
+instance [Monad m]: Category (Kleisli m) where
+  id := pure
+  comp {α β γ} (f : Kleisli m β γ) (g : Kleisli m α β)  : Kleisli m α γ :=
+    fun x => g x >>= f
+
+instance [Monad m]: Arrow (Kleisli m) where
+  arrow {α β} (f : α → β) := fun x => pure (f x)
+  split {α α' β β'} (f : Kleisli m α β)  (g : Kleisli m α' β') := --→ arr (α × α') (β × β')
+    fun p : α × α' =>  f p.1 >>= fun y => g p.2 >>= fun y' => pure (y, y')
+
+instance [Monad m] [LawfulMonad m]: LawfulCategory (Kleisli m) where
+  id_right _ := by simp [Category.comp, Category.id]
+  id_left _ := by  simp [Category.comp, Category.id]
+  id_assoc _ _ _ := by simp [Category.comp, Category.id]
+
+instance [Monad m] [LawfulMonad m]: LawfulArrow (Kleisli m) where
+  arrow_id := rfl
+  arrow_ext _ := by simp [arrow, fun_split, first, Category.id]
+  arrow_fun _ _ := by simp [arrow, Category.rcomp, Category.comp]
+  arrow_xcg _ _ := by simp [arrow, first, Category.rcomp, Category.comp, Category.id, fun_split]
+  arrow_unit _ := by simp [arrow, first, Category.rcomp, Category.comp, Category.id, pair_first]
+  arrow_assoc _ := by simp [arrow, first, fun_assoc, Category.id, Category.rcomp, Category.comp]
