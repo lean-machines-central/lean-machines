@@ -153,6 +153,25 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
                    funext
                    apply And_eq_assoc
 
+/- arrows -/
+
+abbrev _KEvent M [Machine CTX M] γ := Kleisli (_Event M γ)
+  -- α → (_Event M γ) β
+
+--def instArrowKEvent [Machine CTX M]: Arrow (_KEvent M γ) := inferInstance
+
+/-
+variable (f : α → β)
+variable (M)
+variable (instM : Machine CTX M)
+variable (γ)
+#check (Arrow.arrow f : _KEvent M γ α β)
+-/
+
+-- Arrows are less poweful (but more general) than Monads
+-- but Events are monads in their output type
+-- and both monads and arrows do not apply on input types
+
 /- Contravariant functor -/
 
 abbrev _CoEvent (M) [Machine CTX M] (α) (β) :=
