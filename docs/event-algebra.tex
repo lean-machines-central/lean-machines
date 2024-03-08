@@ -1,0 +1,59 @@
+
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{parskip}
+
+\newcommand{\EV}[3]{\ensuremath{{\cal{E}}^{#1}_{[#2 \Rightarrow #3]}}}
+
+\title{Algebras of Events}
+
+\author{Frederic Peschanski\\LIP6 - Sorbonne University - CNRS UMR 7606}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Deterministic events}
+
+The type of basic non-deterministic events is denoted by: $\EV{m}{\alpha}{\beta}$
+
+where :
+
+\begin{itemize}
+\item $m$ is a machine type
+\item $\alpha$ is an input type
+\item $\beta$ is an output type
+\end{itemize}
+
+\subsection{Functors}
+
+Functor deal with the input and output of events, there is no direct interference with the machine state
+ changes.
+
+\subsubsection*{Covariant functor}
+
+$map: (\alpha \rightarrow \beta) \rightarrow  \EV{m}{\gamma}{\alpha} \rightarrow \EV{m}{\gamma}{\beta}$
+
+\textbf{Usage} : transform the \underline{output} of an event with a unary function $g : \alpha \rightarrow \beta$
+
+\subsubsection*{Contravariant functor}
+
+$contramap: (\beta \rightarrow \alpha) \rightarrow  \EV{m}{\alpha}{\gamma} \rightarrow \EV{m}{\beta}{\gamma}$
+
+\textbf{Usage} : transform the \underline{input} of an event with a unary function $f : \beta \rightarrow \alpha$
+
+\subsubsection*{Profunctor}
+
+$dimap: (\beta \rightarrow \alpha) \rightarrow (\gamma \rightarrow \delta) \rightarrow  \EV{m}{\alpha}{\gamma} \rightarrow \EV{m}{\beta}{\delta}$
+
+\textbf{Usage} : transform both the \underline{input} and the \underline{output} of an event with :
+\begin{itemize}
+\item an input transformation $f : \beta \rightarrow \alpha$
+\item an output transformation $g : \gamma \rightarrow \delta$
+\end{itemize}
+
+\end{document}
