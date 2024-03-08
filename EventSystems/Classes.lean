@@ -72,6 +72,8 @@ class Category (cat : Type u → Type u → Type v) where
 
 infixr:90 " (.) " => Category.comp
 
+attribute [simp] Category.id Category.comp
+
 class LawfulCategory (cat : Type u → Type u → Type v) [instC: Category cat] where
   id_right (f : cat α β): f (.) Category.id = f
   id_left (f : cat α β): Category.id (.) f = f
@@ -80,6 +82,7 @@ class LawfulCategory (cat : Type u → Type u → Type v) [instC: Category cat] 
 
 infixr:10 " (<<<) " => Category.comp
 
+@[simp]
 def Category.rcomp [Category cat] (f : cat α β) (g : cat β γ) : cat α γ := g (.) f
 
 infixr:10 " (>>>) " => Category.rcomp
@@ -114,16 +117,34 @@ class Arrow (arr : Type u → Type u → Type v) extends Category arr where
     let r : arr (α × α) (β × β') := split f g
     l (>>>) r
 
+-- XXX: for non-obvious reasons we cannot use the first function
+--      for generating the rest although it is simpler than split
+--      hence the following "default implementation" can be used
+--      as a "tweak"
+def Arrow.split_from_first {arr : Type u → Type u → Type v} [Category arr]
+  (arrsw: {α β : Type u} → arr (α × β) (β × α))
+  (fst : {α β γ : Type u} → arr α β → arr (α × γ) (β × γ))
+  {α α' β β' : Type u} (f : arr α β) (g : arr α' β') : arr (α × α') (β × β') :=
+  let ff : arr (α × α') (β × α') := fst f
+  let swff : arr (β × α') (α'× β) := arrsw
+  let fg : arr (α' × β) (β' × β) := fst g
+  let swfg : arr (β' × β) (β × β') := arrsw
+  ff (>>>) swff (>>>) fg (>>>) swfg
+
 open Arrow
 
+@[simp]
 def fun_split (f : α → β) (g : α' → β') : (α × α') → (β × β') :=
   fun (x,x') => (f x, g x')
 
+@[simp]
 def pair_first {α β} (p : α × β) : α := p.1
 
+@[simp]
 def fun_first (f : α → β) : (α × γ) → (β × γ) :=
   fun (x,z) => (f x, z)
 
+@[simp]
 def fun_assoc {α β γ}: ((α × β) × γ) → (α × (β × γ)) :=
   fun ((a, b), c) => (a, (b, c))
 
@@ -199,14 +220,14 @@ instance [Monad m]: Arrow (Kleisli m) where
     fun p : α × α' =>  f p.1 >>= fun y => g p.2 >>= fun y' => pure (y, y')
 
 instance [Monad m] [LawfulMonad m]: LawfulCategory (Kleisli m) where
-  id_right _ := by simp [Category.comp, Category.id]
-  id_left _ := by  simp [Category.comp, Category.id]
-  id_assoc _ _ _ := by simp [Category.comp, Category.id]
+  id_right _ := by simp
+  id_left _ := by  simp
+  id_assoc _ _ _ := by simp
 
 instance [Monad m] [LawfulMonad m]: LawfulArrow (Kleisli m) where
   arrow_id := rfl
-  arrow_ext _ := by simp [arrow, fun_split, first, Category.id]
-  arrow_fun _ _ := by simp [arrow, Category.rcomp, Category.comp]
-  arrow_xcg _ _ := by simp [arrow, first, Category.rcomp, Category.comp, Category.id, fun_split]
-  arrow_unit _ := by simp [arrow, first, Category.rcomp, Category.comp, Category.id, pair_first]
-  arrow_assoc _ := by simp [arrow, first, fun_assoc, Category.id, Category.rcomp, Category.comp]
+  arrow_ext _ := by simp [arrow, first]
+  arrow_fun _ _ := by simp [arrow]
+  arrow_xcg _ _ := by simp [arrow, first]
+  arrow_unit _ := by simp [arrow, first]
+  arrow_assoc _ := by simp [arrow, first]

@@ -51,11 +51,13 @@ by
   simp [*] at *
   simp [*]
 
+@[simp]
 def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
 {
   action := fun m x => (x, m)
 }
 
+@[simp]
 def fun_Event  (M) [Machine CTX M] (f : α → β) : _Event M α β :=
 {
   action := fun m x => (f x, m)
@@ -171,6 +173,38 @@ variable (γ)
 -- Arrows are less poweful (but more general) than Monads
 -- but Events are monads in their output type
 -- and both monads and arrows do not apply on input types
+
+instance [Machine CTX M]: Category (_Event M) where
+  id := fun_Event M id
+
+  comp {α β γ} (ev₂ : _Event M β γ) (ev₁ : _Event M α β) : _Event M α γ :=
+    { guard := fun m x => ev₁.guard m x ∧ let (y, m') := ev₁.action m x
+                                          ev₂.guard m' y
+      action := fun m x => let (y, m') := ev₁.action m x
+                           ev₂.action m' y
+    }
+
+instance [Machine CTX M]: LawfulCategory (_Event M) where
+  id_right _ := by simp
+  id_left _ := by simp
+  id_assoc _ _ _ := by simp ; funext m x ; apply And_eq_assoc
+
+@[simp]
+def _Event_Arrow_first [Machine CTX M] (ev : _Event M α β) : _Event M (α × γ) (β × γ) :=
+  { guard := fun m (x, _) => ev.guard m x
+    action := fun m (x, y) => let (x', m') := ev.action m x
+                              ((x',y), m')
+  }
+
+instance [Machine CTX M]: Arrow (_Event M) where
+  arrow {α β} (f : α → β) := fun_Event M f
+
+  split {α α' β β'} (ev₁ : _Event M α β)  (ev₂ : _Event M α' β') : _Event M (α × α') (β × β') :=
+    Arrow.split_from_first (fun_Event M (fun (x, y) => (y, x)))
+                           _Event_Arrow_first
+                           ev₁ ev₂
+
+
 
 /- Contravariant functor -/
 
