@@ -204,7 +204,14 @@ instance [Machine CTX M]: Arrow (_Event M) where
                            _Event_Arrow_first
                            ev₁ ev₂
 
-
+instance [Machine CTX M]: LawfulArrow (_Event M) where
+  arrow_id := by simp [Arrow.arrow]
+  arrow_ext _ := by simp [Arrow.arrow, Arrow.first]
+  arrow_fun _ _ := by simp [Arrow.arrow, Arrow.first]
+  arrow_xcg _ _ := by simp [Arrow.arrow, Arrow.first]
+  arrow_unit _ := by simp [Arrow.arrow, Arrow.first]
+  arrow_assoc {α β γ δ} (f : _Event M α β) :=
+    by simp [Arrow.arrow, Arrow.first]
 
 /- Contravariant functor -/
 
@@ -274,6 +281,7 @@ def newEvent {M} [Machine CTX M] (ev : EventSpec M α β) : OrdinaryEvent M α �
     }
   }
 
+@[simp]
 def EventSpec_from_Event [Machine CTX M]
   (ev : _Event M α β)
   (Hsafe : (m : M) → (x : α) →  Machine.invariant m
@@ -288,6 +296,7 @@ def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   newEvent (EventSpec_from_Event (skip_Event M α)
                                  (by intros ; simp [skip_Event] ; assumption))
 
+@[simp]
 def funEvent (M) [Machine CTX M] (f : α → β) : OrdinaryEvent M α β :=
   newEvent (EventSpec_from_Event (fun_Event M f)
                                  (fun m x Hinv _ => by simp [fun_Event] ; assumption))
@@ -429,6 +438,75 @@ instance [Machine CTX M]: LawfulMonad (OrdinaryEvent M γ) where
                    have H := bind_assoc ev.event (fun x => (f x).event) (fun x => (g x).event)
                    simp [bind] at H
                    rw [H]
+
+/- Category and Arrow -/
+
+instance [Machine CTX M]: Category (OrdinaryEvent M) where
+  id := funEvent M id
+
+  comp {α β γ} (ev₂ : OrdinaryEvent M β γ) (ev₁ : OrdinaryEvent M α β) : OrdinaryEvent M α γ :=
+    { event := ev₁.event (>>>) ev₂.event
+      po := {
+        safety := fun m x => by simp
+                                intros Hinv Hgrd₁ Hgrd₂
+                                have Hsafe₁ := ev₁.po.safety m x Hinv Hgrd₁
+                                let ev₁' := ev₁.event.action m x
+                                have Hsafe₂ := ev₂.po.safety ev₁'.2 ev₁'.1
+                                exact Hsafe₂ Hsafe₁ Hgrd₂
+      }
+    }
+
+instance [Machine CTX M]: LawfulCategory (OrdinaryEvent M) where
+  id_right {α β} (ev : OrdinaryEvent M α β) := by cases ev
+                                                  simp [Category.rcomp]
+                                                  apply cast_heq ; simp
+
+  id_left {α β} (ev : OrdinaryEvent M α β) := by cases ev
+                                                 simp [Category.rcomp]
+                                                 apply cast_heq ; simp
+
+  id_assoc {α β γ δ} (ev₃ : OrdinaryEvent M γ δ) (ev₂ : OrdinaryEvent M β γ) (ev₁ : OrdinaryEvent M α β) := by
+      cases ev₁
+      cases ev₂
+      cases ev₃
+      simp [Category.rcomp]
+      constructor
+      · funext m x
+        simp [And_eq_assoc]
+      · apply cast_heq
+        simp [And_eq_assoc]
+
+@[simp]
+def OrdinaryEvent_Arrow_first [Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryEvent M (α × γ) (β × γ) :=
+  { event := Arrow.first ev.event
+    po := {
+      safety := fun m (x,_) => by simp [Arrow.first]
+                                  intros Hinv Hgrd
+                                  apply ev.po.safety m x Hinv Hgrd
+    }
+  }
+
+instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
+  arrow {α β} (f : α → β) := funEvent M f
+
+  split {α α' β β'} (ev₁ : OrdinaryEvent M α β)  (ev₂ : OrdinaryEvent M α' β') : OrdinaryEvent M (α × α') (β × β') :=
+    Arrow.split_from_first (funEvent M (fun (x, y) => (y, x)))
+                           OrdinaryEvent_Arrow_first
+                           ev₁ ev₂
+
+instance [Machine CTX M]: LawfulArrow (OrdinaryEvent M) where
+  arrow_id := by simp [Arrow.arrow]
+  arrow_ext _ := by simp [Arrow.arrow, Arrow.first]
+                    apply cast_heq ; simp
+  arrow_fun _ _ := by simp [Arrow.arrow, Arrow.first]
+                      apply cast_heq ; simp
+  arrow_xcg _ _ := by simp [Arrow.arrow, Arrow.first]
+                      apply cast_heq ; simp
+  arrow_unit _ := by simp [Arrow.arrow, Arrow.first]
+                     apply cast_heq ; simp
+  arrow_assoc {α β γ δ} (f : OrdinaryEvent M α β) :=
+    by simp [Arrow.arrow, Arrow.first]
+       apply cast_heq ; simp
 
 /- Contravariant functor -/
 

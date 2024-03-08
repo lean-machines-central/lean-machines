@@ -77,7 +77,7 @@ attribute [simp] Category.id Category.comp
 class LawfulCategory (cat : Type u → Type u → Type v) [instC: Category cat] where
   id_right (f : cat α β): f (.) Category.id = f
   id_left (f : cat α β): Category.id (.) f = f
-  id_assoc (f : cat γ δ) (g : cat β γ) (h : cat α β):
+  id_assoc {α β γ δ} (f : cat γ δ) (g : cat β γ) (h : cat α β):
     f (.) (g (.) h) = (f (.) g) (.) h
 
 infixr:10 " (<<<) " => Category.comp
@@ -121,6 +121,7 @@ class Arrow (arr : Type u → Type u → Type v) extends Category arr where
 --      for generating the rest although it is simpler than split
 --      hence the following "default implementation" can be used
 --      as a "tweak"
+@[simp]
 def Arrow.split_from_first {arr : Type u → Type u → Type v} [Category arr]
   (arrsw: {α β : Type u} → arr (α × β) (β × α))
   (fst : {α β γ : Type u} → arr α β → arr (α × γ) (β × γ))
