@@ -10,3 +10,6 @@ lean_lib «EventSystems» where
 @[default_target]
 lean_exe «event-systems» where
   root := `Main
+
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4"
