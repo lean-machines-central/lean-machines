@@ -318,7 +318,7 @@ instance [Machine CTX M] : Functor (OrdinaryEvent M γ) where
   map := mapEvent
 
 instance [Machine CTX M] : LawfulFunctor (OrdinaryEvent M γ) where
-  map_const := by intros ; rfl
+  map_const := rfl
   id_map := by intros ; rfl
   comp_map := by intros ; rfl
 
