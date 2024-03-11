@@ -21,6 +21,23 @@ structure AnticipatedEvent (v) [Preorder v] (M) [Machine CTX M] (α) (β)
           extends (_Event M α β)  where
   po : _AnticipatedEventPO v to_Event (EventKind.TransDet Convergence.Anticipated)
 
+def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
+  (variant : M → v)
+  (Hnincr: ∀ (m : M) (x : α),
+    Machine.invariant m
+    → ev.guard m x
+    → let (_, m') := ev.action m x
+      variant m' ≤ variant m) : AnticipatedEvent v M α β :=
+  {
+    guard := ev.guard
+    action := ev.action
+    po := {
+      safety := ev.po.safety
+      variant := variant
+      nonIncreasing := Hnincr
+    }
+  }
+
 structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [Machine CTX M] (α) (β)
   extends _Variant v, EventSpec M α β where
 
@@ -32,18 +49,7 @@ structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [Machine CTX M] (α) (
 
 @[simp]
 def newAnticipatedEvent {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec v M α β) : AnticipatedEvent v M α β :=
-  let event := _Event_from_EventSpec ev.toEventSpec
-  { guard := event.guard
-    action := event.action
-    po := { safety := fun m x => by simp
-                                    intros Hinv Hgrd
-                                    apply ev.safety <;> assumption
-            variant := ev.variant
-            nonIncreasing:= fun m x => by simp
-                                          intros Hinv Hgrd
-                                          apply ev.nonIncreasing <;> assumption
-    }
-  }
+  AnticipatedEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.nonIncreasing
 
 /- Convergent events -/
 
@@ -60,6 +66,29 @@ structure ConvergentEvent (v) [Preorder v]  [WellFoundedLT v] (M) [Machine CTX M
           extends (_Event M α β)  where
   po : _ConvergentEventPO v to_Event (EventKind.TransDet Convergence.Convergent)
 
+def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
+  (variant : M → v)
+  (Hconv: ∀ (m : M) (x : α),
+    Machine.invariant m
+    → ev.guard m x
+    → let m' := (ev.action m x).2
+      variant m' < variant m)
+ : ConvergentEvent v M α β :=
+ {
+  guard := ev.guard
+  action := ev.action
+  po := {
+    safety := ev.po.safety
+    variant := variant
+    nonIncreasing := fun m x => by simp
+                                   intros Hinv Hgrd
+                                   have Hconv' := Hconv m x Hinv Hgrd
+                                   apply le_of_lt
+                                   exact Hconv'
+    convergence := Hconv
+  }
+ }
+
 structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α) (β)
   extends _Variant v, EventSpec M α β where
 
@@ -71,23 +100,7 @@ structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [Machine CT
 
 @[simp]
 def newConvergentEvent {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec v M α β) : ConvergentEvent v M α β :=
-  let event := _Event_from_EventSpec ev.toEventSpec
-  { guard := event.guard
-    action := event.action
-    po := { safety := fun m x => by simp
-                                    intros Hinv Hgrd
-                                    apply ev.safety <;> assumption
-            variant := ev.variant
-            nonIncreasing := fun m x => by simp
-                                           intros Hinv Hgrd
-                                           have Hconv := ev.convergence m x Hinv Hgrd
-                                           apply le_of_lt
-                                           exact Hconv
-            convergence := fun m x => by simp
-                                         intros Hinv Hgrd
-                                         apply ev.convergence <;> assumption
-    }
-  }
+  ConvergentEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.convergence
 
 @[simp]
 def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : AnticipatedEvent v M α β)
