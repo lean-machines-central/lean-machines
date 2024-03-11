@@ -243,8 +243,18 @@ instance [Machine CTX M] : Profunctor (_Event M) where
     Functor.map g ev'
 
 instance [Machine CTX M] : LawfulProfunctor (_Event M) where
-  dimap_id _ := rfl
-  dimap_comp _ _ _ _ _ := rfl
+  dimap_id := rfl
+  dimap_comp _ _ _ _ := rfl
+
+instance [Machine CTX M] : StrongProfunctor (_Event M) where
+  first' {α β γ} (ev : _Event M α β): _Event M (α × γ) (β × γ) :=
+    {
+      guard := fun m (x, _) => ev.guard m x
+      action := fun m (x, y) => let (x', m') := ev.action m x
+                                ((x', y), m')
+    }
+
+instance [Machine CTX M] : LawfulStrongProfunctor (_Event M) where
 
 /- Ordinary events -/
 
@@ -574,5 +584,20 @@ instance [Machine CTX M] : Profunctor (OrdinaryEvent M) where
     }
 
 instance [Machine CTX M] : LawfulProfunctor (OrdinaryEvent M) where
-  dimap_id _ := rfl
-  dimap_comp _ _ _ _ _ := rfl
+  dimap_id := rfl
+  dimap_comp _ _ _ _ := rfl
+
+instance [Machine CTX M] : StrongProfunctor (OrdinaryEvent M) where
+  first' {α β γ} (ev : OrdinaryEvent M α β): OrdinaryEvent M (α × γ) (β × γ) :=
+    let event := StrongProfunctor.first' ev.to_Event
+    {
+      guard := event.guard
+      action := event.action
+      po := {
+        safety := fun m x => by simp
+                                intros Hinv Hgrd
+                                apply ev.po.safety <;> assumption
+      }
+    }
+
+instance [Machine CTX M] : LawfulStrongProfunctor (OrdinaryEvent M) where

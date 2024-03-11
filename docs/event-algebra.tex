@@ -7,6 +7,13 @@
 \usepackage{parskip}
 
 \newcommand{\EV}[3]{\ensuremath{{\cal{E}}^{#1}_{[#2 \Rightarrow #3]}}}
+\newcommand{\FMAP}{\ensuremath{\langle \$ \rangle}}
+\newcommand{\APPLY}{\ensuremath{\langle \star \rangle}}
+\newcommand{\BIND}{\mathbin{>\!\!\!>\mkern-6.7mu=}}
+\newcommand{\COMP}{\lll} %{\mathbin{<\!\!\!<\!\!\!<}}
+\newcommand{\SEQ}{\ggg} %{\mathbin{>\!\!\!>\!\!\!>}}
+\newcommand{\SPLIT}{\mathbin{\divideontimes\!\!\!\!\divideontimes\!\!\!\!\divideontimes}}
+\newcommand{\FANOUT}{\mathbin{\&\!\!\!\&\!\!\!\&}}
 
 \title{Algebras of Events}
 
@@ -38,7 +45,9 @@ Functor deal with the input and output of events, there is no direct interferenc
 
 $map: (\alpha \rightarrow \beta) \rightarrow  \EV{m}{\gamma}{\alpha} \rightarrow \EV{m}{\gamma}{\beta}$
 
-\textbf{Usage} : transform the \underline{output} of an event with a unary function $g : \alpha \rightarrow \beta$
+\textbf{Remark}: the expression $map f \EV{m}{\gamma}{\alpha}$ is commonly denoted by $f \FMAP \EV{m}{\gamma}{\alpha}$ 
+
+\textbf{Usage}: transform the \underline{output} of an event with a unary function $g : \alpha \rightarrow \beta$
 
 \subsubsection*{Contravariant functor}
 
@@ -50,10 +59,118 @@ $contramap: (\beta \rightarrow \alpha) \rightarrow  \EV{m}{\alpha}{\gamma} \righ
 
 $dimap: (\beta \rightarrow \alpha) \rightarrow (\gamma \rightarrow \delta) \rightarrow  \EV{m}{\alpha}{\gamma} \rightarrow \EV{m}{\beta}{\delta}$
 
-\textbf{Usage} : transform both the \underline{input} and the \underline{output} of an event with :
+\textbf{Usage}: transform both the \underline{input} and the \underline{output} of an event with :
 \begin{itemize}
 \item an input transformation $f : \beta \rightarrow \alpha$
 \item an output transformation $g : \gamma \rightarrow \delta$
+\end{itemize}
+
+\textbf{Strong profunctor} adds:
+
+$first' : \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\alpha \times \gamma}{\beta \times \gamma}$
+
+and $second' : \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\gamma \times \alpha}{\gamma \times \beta}$
+
+which allows to combine input and output transformations in tuples, and opens up the door for \textbf{lenses}.
+
+\subsection{Applicative functors}
+
+Applicative functors are (covariant) functors with two added requirements:
+
+$pure: \alpha \rightarrow \EV{m}{\gamma}{\alpha}$  (for an arbirary $\gamma$)
+
+$apply: \EV{m}{\gamma}{\alpha \rightarrow \beta} \rightarrow \EV{m}{\gamma}{\alpha} \rightarrow \EV{m}{\gamma}{\beta}$
+
+
+The $apply$ operator does two things:
+
+\begin{itemize}
+\item change the state of $m$ according to the sequential composition of the effects of $ev_f$ and those of $ef_x$  (in that order)
+\item apply the function $f : \alpha \rightarrow \beta$ on output value $x : \alpha$
+\end{itemize}
+
+\textbf{Remarks}:
+\begin{enumerate}
+\item $apply~ev_f~ev_x$ is commonly denoted by $ev_f~\APPLY~ev_x$.
+\item the function $f$ is only concerned with the (covariant) output of events
+\end{enumerate}
+
+\textbf{Usage}: 
+\begin{itemize}
+\item $pure$ reifies values as events, but without any observable state change, i.e. a pure event is just a value.
+\item $apply$ reifies function application at the functor (i.e. event) level. For instance, a standard application $f e_1 e_2 \ldots e_n$ becomes $f \FMAP e_1 \APPLY e_2 \APPLY \cdots e_n$ in the context of the functor. 
+\end{itemize}
+
+\subsection{Monads}
+
+A monad is an applicative functor (hence also a covariant functor) that, in addition, provides the following operator :
+
+$bind: \EV{m}{\gamma}{\alpha} \rightarrow (\alpha \rightarrow \EV{m}{\gamma}{\beta}) \rightarrow \EV{m}{\gamma}{\beta}$
+
+\textbf{Remark}: $bind~ev~f$ is commonly denoted by $ev \BIND f$
+
+\subsection{Categories and Arrows}
+
+Arrows are a generalization of monads.
+
+\subsubsection{Category}
+
+The starting point is a \textbf{Category} (from Category Theory) with two basic operators:
+
+$id : \EV{m}{\alpha}{\alpha}$
+
+$comp : \EV{m}{\beta}{\gamma} \rightarrow \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\alpha}{\gamma}$
+
+\textbf{Remarks}:  
+\begin{itemize}
+\item $comp~ev_2~ev_1$ is commonly denoted by $ev_2 \COMP ev_1$. 
+\item this is identical to the reverse composition $ev_1 \SEQ ev_2$.
+\end{itemize}
+
+\textbf{Usage}:
+\begin{itemize}
+\item $id$ is an event that propates its input to the output, which is isomorphic to an Event-B event ``without'' an actual (i.e. changed) output.
+\item $comp$ (and in particular the operator $\SEQ$) realizes the \textbf{sequential composition} of events, and is thus most useful
+\end{itemize}
+
+\subsubsection{Arrow}
+
+An arrow is a category that provides two basic operators :
+
+$arrow : (\alpha \rightarrow \beta) \rightarrow \EV{m}{\alpha}{\beta}$
+
+$split : \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\alpha'}{\beta'} \rightarrow \EV{m}{\alpha \times \alpha'}{\beta \times \beta'}$
+
+\textbf{Remark}: $split~ev~ev'$ is commonly denoted by $ev \SPLIT ev'$.
+
+\textbf{Usage}:
+\begin{itemize}
+\item While $pure$ reifies values, $arrow$ reifies whole functions. Put in other terms, (total) functions \emph{are} (a kind of) events. For example, to connect two ``incompatible'' events $ev_1 : \EV{m}{\alpha}{\beta}$ and $ev_2 : EV{m}{\gamma}{\delta}$ in sequence, it ``suffices'' to have a ``glue'' function $g : \beta \rightarrow \gamma$ and write $ev_1 \SEQ arrow~g \SEQ ev_2$.
+\item $split$ is a kind of parallel composition of events with separate and non-interfering input/output pairs.
+\end{itemize}
+
+\textbf{Derived operators}
+
+The follwing operators are derivable from $arrow$ and $split$ :
+
+$first : \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\alpha \times \gamma}{\beta \times \gamma}$ (for an arbitrary $\gamma$)
+
+$second : \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\gamma \times \alpha}{\gamma \times \beta}$ (for an arbitrary $\gamma$)
+
+$fanout : \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\alpha}{\beta'} \rightarrow \EV{m}{\alpha}{\beta \times \beta'}$
+
+\textbf{Remarks} : 
+\begin{itemize}
+\item $split$ is also derivable from $first$ using the function $swap (x, y) = (y, x)$, and the following definition: 
+
+$split = first~f \SEQ arrow~swap \SEQ first~g \SEQ arrow~swap$.
+\item $fanout~ev_1~ev_2$ is commonly denoted by: $ev_1 \FANOUT ev_2$.
+\end{itemize}
+
+\textbf{Usage}:
+\begin{itemize}
+\item $first$ and $second$ are the two ``halves'' of $split$ 
+\item $fanout$ merges to distinct events with compatible input types into a single event with a pair of outputs. Note that the effects of the two events are combined sequentially.
 \end{itemize}
 
 \end{document}
