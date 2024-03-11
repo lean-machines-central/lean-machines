@@ -281,3 +281,26 @@ instance [Monad m] [LawfulMonad m]: LawfulArrow (Kleisli m) where
   arrow_xcg _ _ := by simp [arrow, first]
   arrow_unit _ := by simp [arrow, first]
   arrow_assoc _ := by simp [arrow, first]
+
+-- Note: an arrow is naturally a covariant functor
+def map_from_arrow [Arrow arr] (f : α → β) (x : arr γ α) : arr γ β :=
+  let af : arr α β := arrow f
+  x (>>>) af
+
+-- And also a contravariant functor
+def contramap_from_arrow [Arrow arr] (f : β → α) (x : arr α γ) : arr β γ :=
+  let af : arr β α := arrow f
+  af (>>>) x
+
+-- But it is not applicative in that pure is not realizable
+-- because arrows only consider pairs of input/output types
+-- but we have an approximation :
+def quasi_pure_from_arrow [Arrow arr] (x : α) : arr Unit α :=
+  arrow (fun () => x)
+
+/-
+-- Apply would inject a function type within an arrow ... without a
+-- way to apply it ... a deadend ...
+def apply_from_arrow [Arrow arr] (af : arr γ (α → β)) (ax : arr γ α) : arr γ β :=
+  by sorry
+-/
