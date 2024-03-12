@@ -22,7 +22,7 @@ inductive EventKind where
 
 open EventKind
 
-structure _EventRoot (M) [Machine CTX M] (α : Type 0) where
+structure _EventRoot (M) [Machine CTX M] (α : Type) where
   guard : M → α → Prop := fun _ _ => True
 
 theorem ext_EventRoot [Machine CTX M] (ev1 ev2 : _EventRoot M α):
