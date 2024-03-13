@@ -141,3 +141,110 @@ instance [Machine CTX M] : StrongProfunctor (_NDEvent M) where
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (_NDEvent M) where
+
+
+instance [Machine CTX M]: Category (_NDEvent M) where
+  id := {
+    effect := fun m x (y, m') => y = x ∧ m' = m
+  }
+
+  comp {α β γ} (ev₂ : _NDEvent M β γ) (ev₁ : _NDEvent M α β) : _NDEvent M α γ :=
+    { guard := fun m x => ev₁.guard m x ∧ (∀ y, ∀ m', ev₁.effect m x (y, m')
+                                           → ev₂.guard m' y)
+      effect := fun m x (z, m'') => ∃ y, ∃ m', ev₁.effect m x (y, m') ∧ ev₂.effect m' y (z, m'')
+    }
+
+instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
+  id_right ev := by cases ev
+                    case mk evr eff =>
+                      simp
+                      funext m x (z, m'')
+                      simp
+                      constructor
+                      · intros Heff
+                        cases Heff
+                        case _ y Heff =>
+                          cases Heff
+                          case _ m' Heff =>
+                            cases Heff
+                            case _ Heq Heff =>
+                              simp [Heq] at Heff
+                              assumption
+                      intro Heff
+                      exists x
+                      exists m
+
+  id_left ev := by cases ev
+                   case mk evr eff =>
+                     simp
+                     funext m x (z, m'')
+                     simp
+                     constructor
+                     · intro Heff
+                       cases Heff
+                       case _ y Heff =>
+                         simp [Heff]
+                     intro Heff
+                     exists z
+
+  id_assoc ev₁ ev₂ ev₃ := by cases ev₁
+                             case mk evr₁ eff₁ =>
+                               cases ev₂
+                               case mk evr₂ eff₂ =>
+                                 cases ev₃
+                                 case mk evr₃ eff₃ =>
+                                   simp
+                                   constructor
+                                   · funext m x
+                                     simp
+                                     constructor
+                                     · intro H₁
+                                       constructor
+                                       · simp [H₁]
+                                       intros y m' Heff₃
+                                       constructor
+                                       · cases H₁
+                                         case _ Hevr₂ Hevr₁ =>
+                                           cases Hevr₂
+                                           case _ Hgrd₃ Hevr₂ =>
+                                             apply Hevr₂
+                                             assumption
+                                       intros z m'' Heff₂
+                                       cases H₁
+                                       case _ Hevr₂ Hevr₁ =>
+                                         apply Hevr₁ z m'' y m'
+                                         <;> assumption
+                                     simp
+                                     intros Hevr₃ Hevr₁
+                                     constructor
+                                     · constructor
+                                       · assumption
+                                       · intros z m' Heff₃
+                                         have Hevr₁' := Hevr₁ z m' Heff₃
+                                         simp [Hevr₁']
+                                     · intros z m' y m'' Heff₃ Heff₂
+                                       have Hevr₁' := Hevr₁ y m'' Heff₃
+                                       cases Hevr₁'
+                                       case _ Hgrd₂ Hevr₁' =>
+                                         apply Hevr₁' z <;> assumption
+                                   · funext m'' z (u, m₃)
+                                     simp
+                                     constructor
+                                     · intro Hex
+                                       cases Hex
+                                       case _ y Hex =>
+                                         cases Hex
+                                         case _ m Hex =>
+                                           cases Hex
+                                           case _ Hex Heff₁ =>
+                                             cases Hex
+                                             case _ x Hex =>
+                                               cases Hex
+                                               case _ m' Heff =>
+                                                 exists x
+                                                 exists m'
+                                                 constructor
+                                                 · simp [Heff]
+                                                 · exists y
+                                                   exists m
+                                                   simp [Heff₁, Heff]
