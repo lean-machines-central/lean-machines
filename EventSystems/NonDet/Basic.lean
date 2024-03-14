@@ -27,7 +27,7 @@ instance [Machine CTX M] : LawfulFunctor (_NDEvent M γ) where
   map_const := rfl
   id_map ev := by simp [Functor.map]
                   cases ev
-                  case mk evr eff =>
+                  case mk evr Peff =>
                     simp
                     funext m x (y,m')
                     apply propext
@@ -187,64 +187,46 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
                      intro Heff
                      exists z
 
-  id_assoc ev₁ ev₂ ev₃ := by cases ev₁
-                             case mk evr₁ eff₁ =>
-                               cases ev₂
-                               case mk evr₂ eff₂ =>
-                                 cases ev₃
-                                 case mk evr₃ eff₃ =>
-                                   simp
-                                   constructor
-                                   · funext m x
-                                     simp
-                                     constructor
-                                     · intro H₁
-                                       constructor
-                                       · simp [H₁]
-                                       intros y m' Heff₃
-                                       constructor
-                                       · cases H₁
-                                         case _ Hevr₂ Hevr₁ =>
-                                           cases Hevr₂
-                                           case _ Hgrd₃ Hevr₂ =>
-                                             apply Hevr₂
-                                             assumption
-                                       intros z m'' Heff₂
-                                       cases H₁
-                                       case _ Hevr₂ Hevr₁ =>
-                                         apply Hevr₁ z m'' y m'
-                                         <;> assumption
-                                     simp
-                                     intros Hevr₃ Hevr₁
-                                     constructor
-                                     · constructor
-                                       · assumption
-                                       · intros z m' Heff₃
-                                         have Hevr₁' := Hevr₁ z m' Heff₃
-                                         simp [Hevr₁']
-                                     · intros z m' y m'' Heff₃ Heff₂
-                                       have Hevr₁' := Hevr₁ y m'' Heff₃
-                                       cases Hevr₁'
-                                       case _ Hgrd₂ Hevr₁' =>
-                                         apply Hevr₁' z <;> assumption
-                                   · funext m'' z (u, m₃)
-                                     simp
-                                     constructor
-                                     · intro Hex
-                                       cases Hex
-                                       case _ y Hex =>
-                                         cases Hex
-                                         case _ m Hex =>
-                                           cases Hex
-                                           case _ Hex Heff₁ =>
-                                             cases Hex
-                                             case _ x Hex =>
-                                               cases Hex
-                                               case _ m' Heff =>
-                                                 exists x
-                                                 exists m'
-                                                 constructor
-                                                 · simp [Heff]
-                                                 · exists y
-                                                   exists m
-                                                   simp [Heff₁, Heff]
+  id_assoc ev₁ ev₂ ev₃ := by
+    cases ev₁
+    case mk evr₁ eff₁ =>
+      cases ev₂
+      case mk evr₂ eff₂ =>
+        cases ev₃
+        case mk evr₃ eff₃ =>
+          simp
+          constructor
+          case left =>
+            funext m x
+            case h.h =>
+              simp
+              constructor
+              case mpr =>
+                intros H₁
+                cases H₁
+                case intro Hgrd₃ H₁ =>
+                  constructor
+                  case left =>
+                    simp [Hgrd₃]
+                    intros y m' Heff₃
+                    apply (H₁ y m' Heff₃).left
+                  case right =>
+                    intros z m'' y m' Heff₃ Heff₂
+                    have H₁' := H₁ y m' Heff₃  ; clear H₁
+                    cases H₁'
+                    case intro Hgrd₂ Hgrd₁ =>
+                      apply Hgrd₁ z m'' <;> assumption
+              case mp =>
+                  simp
+                  intros Hgrd₃ Hgrd₂ Hgrd₁
+                  constructor
+                  case left =>
+                    assumption
+                  case right =>
+                    intros y m' Heff₃
+                    constructor
+                    case left =>
+                      apply Hgrd₂ <;> assumption
+                    case right =>
+                      intros z m'' Heff₂
+                      apply Hgrd₁ z m'' <;> assumption
