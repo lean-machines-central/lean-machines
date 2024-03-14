@@ -230,3 +230,66 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
                     case right =>
                       intros z m'' Heff₂
                       apply Hgrd₁ z m'' <;> assumption
+          case right =>
+            funext m x (t, m₃)
+            case h.h.h =>
+              simp
+              constructor
+              case mp =>
+                intro Hex
+                cases Hex
+                case intro z Hex =>
+                  cases Hex
+                  case intro m'' Hex =>
+                  cases Hex
+                  case intro Hex Heff₁ =>
+                    cases Hex
+                    case intro y Hex =>
+                      cases Hex
+                      case intro m' Heff =>
+                        exists y
+                        exists m'
+                        simp [Heff]
+                        exists z
+                        exists m''
+                        simp [Heff₁, Heff]
+              case mpr =>
+                intro Hex
+                cases Hex
+                case intro y Hex =>
+                  cases Hex
+                  case intro m' Hex =>
+                    cases Hex
+                    case intro Heff₃ Hex =>
+                      cases Hex
+                      case intro z Hex =>
+                        cases Hex
+                        case intro m'' Heff =>
+                          exists z
+                          exists m''
+                          constructor
+                          case left =>
+                            exists y
+                            exists m'
+                            simp [Heff₃, Heff]
+                          case right =>
+                            simp [Heff]
+
+
+
+
+def arrow_NDEvent [Machine CTX M] (f : α → β) : _NDEvent M α β :=
+  {
+    effect := fun m x (y, m') => y = f x ∧ m' = m
+  }
+
+-- Split is simply parallel composition
+def split_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M γ δ) : _NDEvent M (α × γ) (β × δ) :=
+  {
+    guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
+    effect := fun m (x, y) ((x', y'), m') => ev₁.effect m x (x', m') ∧ ev₂.effect m y (y', m')
+  }
+
+instance [Machine CTX M]: Arrow (_NDEvent M) where
+  arrow := arrow_NDEvent
+  split := split_NDEvent
