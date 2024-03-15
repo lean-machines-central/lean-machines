@@ -292,9 +292,18 @@ def split_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M
     effect := fun m (x, y) ((x', y'), m') => ev₁.effect m x (x', m') ∧ ev₂.effect m y (y', m')
   }
 
+-- Remark: without an explicit first the law `arrow_unit` is not provable
+@[simp]
+def first_NDEvent [Machine CTX M] (ev : _NDEvent M α β) : _NDEvent M (α × γ) (β × γ) :=
+  {
+    guard := fun m (x, _) => ev.guard m x
+    effect := fun m (x, y) ((x', y'), m') => ev.effect m x (x', m') ∧ y'= y
+  }
+
 instance [Machine CTX M]: Arrow (_NDEvent M) where
   arrow := arrow_NDEvent
   split := split_NDEvent
+  first := first_NDEvent
 
 instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
   arrow_id := by simp [Arrow.arrow]
@@ -303,6 +312,7 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                     simp
                     constructor
                     <;> (intro H ; simp [H])
+
   arrow_fun f g := by simp [Arrow.arrow]
                       funext m x (z, m')
                       simp
@@ -315,65 +325,39 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                         case _ y H =>
                           simp [H]
   arrow_xcg ev g := by simp [Arrow.arrow, Arrow.first]
-                       funext m (x, y) ((y', x'), m')
+                       funext m (x, y₁) ((y₂, x'), m')
                        simp
                        constructor
                        · intro Hex
-                         cases Hex
-                         case _ p Hex =>
-                           cases Hex
-                           case intro m'' H =>
-                             cases H
-                             case intro H₁ H₂ =>
-                               cases H₂
-                               case intro H₂ H₃ =>
-                                 exists (y',y)
-                                 simp [H₁, H₃]
-                                 have Heq :  ev.effect m x (y', m)
-                                             = ev.effect m'' p.fst (y', m') := by simp [H₁, H₂, H₃]
-                                 rw [Heq]
-                                 exact H₂
+                         obtain ⟨⟨x'', z⟩, Hex⟩ := Hex
+                         obtain ⟨m'', ⟨⟨H₁, H₂⟩, ⟨H₃,H₄⟩⟩⟩ := Hex
+                         exists (y₂, y₁)
+                         simp [*] at *
+                         simp [H₁] at H₃
+                         simp [H₁, H₃]
                        · intro Hex
-                         cases Hex
-                         case _ p H =>
-                           cases H
-                           case intro H₁ H₃ =>
-                             cases H₁
-                             case intro H₁ H₂ =>
-                               exists (x, g y)
-                               exists m
-                               simp [H₁, H₂, H₃]
-                               have Heq : ev.effect m x (p.fst, m)
-                                          = ev.effect m x (p.fst, m') := by simp [H₂]
-                               rw [Heq]
-                               exact H₁
+                         obtain ⟨⟨y₃, y₄⟩, ⟨⟨H₁,H₂⟩,H₃,H₄⟩⟩ := Hex
+                         exists (x, g y₁)
+                         exists m
+                         simp [*] at *
+                         simp [H₂]
+
   arrow_unit ev := by simp [Arrow.arrow, Arrow.first]
-                      funext m (x, y) (y', m')
+                      funext m (x, y₁) (y₂, m')
                       simp
                       constructor
                       · intro Hex
-                        cases Hex
-                        case _ p H =>
-                          simp at H
-                          exists x
-                          exists m
-                          simp [H]
-                          cases H
-                          case intro H₁ H₂ =>
-                            cases H₁
-                            case intro H₁ H₃ =>
-                              have Heq : ev.effect m x (p.fst, m)
-                                         = ev.effect m x (p.fst, m') := by simp [H₂, H₃]
-                              rw [Heq]
-                              exact H₁
+                        obtain ⟨⟨y₃, y₄⟩, ⟨⟨H₁,H₂⟩,H₃⟩⟩ := Hex
+                        exists x
+                        exists m
+                        simp [H₁, H₂, H₃]
                       · intro Hex
                         obtain ⟨x', Hex⟩  := Hex
                         obtain ⟨m'', ⟨H₁ , H₂⟩⟩ := Hex
-                        exists (y', y)
+                        exists (y₂, y₁)
                         simp
                         simp [H₁] at H₂
-                        simp [H₂]
-                        sorry -- m' = m  is not provable here
+                        assumption
 
   arrow_assoc ev := by simp [Arrow.arrow, Arrow.first]
                        funext m ((x, z), t) ((y, z', t'), m')
@@ -381,14 +365,15 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                        constructor
                        · intro Hex
                          obtain ⟨⟨⟨y',z''⟩, t''⟩, H⟩ := Hex
-                         obtain ⟨⟨⟨H₁, H₂, H₃⟩, H₄⟩, H₅⟩ := H
+                         obtain ⟨⟨⟨H₁, H₂⟩, H₃⟩, ⟨H₄, H₅, H₆⟩⟩ := H
                          simp [*] at *
                          simp [H₅,H₂,H₄]
                          exists (x, z, t)
                          exists m
+                         simp [H₁, H₃, H₆]
                        ·  intro Hex
                           obtain ⟨⟨x',z'',t''⟩, Hex⟩ := Hex
-                          obtain ⟨m'', ⟨⟨H₁, H₂⟩, H₃, ⟨H₄, H₅⟩⟩⟩ := Hex
+                          obtain ⟨m'', ⟨⟨H₁, H₂⟩, ⟨H₃,H₄⟩⟩⟩ := Hex
                           simp [*] at *
                           simp [H₁] at H₃
                           exists ((y, z), t)
