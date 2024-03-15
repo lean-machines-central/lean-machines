@@ -493,3 +493,93 @@ instance [Machine CTX M] : LawfulFunctor (OrdinaryNDEvent M γ) where
                               exists (g x)
                               simp
                               exists x
+
+/- XXX:
+--  The output contravariant functor not provable, because we would
+-- need a iso morphisme between α and β.
+instance [Machine CTX M] : Contravariant (OrdinaryNDEvent M γ) where
+  contramap {α β} (f : β → α) event :=
+  let ev' : _NDEvent M γ β := Contravariant.contramap f event.to_NDEvent
+  {
+    guard := ev'.guard
+    effect := ev'.effect
+    po := {
+      safety := fun m x => by simp [ev', Contravariant.contramap]
+                              intros Hinv Hgrd y m' Heff
+                              apply event.po.safety m x Hinv Hgrd (f y) m' Heff
+      feasibility := fun m x => by simp [ev', Contravariant.contramap]
+                                   intros Hinv Hgrd
+                                   have Hfeas := event.po.feasibility m x Hinv Hgrd
+                                   obtain ⟨y, m', Hfeas⟩ := Hfeas
+
+
+
+    }
+  }
+-/
+
+
+-- The input contravariant functor
+abbrev CoOrdinaryNDEvent (M) [Machine CTX M] (α) (β) := OrdinaryNDEvent M β α
+
+
+@[simp]
+def CoOrdinaryNDEvent_from_OrdinaryNDEvent [Machine CTX M] (ev : OrdinaryNDEvent M α β) : CoOrdinaryNDEvent M β α :=
+ ev
+
+@[simp]
+def OrdinaryNDEvent_from_CoOrdinaryNDEvent [Machine CTX M] (ev : CoOrdinaryNDEvent M β α) : OrdinaryNDEvent M α β :=
+ ev
+
+instance [Machine CTX M] : Contravariant (CoOrdinaryNDEvent M γ) where
+  contramap {α β} (f : β → α) event :=
+  let ev : _CoNDEvent M γ β := Contravariant.contramap f event.to_NDEvent
+  {
+     guard := ev.guard
+     effect := ev.effect
+     po := {
+      safety := fun m x => by simp
+                              revert ev
+                              cases event
+                              case mk _ev po =>
+                                simp [Contravariant.contramap]
+                                intros Hinv Hgrd y m' Heff
+                                apply po.safety m (f x) Hinv Hgrd y m' Heff
+      feasibility := fun m x => by simp
+                                   intro Hinv
+                                   revert ev
+                                   cases event
+                                   case mk _ev po =>
+                                     simp [Contravariant.contramap]
+                                     apply po.feasibility m (f x) Hinv
+
+     }
+  }
+
+instance [Machine CTX M] : LawfullContravariant (CoOrdinaryNDEvent M γ) where
+  cmap_id _ := rfl
+  cmap_comp _ _ := rfl
+
+instance [Machine CTX M] : Profunctor (OrdinaryNDEvent M) where
+  dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : OrdinaryNDEvent M α γ) : OrdinaryNDEvent M β δ :=
+  let ev' := OrdinaryNDEvent_from_CoOrdinaryNDEvent (Contravariant.contramap f (CoOrdinaryNDEvent_from_OrdinaryNDEvent ev))
+  g <$> ev'
+
+
+instance [Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
+  dimap_id := by simp [Profunctor.dimap, Contravariant.contramap]
+                 exact fun {α β} => rfl
+  dimap_comp f f' g g' := by funext event
+                             have Hdc' := LawfulProfunctor.dimap_comp (pf:=_NDEvent M) f f' g g'
+                             have Hdc : Profunctor.dimap (f' ∘ f) (g ∘ g') event.to_NDEvent = (Profunctor.dimap f g ∘ Profunctor.dimap f' g') event.to_NDEvent := by
+                               exact congrFun Hdc' event.to_NDEvent
+                             cases event
+                             case _ ev po =>
+                               cases po
+                               case mk safe feas =>
+                                 simp at *
+                                 simp [Profunctor.dimap, Contravariant.contramap, Functor.map] at *
+                                 simp [*]
+                                 clear Hdc'
+                                 apply cast_heq
+                                 simp [*]
