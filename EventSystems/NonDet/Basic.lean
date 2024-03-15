@@ -367,32 +367,30 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                               rw [Heq]
                               exact H₁
                       · intro Hex
-                        cases Hex
-                        case _ x' Hex =>
-                          cases Hex
-                          case intro m'' H =>
-                            exists (y', y)
-                            simp
-                            sorry -- something is not provable here ...
+                        obtain ⟨x', Hex⟩  := Hex
+                        obtain ⟨m'', ⟨H₁ , H₂⟩⟩ := Hex
+                        exists (y', y)
+                        simp
+                        simp [H₁] at H₂
+                        simp [H₂]
+                        sorry -- m' = m  is not provable here
+
   arrow_assoc ev := by simp [Arrow.arrow, Arrow.first]
                        funext m ((x, z), t) ((y, z', t'), m')
                        simp
                        constructor
                        · intro Hex
-                         cases Hex
-                         case _ p'' H =>
-                           simp [H]
-                           exists (x, z, t)
-                           exists m
-                           simp
-                           have Heq : ev.effect m x (p''.1.fst, m)
-                                      = ev.effect m x (p''.fst.fst, m') := by simp [H]
-                           rw [Heq]
-                           cases H
-                           case intro H₁ H₂ =>
-                             cases H₁
-                             case intro H₁ H₃ =>
-                               cases H₁
-                               case intro H₁ H₃ =>
-                                 exact H₁
-                       · sorry -- TODO
+                         obtain ⟨⟨⟨y',z''⟩, t''⟩, H⟩ := Hex
+                         obtain ⟨⟨⟨H₁, H₂, H₃⟩, H₄⟩, H₅⟩ := H
+                         simp [*] at *
+                         simp [H₅,H₂,H₄]
+                         exists (x, z, t)
+                         exists m
+                       ·  intro Hex
+                          obtain ⟨⟨x',z'',t''⟩, Hex⟩ := Hex
+                          obtain ⟨m'', ⟨⟨H₁, H₂⟩, H₃, ⟨H₄, H₅⟩⟩⟩ := Hex
+                          simp [*] at *
+                          simp [H₁] at H₃
+                          exists ((y, z), t)
+                          simp [H₃]
+                          simp [H₁, H₄]
