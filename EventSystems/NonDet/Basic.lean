@@ -278,12 +278,14 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
 
 
 
+@[simp]
 def arrow_NDEvent [Machine CTX M] (f : α → β) : _NDEvent M α β :=
   {
     effect := fun m x (y, m') => y = f x ∧ m' = m
   }
 
 -- Split is simply parallel composition
+@[simp]
 def split_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M γ δ) : _NDEvent M (α × γ) (β × δ) :=
   {
     guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
@@ -293,3 +295,104 @@ def split_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M
 instance [Machine CTX M]: Arrow (_NDEvent M) where
   arrow := arrow_NDEvent
   split := split_NDEvent
+
+instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
+  arrow_id := by simp [Arrow.arrow]
+  arrow_ext f := by simp [Arrow.arrow, Arrow.first]
+                    funext m (x, z) ((y, z'), m')
+                    simp
+                    constructor
+                    <;> (intro H ; simp [H])
+  arrow_fun f g := by simp [Arrow.arrow]
+                      funext m x (z, m')
+                      simp
+                      constructor
+                      · intro H
+                        exists (f x)
+                        simp [H]
+                      · intro Hex
+                        cases Hex
+                        case _ y H =>
+                          simp [H]
+  arrow_xcg ev g := by simp [Arrow.arrow, Arrow.first]
+                       funext m (x, y) ((y', x'), m')
+                       simp
+                       constructor
+                       · intro Hex
+                         cases Hex
+                         case _ p Hex =>
+                           cases Hex
+                           case intro m'' H =>
+                             cases H
+                             case intro H₁ H₂ =>
+                               cases H₂
+                               case intro H₂ H₃ =>
+                                 exists (y',y)
+                                 simp [H₁, H₃]
+                                 have Heq :  ev.effect m x (y', m)
+                                             = ev.effect m'' p.fst (y', m') := by simp [H₁, H₂, H₃]
+                                 rw [Heq]
+                                 exact H₂
+                       · intro Hex
+                         cases Hex
+                         case _ p H =>
+                           cases H
+                           case intro H₁ H₃ =>
+                             cases H₁
+                             case intro H₁ H₂ =>
+                               exists (x, g y)
+                               exists m
+                               simp [H₁, H₂, H₃]
+                               have Heq : ev.effect m x (p.fst, m)
+                                          = ev.effect m x (p.fst, m') := by simp [H₂]
+                               rw [Heq]
+                               exact H₁
+  arrow_unit ev := by simp [Arrow.arrow, Arrow.first]
+                      funext m (x, y) (y', m')
+                      simp
+                      constructor
+                      · intro Hex
+                        cases Hex
+                        case _ p H =>
+                          simp at H
+                          exists x
+                          exists m
+                          simp [H]
+                          cases H
+                          case intro H₁ H₂ =>
+                            cases H₁
+                            case intro H₁ H₃ =>
+                              have Heq : ev.effect m x (p.fst, m)
+                                         = ev.effect m x (p.fst, m') := by simp [H₂, H₃]
+                              rw [Heq]
+                              exact H₁
+                      · intro Hex
+                        cases Hex
+                        case _ x' Hex =>
+                          cases Hex
+                          case intro m'' H =>
+                            exists (y', y)
+                            simp
+                            sorry -- something is not provable here ...
+  arrow_assoc ev := by simp [Arrow.arrow, Arrow.first]
+                       funext m ((x, z), t) ((y, z', t'), m')
+                       simp
+                       constructor
+                       · intro Hex
+                         cases Hex
+                         case _ p'' H =>
+                           simp [H]
+                           exists (x, z, t)
+                           exists m
+                           simp
+                           have Heq : ev.effect m x (p''.1.fst, m)
+                                      = ev.effect m x (p''.fst.fst, m') := by simp [H]
+                           rw [Heq]
+                           cases H
+                           case intro H₁ H₂ =>
+                             cases H₁
+                             case intro H₁ H₃ =>
+                               cases H₁
+                               case intro H₁ H₃ =>
+                                 exact H₁
+                       · sorry -- TODO
