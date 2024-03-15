@@ -583,3 +583,46 @@ instance [Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
                                  clear Hdc'
                                  apply cast_heq
                                  simp [*]
+
+instance [Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
+  first' {α β γ} (event : OrdinaryNDEvent M α β): OrdinaryNDEvent M (α × γ) (β × γ) :=
+    let ev : _NDEvent M (α × γ) (β × γ) := StrongProfunctor.first' event.to_NDEvent
+    {
+      guard := ev.guard
+      effect := ev.effect
+      po := {
+        safety := fun m (x, z) => by simp
+                                     intros Hinv
+                                     have Hsafe := event.po.safety m x Hinv
+                                     revert ev
+                                     revert Hsafe
+                                     cases event
+                                     case mk _ev po =>
+                                       simp
+                                       simp [StrongProfunctor.first']
+                                       intros Hsafe Hgrd
+                                       intro (y,z')
+                                       intro m'
+                                       simp
+                                       intro _ Heff
+                                       have Hsafe' := Hsafe Hgrd y m' Heff
+                                       assumption
+
+        feasibility := fun m (x, z) => by simp
+                                          intro Hinv
+                                          have Hfeas := event.po.feasibility m x Hinv
+                                          revert ev
+                                          revert Hfeas
+                                          cases event
+                                          case mk _ev po =>
+                                            simp [StrongProfunctor.first']
+                                            intro Heff Hgrd
+                                            simp [Hgrd] at Heff
+                                            obtain ⟨y, m', Heff⟩ := Heff
+                                            exists (y,z)
+                                            simp
+                                            exists m'
+      }
+    }
+
+instance [Machine CTX M] : LawfulStrongProfunctor (OrdinaryNDEvent M) where
