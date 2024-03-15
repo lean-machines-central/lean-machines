@@ -265,7 +265,6 @@ structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) wher
     → Machine.invariant (ev.action m x).snd
 
 structure OrdinaryEvent (M) [Machine CTX M] (α) (β) extends _Event M α β where
-  --event : _Event M α β
   po : _EventPO to_Event  (EventKind.TransDet Convergence.Ordinary)
 
 structure EventSpec (M) [Machine CTX M] (α) (β) where

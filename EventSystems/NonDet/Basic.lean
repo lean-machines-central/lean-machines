@@ -7,6 +7,7 @@ structure _NDEvent (M) [Machine CTX M] (α) (β : Type)
 
   effect: M → α → (β × M) → Prop
 
+@[simp]
 def _NDEvent_fromEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :=
 {
   guard := ev.guard
@@ -379,3 +380,116 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                           exists ((y, z), t)
                           simp [H₃]
                           simp [H₁, H₄]
+
+/- Ordinary non-deterministic events -/
+
+structure _NDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) where
+  safety (m : M) (x : α):
+    Machine.invariant m
+    → ev.guard m x
+    → ∀ y, ∀ m', ev.effect m x (y, m')
+                 → Machine.invariant m'
+
+  feasibility (m : M) (x : α):
+    Machine.invariant m
+    → ev.guard m x
+    → ∃ y, ∃ m', ev.effect m x (y, m')
+
+structure OrdinaryNDEvent (M) [Machine CTX M] (α) (β) extends _NDEvent M α β where
+  po : _NDEventPO to_NDEvent  (EventKind.TransNonDet Convergence.Ordinary)
+
+def OrdinaryNDEvent_fromOrdinaryEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryNDEvent M α β :=
+  let event := _NDEvent_fromEvent ev.to_Event
+{
+  guard := event.guard
+  effect := event.effect
+  po := {
+    safety := fun m x => by simp [event]
+                            intro Hinv Hgrd
+                            apply ev.po.safety m x Hinv Hgrd
+
+    feasibility := fun m x => by simp [event]
+  }
+}
+
+instance [Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
+  map {α β} (f : α → β) event :=
+  let ev' : _NDEvent M γ β := f <$> event.to_NDEvent
+  {
+    guard := ev'.guard
+    effect := ev'.effect
+    po := {
+      safety := fun m z => by simp [ev', Functor.map]
+                              intros Hinv Hgrd _ m' x Heff _
+                              apply event.po.safety m z Hinv Hgrd x m' Heff
+      feasibility := fun m z => by simp [ev', Functor.map]
+                                   intros Hinv Hgrd
+                                   have Hfeas := event.po.feasibility m z Hinv Hgrd
+                                   obtain ⟨y, m', Hfeas⟩ := Hfeas
+                                   exists (f y)
+                                   exists m'
+                                   exists y
+    }
+  }
+
+-- XXX: proofs are a little bit painful due to the existentials ...
+instance [Machine CTX M] : LawfulFunctor (OrdinaryNDEvent M γ) where
+  map_const := rfl
+  id_map ev := by simp [Functor.map]
+                  cases ev
+                  case mk _ev _po =>
+                    simp
+                    constructor
+                    case left =>
+                      have Hid_map := LawfulFunctor.id_map _ev
+                      simp [Functor.map] at Hid_map
+                      assumption
+                    case right =>
+                      apply cast_heq
+                      simp
+                      cases _ev
+                      case _ evr eff =>
+                        simp
+                        cases evr
+                        case mk grd =>
+                          simp
+                          congr
+                          funext m z (x, m')
+                          simp
+                          constructor
+                          · intro Heff
+                            exists x
+                          · intro Hex
+                            obtain ⟨x', Heff⟩ := Hex
+                            simp [Heff]
+
+  comp_map g h ev := by simp [Functor.map]
+                        cases ev
+                        case mk _ev _po =>
+                          simp
+                          constructor
+                          case left =>
+                            have Hcm := LawfulFunctor.comp_map g h _ev
+                            simp [Functor.map] at Hcm
+                            assumption
+                          case right =>
+                            apply cast_heq
+                            congr
+                            funext m z (z', m')
+                            simp
+                            constructor
+                            case _ =>
+                              intro Hex
+                              obtain ⟨y, Hex⟩ := Hex
+                              obtain ⟨Hex, Hz'⟩ := Hex
+                              rw [Hz']
+                              obtain ⟨x, ⟨Heff, Hy⟩⟩ := Hex
+                              rw [Hy]
+                              exists x
+                            case _ =>
+                              intro Hex
+                              obtain ⟨x, ⟨Heff, Hz'⟩⟩ := Hex
+                              rw [Hz']
+                              exists (g x)
+                              simp
+                              exists x
