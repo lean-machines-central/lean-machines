@@ -591,38 +591,90 @@ instance [Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
       guard := ev.guard
       effect := ev.effect
       po := {
-        safety := fun m (x, z) => by simp
-                                     intros Hinv
-                                     have Hsafe := event.po.safety m x Hinv
-                                     revert ev
-                                     revert Hsafe
-                                     cases event
-                                     case mk _ev po =>
-                                       simp
-                                       simp [StrongProfunctor.first']
-                                       intros Hsafe Hgrd
-                                       intro (y,z')
-                                       intro m'
-                                       simp
-                                       intro _ Heff
-                                       have Hsafe' := Hsafe Hgrd y m' Heff
-                                       assumption
+        safety := fun m (x, z) => by simp [ev, StrongProfunctor.first']
+                                     intros Hinv Hgrd
+                                     have Hsafe := event.po.safety m x Hinv Hgrd
+                                     intro (y,z')
+                                     intro m'
+                                     simp
+                                     intros _ Heff
+                                     apply Hsafe y m' Heff
 
-        feasibility := fun m (x, z) => by simp
-                                          intro Hinv
-                                          have Hfeas := event.po.feasibility m x Hinv
-                                          revert ev
-                                          revert Hfeas
-                                          cases event
-                                          case mk _ev po =>
-                                            simp [StrongProfunctor.first']
-                                            intro Heff Hgrd
-                                            simp [Hgrd] at Heff
-                                            obtain ⟨y, m', Heff⟩ := Heff
-                                            exists (y,z)
-                                            simp
-                                            exists m'
+        feasibility := fun m (x, z) => by simp [ev, StrongProfunctor.first']
+                                          intro Hinv Hgrd
+                                          have Hfeas := event.po.feasibility m x Hinv Hgrd
+                                          obtain ⟨y, m', Hfeas⟩ := Hfeas
+                                          exists (y,z)
+                                          simp
+                                          exists m'
       }
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (OrdinaryNDEvent M) where
+
+instance [Machine CTX M]: Category (OrdinaryNDEvent M) where
+  id {α }:=
+  let ev : _NDEvent M α α := Category.id
+  {
+    guard := ev.guard
+    effect := ev.effect
+    po := {
+      safety := fun m x => by simp [ev]
+      feasibility := fun m x => by simp [ev]
+    }
+  }
+
+  comp {α β γ} (ev₂ : OrdinaryNDEvent M β γ) (ev₁ : OrdinaryNDEvent M α β) : OrdinaryNDEvent M α γ :=
+    let ev : _NDEvent M α γ := Category.comp ev₂.to_NDEvent ev₁.to_NDEvent
+    { guard := ev.guard
+      effect := ev.effect
+      po := {
+        safety := fun m x => by simp
+                                intros Hinv
+                                have Hsafe₁ := ev₁.po.safety m x Hinv
+                                have Hsafe₂ := ev₂.po.safety
+                                simp [ev] at *
+                                intros Hgrd₁ Hev₂ z m'' y m' Heff₁ Heff₂
+                                have Hsafe₁ := Hsafe₁ Hgrd₁ y m' Heff₁
+                                apply Hsafe₂ m' y Hsafe₁ (Hev₂ y m' Heff₁) z m'' Heff₂
+        feasibility := fun m x => by simp [ev]
+                                     intros Hinv Hgrd
+                                     have Hfeas₁ := ev₁.po.feasibility m x Hinv Hgrd
+                                     obtain ⟨y, m', Heff₁⟩ := Hfeas₁
+                                     have Hfeas₂ := ev₂.po.feasibility m' y
+                                     have Hsafe₁ := ev₁.po.safety m x Hinv Hgrd y m' Heff₁
+                                     intro Hgrd₂
+                                     have Hgrd₂ := Hgrd₂ y m' Heff₁
+                                     have Hfeas₂ := Hfeas₂ Hsafe₁ Hgrd₂
+                                     obtain ⟨y', m'', Heff₂⟩ := Hfeas₂
+                                     exists y' ; exists m'' ; exists y ; exists m'
+      }
+    }
+
+instance [Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
+  id_right ev := by simp
+                    have Hir := LawfulCategory.id_right ev.to_NDEvent
+                    simp at Hir
+                    cases ev
+                    case mk _ po =>
+                      simp [Hir]
+                      apply cast_heq
+                      simp [Hir]
+
+  id_left ev := by simp
+                   have Hil:= LawfulCategory.id_left ev.to_NDEvent
+                   simp at Hil
+                   cases ev
+                   case mk _ po =>
+                     simp [Hil]
+                     apply cast_heq
+                     simp [Hil]
+
+  id_assoc ev₁ ev₂ ev₃ := by have Hia := LawfulCategory.id_assoc ev₁.to_NDEvent ev₂.to_NDEvent ev₃.to_NDEvent
+                             simp [*] at *
+                             cases ev₁
+                             cases ev₂
+                             cases ev₃
+                             simp [Hia]
+                             apply cast_heq
+                             simp [Hia]
