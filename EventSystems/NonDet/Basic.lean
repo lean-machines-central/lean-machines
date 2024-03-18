@@ -678,3 +678,51 @@ instance [Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
                              simp [Hia]
                              apply cast_heq
                              simp [Hia]
+
+-- XXX: This axiom is required to obtain feasibility
+axiom OrdinaryNDEvent_feasibility_ax {CTX} {M} [Machine CTX M] {α β α' β'} (ev₁ : _NDEvent M α β)  (ev₂ : _NDEvent M α' β')
+  (m : M) (x : α) (x' : α'):
+  (∃ y, ∃ m', ev₁.effect m x (y, m'))
+  → (∃ y', ∃ m', ev₂.effect m x' (y', m'))
+  → (∃ y, ∃ y', ∃ m', (Arrow.split ev₁ ev₂).effect m (x, x') ((y, y'), m'))
+
+instance [Machine CTX M]: Arrow (OrdinaryNDEvent M) where
+
+  arrow {α β} (f : α → β) :=
+    let event : _NDEvent M α β := Arrow.arrow f
+    {
+      guard := event.guard
+      effect := event.effect
+      po := {
+        safety := fun m x => by simp [event, Arrow.arrow]
+        feasibility := fun m x => by simp [event, Arrow.arrow]
+      }
+    }
+
+  split {α α' β β'} (ev₁ : OrdinaryNDEvent M α β)  (ev₂ : OrdinaryNDEvent M α' β') : OrdinaryNDEvent M (α × α') (β × β') :=
+    let event : _NDEvent M  (α × α') (β × β') := Arrow.split ev₁.to_NDEvent ev₂.to_NDEvent
+    {
+      guard := event.guard
+      effect := event.effect
+      po := {
+        safety := fun m (x,x') => by simp [event, Arrow.split]
+                                     intros Hinv Hgrd₁ _
+                                     intro (y,y') m'
+                                     simp
+                                     intros Heff₁ _
+                                     apply ev₁.po.safety m x Hinv Hgrd₁ y m' Heff₁
+
+        -- this could be called "weak feasibility"
+        feasibility := fun m (x, x') => by simp [event, Arrow.split]
+                                           intros Hinv Hgrd₁ Hgrd₂
+                                           have Hfeas₁ := ev₁.po.feasibility m x Hinv Hgrd₁
+                                           have Hfeas₂ := ev₂.po.feasibility m x' Hinv Hgrd₂
+                                           -- we cannot prove that m''= m' thus we rely on
+                                           -- an dedicated axiom
+                                           have Hax := (OrdinaryNDEvent_feasibility_ax ev₁.to_NDEvent ev₂.to_NDEvent m x x') Hfeas₁ Hfeas₂
+                                           obtain ⟨y, y', m', Hax⟩ := Hax
+                                           simp [Arrow.split] at Hax
+                                           exists (y, y')
+                                           exists m'
+      }
+    }
