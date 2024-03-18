@@ -1,4 +1,5 @@
 
+import EventSystems.Prelude
 import EventSystems.Classes
 import EventSystems.Basic
 
@@ -738,16 +739,68 @@ instance [Machine CTX M]: LawfulArrow (OrdinaryNDEvent M) where
                       <;> (intro H ; simp [H])
                     apply cast_heq
                     simp
-                    apply congrFun
-                    apply congrArg
-                    simp
+                    congr
                     funext m (x,z) ((y,z'),m')
                     simp
                     constructor
                     <;> (intro H ; simp [H])
+
   arrow_fun f g := by simp [Arrow.arrow]
                       have Hfun := LawfulArrow.arrow_fun (arr := _NDEvent M) f g
                       simp [Arrow.arrow] at Hfun
                       simp [Hfun]
                       apply cast_heq
                       simp [Hfun]
+
+  arrow_xcg ev g := by simp [Arrow.arrow, Arrow.first, Arrow.split]
+                       -- the following could be used, but is cumbersome to use ...
+                       -- (and the alternative we use is ugly ...)
+                       have Hxcg := LawfulArrow.arrow_xcg (arr:=_NDEvent M) ev.to_NDEvent g
+                       simp [Arrow.arrow, Arrow.first, Arrow.split] at Hxcg
+                       constructor
+                       case left =>
+                         funext m (x, y) ((y', x'), m')
+                         simp
+                         constructor
+                         · intro Hex
+                           obtain ⟨⟨x'',x'''⟩, m'', Hex⟩ := Hex
+                           simp at Hex
+                           obtain ⟨⟨⟨Hx'', Hx'''⟩, Hm''⟩, Heff, Hx', Hm'⟩ := Hex
+                           exists (y',y)
+                           simp [*]
+                           simp [Hx'', Hm', Hm''] at Heff
+                           assumption
+                         · intro Hex
+                           obtain ⟨⟨y₃,y₄⟩, ⟨Heff, H₁, H₂, H₃⟩, H₄, H₅⟩ := Hex
+                           simp [*] at *
+                           exists (x, g y)
+                           exists m
+                           simp [*]
+                       case right =>
+                         apply cast_heq
+                         simp
+                         congr
+                         funext m (x, y) ((y', x'), m')
+                         simp
+                         constructor
+                         · intro Hex
+                           obtain ⟨⟨y'',y'''⟩, ⟨Heff, H₁, H₂⟩, H₃, H₄⟩ := Hex
+                           exists (x, g y)
+                           exists m'
+                           simp [*] at *
+                           simp [*]
+                         · intro Hex
+                           obtain ⟨⟨y₃,y₄⟩, m', ⟨H₁, H₂⟩, Heff, Hex, H₃, H₄⟩ := Hex
+                           simp [*] at *
+                           exists (y', y)
+                           simp [H₁] at Heff
+                           simp [*]
+
+  arrow_unit {α β} ev :=
+                   by simp [Arrow.arrow, Arrow.first, Arrow.split]
+                      -- we need to use the _NDEvent proof
+                      have Hunit := LawfulArrow.arrow_unit (arr:=_NDEvent M) ev.to_NDEvent
+                      simp [Arrow.first, Arrow.arrow] at Hunit
+                      constructor
+                      case left =>
+                        sorry

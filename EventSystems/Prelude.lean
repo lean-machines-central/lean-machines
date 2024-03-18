@@ -19,3 +19,10 @@ theorem And_eq_assoc (P Q R : Prop):
 by
   apply propext
   apply And_assoc
+
+theorem Eq_fun (e₁ : α → β) (e₂ : α → β):
+  (fun x : α => e₁ x) = (fun y : α => e₂ y)
+  → e₁ = e₂ :=
+by
+  intro Heq
+  exact Heq
