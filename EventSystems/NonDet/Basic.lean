@@ -726,3 +726,28 @@ instance [Machine CTX M]: Arrow (OrdinaryNDEvent M) where
                                            exists m'
       }
     }
+
+instance [Machine CTX M]: LawfulArrow (OrdinaryNDEvent M) where
+  arrow_id := by simp [Arrow.arrow]
+
+  arrow_ext f := by simp [Arrow.arrow, Arrow.first, Arrow.split]
+                    constructor
+                    · funext m (x,z) ((y,z'),m')
+                      simp
+                      constructor
+                      <;> (intro H ; simp [H])
+                    apply cast_heq
+                    simp
+                    apply congrFun
+                    apply congrArg
+                    simp
+                    funext m (x,z) ((y,z'),m')
+                    simp
+                    constructor
+                    <;> (intro H ; simp [H])
+  arrow_fun f g := by simp [Arrow.arrow]
+                      have Hfun := LawfulArrow.arrow_fun (arr := _NDEvent M) f g
+                      simp [Arrow.arrow] at Hfun
+                      simp [Hfun]
+                      apply cast_heq
+                      simp [Hfun]
