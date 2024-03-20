@@ -281,7 +281,7 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
 
 
 @[simp]
-def arrow_NDEvent [Machine CTX M] (f : α → β) : _NDEvent M α β :=
+def arrow_NDEvent (M) [Machine CTX M] (f : α → β) : _NDEvent M α β :=
   {
     effect := fun m x (y, m') => y = f x ∧ m' = m
   }
@@ -302,8 +302,15 @@ def first_NDEvent [Machine CTX M] (ev : _NDEvent M α β) : _NDEvent M (α × γ
     effect := fun m (x, y) ((x', y'), m') => ev.effect m x (x', m') ∧ y'= y
   }
 
+-- An alternative possible definition for split based on first
+
+@[simp]
+def split_NDEvent_fromFirst [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M γ δ) : _NDEvent M (α × γ) (β × δ) :=
+  Arrow.split_from_first (arrow_NDEvent M (fun (x, y) => (y, x)))
+                         first_NDEvent ev₁ ev₂
+
 instance [Machine CTX M]: Arrow (_NDEvent M) where
-  arrow := arrow_NDEvent
+  arrow := arrow_NDEvent M
   split := split_NDEvent
   first := first_NDEvent
 
@@ -681,7 +688,7 @@ instance [Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
                              simp [Hia]
 
 -- XXX: This axiom is required to obtain feasibility
-axiom OrdinaryNDEvent_feasibility_ax {CTX} {M} [Machine CTX M] {α β α' β'} (ev₁ : _NDEvent M α β)  (ev₂ : _NDEvent M α' β')
+axiom OrdinaryNDEvent_split_feasibility_ax {CTX} {M} [Machine CTX M] {α β α' β'} (ev₁ : _NDEvent M α β)  (ev₂ : _NDEvent M α' β')
   (m : M) (x : α) (x' : α'):
   (∃ y, ∃ m', ev₁.effect m x (y, m'))
   → (∃ y', ∃ m', ev₂.effect m x' (y', m'))
@@ -720,7 +727,7 @@ instance [Machine CTX M]: Arrow (OrdinaryNDEvent M) where
                                            have Hfeas₂ := ev₂.po.feasibility m x' Hinv Hgrd₂
                                            -- we cannot prove that m''= m' thus we rely on
                                            -- an dedicated axiom
-                                           have Hax := (OrdinaryNDEvent_feasibility_ax ev₁.to_NDEvent ev₂.to_NDEvent m x x') Hfeas₁ Hfeas₂
+                                           have Hax := (OrdinaryNDEvent_split_feasibility_ax ev₁.to_NDEvent ev₂.to_NDEvent m x x') Hfeas₁ Hfeas₂
                                            obtain ⟨y, y', m', Hax⟩ := Hax
                                            simp [Arrow.split] at Hax
                                            exists (y, y')
