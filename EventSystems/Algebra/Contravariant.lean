@@ -29,3 +29,26 @@ instance : LawfullContravariant (CoFun γ) where
   cmap_comp {α β γ : Type u} (f : β → γ) (g : γ → α) := by rfl
 
 end ContraFun
+
+infixl:40 " >$< " => Contravariant.contramap
+
+namespace Contravariant
+
+@[simp]
+def cmapConst [Contravariant cf]: β → cf β → cf α :=
+  contramap ∘ (fun x _ => x)
+
+@[simp]
+def constCmap [Contravariant cf]: cf β → β → cf α :=
+  flip cmapConst
+
+def mapConst [Functor f] : α → f β → f α :=
+  Functor.map ∘ (fun x _ => x)
+
+def constMap [Functor f] : f β → α → f α :=
+  flip mapConst
+
+def phantom [Functor f] [Contravariant f] (x : f α) : f β :=
+  constCmap (constMap x ()) ()
+
+end Contravariant

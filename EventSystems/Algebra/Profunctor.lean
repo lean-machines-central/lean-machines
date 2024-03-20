@@ -35,6 +35,8 @@ def StrongProfunctor.defaultSecond'{α β γ : Type u} (pf) [instPF: StrongProfu
   dimap swap_fun swap_fun ∘ @first' pf instPF α β γ
 
 class LawfulStrongProfunctor (pf : Type u → Type u → Type w) [StrongProfunctor pf] extends LawfulProfunctor pf where
+  -- well ... there *are* laws
+  -- cf. https://arxiv.org/pdf/1406.4823.pdf
 
 theorem comp_assoc:
   f ∘ g ∘ h = (f ∘ g) ∘ h := rfl
@@ -45,8 +47,8 @@ by
   funext x
   simp [swap_fun]
 
--- Law₁: first' ≡ dimap swap swap . second'
-theorem StrongProfunctor.law₁ {α β γ : Type u} (pf) [instPF: StrongProfunctor pf] [LawfulStrongProfunctor pf]:
+-- first' ≡ dimap swap swap . second'
+theorem StrongProfunctor.first_dimap {α β γ : Type u} (pf) [instPF: StrongProfunctor pf] [LawfulStrongProfunctor pf]:
   @first' pf instPF α β γ =
   Profunctor.dimap swap_fun swap_fun ∘ defaultSecond' pf :=
 by
