@@ -420,6 +420,41 @@ def OrdinaryNDEvent_fromOrdinaryEvent [Machine CTX M] (ev : OrdinaryEvent M α �
   }
 }
 
+structure NDEventSpec (M) [Machine CTX M] (α) (β) where
+  guard (m : M) (x : α) : Prop := True
+  effect (m : M) (x : α) (_ : β × M) : Prop
+
+  safety (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ y, ∀ m', effect m x (y, m')
+                 → Machine.invariant m'
+
+  feasibility (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∃ y, ∃ m', effect m x (y, m')
+
+@[simp]
+def _NDEvent_from_NDEventSpec [Machine CTX M] (ev : NDEventSpec M α β) : _NDEvent M α β :=
+  { guard := ev.guard
+    effect := ev.effect
+  }
+
+@[simp]
+def newNDEvent {M} [Machine CTX M] (ev : NDEventSpec M α β) : OrdinaryNDEvent M α β :=
+  let event := _NDEvent_from_NDEventSpec ev
+  { guard := event.guard
+    effect := event.effect
+    po := { safety := fun m x => by simp
+                                    intros Hinv Hgrd
+                                    apply ev.safety <;> assumption
+            feasibility := fun m x => by simp
+                                         intros Hinv Hgrd
+                                         apply ev.feasibility <;> assumption
+    }
+  }
+
 instance [Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
   map {α β} (f : α → β) event :=
   let ev' : _NDEvent M γ β := f <$> event.to_NDEvent
