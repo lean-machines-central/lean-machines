@@ -317,10 +317,11 @@ structure InitEventSpec (M) [Machine CTX M] (α) (β) where
 @[simp]
 def EventSpec_from_InitEventSpec [Machine CTX M] (ev : InitEventSpec M α β) : EventSpec M α β :=
   {
-    guard := fun _ x => ev.guard x
+    guard := fun m x => m = Machine.reset ∧ ev.guard x
     action := fun _ x => ev.init x
-    safety := fun m x => by intro _
-                            apply ev.safety x
+    safety := fun m x => by simp
+                            intros
+                            apply ev.safety x ; assumption
   }
 
 @[simp]
