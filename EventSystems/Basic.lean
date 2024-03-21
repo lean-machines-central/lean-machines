@@ -9,6 +9,7 @@ def hello := "world"
 class Machine (CTX : outParam (Type u)) (M) where
   context : CTX
   invariant : M → Prop
+  reset : M
 
 inductive Convergence where
   | Ordinary
@@ -279,6 +280,17 @@ structure EventSpec (M) [Machine CTX M] (α) (β) where
     → Machine.invariant (action m x).snd
 
 @[simp]
+def EventSpec_from_Event [Machine CTX M]
+  (ev : _Event M α β)
+  (Hsafe : (m : M) → (x : α) →  Machine.invariant m
+                           → ev.guard m x
+                           → Machine.invariant (ev.action m x).snd) : EventSpec M α β :=
+  { guard := ev.guard
+    action := ev.action
+    safety := Hsafe
+  }
+
+@[simp]
 def _Event_from_EventSpec [Machine CTX M] (ev : EventSpec M α β) : _Event M α β :=
   { guard := ev.guard
     action := ev.action
@@ -295,16 +307,25 @@ def newEvent {M} [Machine CTX M] (ev : EventSpec M α β) : OrdinaryEvent M α �
     }
   }
 
+structure InitEventSpec (M) [Machine CTX M] (α) (β) where
+  guard (x : α) : Prop := True
+  init (x : α) : β × M
+  safety (x : α) :
+    guard x
+    → Machine.invariant (init x).snd
+
 @[simp]
-def EventSpec_from_Event [Machine CTX M]
-  (ev : _Event M α β)
-  (Hsafe : (m : M) → (x : α) →  Machine.invariant m
-                           → ev.guard m x
-                           → Machine.invariant (ev.action m x).snd) : EventSpec M α β :=
-  { guard := ev.guard
-    action := ev.action
-    safety := Hsafe
+def EventSpec_from_InitEventSpec [Machine CTX M] (ev : InitEventSpec M α β) : EventSpec M α β :=
+  {
+    guard := fun _ x => ev.guard x
+    action := fun _ x => ev.init x
+    safety := fun m x => by intro _
+                            apply ev.safety x
   }
+
+@[simp]
+def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : OrdinaryEvent M α β :=
+  newEvent (EventSpec_from_InitEventSpec ev)
 
 def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   newEvent (EventSpec_from_Event (skip_Event M α)
