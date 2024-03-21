@@ -1,5 +1,8 @@
 import EventSystems.Prelude
-import EventSystems.Classes
+import EventSystems.Algebra.Contravariant
+import EventSystems.Algebra.Profunctor
+import EventSystems.Algebra.Arrow
+
 
 def hello := "world"
 

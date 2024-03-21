@@ -1,6 +1,5 @@
 
 import EventSystems.Prelude
-import EventSystems.Classes
 import EventSystems.Basic
 
 structure _NDEvent (M) [Machine CTX M] (α) (β : Type)
