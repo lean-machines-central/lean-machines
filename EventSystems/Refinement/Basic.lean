@@ -6,11 +6,11 @@ class Refinement {ACTX : outParam (Type u₁)} (AM)
                     {CTX : outParam (Type u₂)} (M)
                     [Machine ACTX AM] [Machine CTX M] where
 
-  refine : M → AM → Prop
+  refine : AM → M → Prop
 
   refine_inv (m : M) (am : AM):
     Machine.invariant m
-    → refine m am
+    → refine am m
     → Machine.invariant am
 
 open Refinement
@@ -113,26 +113,31 @@ instance [Machine ACTX AM] [Machine CTX M] [Refinement AM M] : StrongProfunctor 
 
 instance [Machine ACTX AM] [Machine CTX M] [Refinement AM M] : LawfulStrongProfunctor (_REvent AM M) where
 
-/-
 
-structure _REvent {ACTX} (AM) [Machine ACTX AM]
-                 {CTX} (M) [Machine CTX M]
-                 [Refinement AM M] (α) (β)
-          extends Event M α where
+structure _REventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+   (ev : _Event M α β) (kind : EventKind)
+   extends _EventPO ev kind where
 
-  absParam : α → β
-  abstract : Event AM β
+  abstract : _Event AM α β
 
   strengthening (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ am, refine m am
-      → abstract.guard am (absParam x)
+    → ev.guard m x
+    → ∀ am, refine am m
+      → abstract.guard am x
 
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ am, refine m am
-      → refine (action m x) (abstract.action am (absParam x))
+    → ev.guard m x
+    → ∀ am, refine am m
+      -- XXX : some constraint on output ?
+      --       (maybe a post_weakening requirement ?)
+      --       for now, let's go with equality because its transparent for the Event-B
+      --       refinement model
+      → let (y, m') := ev.action m x
+        let (z, am') := abstract.action am x
+        y = z ∧ refine am' m'
 
--/
+
+structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _Event M α β where
+  po : _REventPO (instR:=instR) to_Event (EventKind.TransDet Convergence.Ordinary)
