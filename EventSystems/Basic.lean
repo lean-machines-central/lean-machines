@@ -230,10 +230,11 @@ def coEvent_from_Event [Machine CTX M] (ev : _Event M α β) : _CoEvent M β α 
 def Event_from_CoEvent [Machine CTX M] (ev : _CoEvent M β α) : _Event M α β :=
  ev
 
-instance [Machine CTX M] : Contravariant (_CoEvent M β) where
-  contramap f ev := { guard := fun m x => ev.guard m (f x)
-                      action := fun m x => ev.action m (f x)
-                    }
+instance [Machine CTX M] : Contravariant (_CoEvent M γ) where
+  contramap f ev := {
+    guard := fun m x => ev.guard m (f x)
+    action := fun m x => ev.action m (f x)
+  }
 
 instance [Machine CTX M] : LawfullContravariant (_CoEvent M β) where
   cmap_id _ := rfl
