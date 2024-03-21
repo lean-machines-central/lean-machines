@@ -476,6 +476,10 @@ def NDEventSpec_from_InitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec M α 
   feasibility := fun m x => by simp ; intros ; apply ev.feasibility x ; assumption
  }
 
+ @[simp]
+def newInitNDEvent {M} [Machine CTX M] (ev : InitNDEventSpec M α β) : OrdinaryNDEvent M α β :=
+  newNDEvent (NDEventSpec_from_InitNDEventSpec ev)
+
 instance [Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
   map {α β} (f : α → β) event :=
   let ev' : _NDEvent M γ β := f <$> event.to_NDEvent
