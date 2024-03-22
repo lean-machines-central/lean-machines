@@ -299,9 +299,7 @@ def _Event_from_EventSpec [Machine CTX M] (ev : EventSpec M α β) : _Event M α
 
 @[simp]
 def newEvent {M} [Machine CTX M] (ev : EventSpec M α β) : OrdinaryEvent M α β :=
-  let event := _Event_from_EventSpec ev
-  { guard := event.guard
-    action := event.action
+  { to_Event := _Event_from_EventSpec ev
     po := { safety := fun m x => by simp
                                     intros Hinv Hgrd
                                     apply ev.safety <;> assumption
@@ -339,10 +337,8 @@ def funEvent (M) [Machine CTX M] (f : α → β) : OrdinaryEvent M α β :=
                                  (fun m x Hinv _ => by simp [fun_Event] ; assumption))
 
 def mapEvent [Machine CTX M] (f : α → β) (ev : OrdinaryEvent M γ α) : OrdinaryEvent M γ β :=
-  let event := Functor.map f ev.to_Event
   {
-    guard := event.guard
-    action := event.action
+    to_Event := Functor.map f ev.to_Event
     po := { safety := fun m x => by intros Hinv Hgrd
                                     simp [Functor.map, map_Event] at *
                                     apply ev.po.safety m x Hinv Hgrd
@@ -361,12 +357,10 @@ instance [Machine CTX M] : LawfulFunctor (OrdinaryEvent M γ) where
 
 @[simp]
 def pureEvent [Machine CTX M] (y : α) : OrdinaryEvent M γ α :=
-  let event : _Event M γ α := pure y
   {
-    guard := event.guard
-    action := event.action
+    to_Event := pure y
     po := {
-      safety := fun m _ => by simp [event, pure]
+      safety := fun m _ => by simp [pure]
     }
   }
 

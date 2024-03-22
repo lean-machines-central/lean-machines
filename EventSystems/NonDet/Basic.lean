@@ -781,7 +781,7 @@ instance [Machine CTX M]: Arrow (OrdinaryNDEvent M) where
                                      apply ev₁.po.safety m x Hinv Hgrd₁ y m' Heff₁
 
         -- this could be called "weak feasibility"
-        feasibility := fun m (x, x') => by simp [event, Arrow.split]
+        feasibility := fun m (x, x') => by simp [Arrow.split, event]
                                            intros Hinv Hgrd₁ Hgrd₂
                                            have Hfeas₁ := ev₁.po.feasibility m x Hinv Hgrd₁
                                            have Hfeas₂ := ev₂.po.feasibility m x' Hinv Hgrd₂
