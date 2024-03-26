@@ -296,3 +296,71 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedEvent v M) 
 
 instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedEvent v M) where
   -- XXX : at some point the laws should be demonstrated
+
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (ConvergentEvent v M) where
+  dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : ConvergentEvent v M α γ) : ConvergentEvent v M β δ :=
+    let event := Profunctor.dimap f g ev.to_Event
+    {
+      guard := fun m x => ev.guard m (f x)
+      action := fun m x => event.action m x
+      po := {
+        safety := fun m x => by simp [Profunctor.dimap]
+                                intros Hinv Hgrd
+                                let ev' := ConvergentEvent_from_CoConvergentEvent (Contravariant.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+                                let ev'' := g <$> ev'
+                                have Hsafe := ev''.po.safety m x Hinv
+                                revert Hsafe ev' ev'' ; simp
+                                intro Hsafe
+                                exact Hsafe Hgrd
+
+        variant := ev.po.variant
+
+        nonIncreasing := fun m x => by simp
+                                       intros Hinv Hgrd
+                                       let ev' := ConvergentEvent_from_CoConvergentEvent (Contravariant.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+                                       let ev'' := g <$> ev'
+                                       have Hni := ev''.po.nonIncreasing m x Hinv
+                                       revert Hni ev' ev'' ; simp [Functor.map, Contravariant.contramap]
+                                       intro Hni
+                                       apply Hni ; exact Hgrd
+
+        convergence := fun m x => by simp
+                                     intros Hinv Hgrd
+                                     let ev' := ConvergentEvent_from_CoConvergentEvent (Contravariant.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+                                     let ev'' := g <$> ev'
+                                     have Hni := ev''.po.convergence m x Hinv
+                                     revert Hni ev' ev'' ; simp [Functor.map, Contravariant.contramap]
+                                     intro Hni
+                                     apply Hni ; exact Hgrd
+      }
+    }
+
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (ConvergentEvent v M) where
+  dimap_id := rfl
+  dimap_comp _ _ _ _ := rfl
+
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (ConvergentEvent v M) where
+  first' {α β γ} (ev : ConvergentEvent v M α β): ConvergentEvent v M (α × γ) (β × γ) :=
+    let event := StrongProfunctor.first' ev.to_Event
+    {
+      guard := fun m (x, y) => ev.guard m x ∧ event.guard m (x, y)
+      action := event.action
+      po := {
+        safety := fun m x => by simp
+                                intros Hinv _
+                                apply ev.po.safety ; assumption
+
+        variant := ev.po.variant
+
+        nonIncreasing := fun m (x,y) => by simp
+                                           intro Hinv _
+                                           apply ev.po.nonIncreasing m x Hinv
+        convergence := fun m (x,y) => by simp
+                                         intro Hinv _
+                                         apply ev.po.convergence m x Hinv
+
+      }
+    }
+
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentEvent v M) where
+  -- XXX : at some point the laws should be demonstrated
