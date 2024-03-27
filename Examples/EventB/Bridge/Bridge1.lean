@@ -1,7 +1,8 @@
 
+import Examples.EventB.Bridge.Bridge0
+
 import EventSystems.Refinement.Basic
 
-import Examples.EventB.Bridge.Bridge0
 
 namespace BridgeSpec
 
@@ -56,8 +57,8 @@ def Init : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
     init := ⟨0, 0, 0⟩
     safety := by simp [Machine.invariant]
     abstract := Bridge0.Init
-    strengthening := by simp [Bridge0.Init, newInitEvent']
-    simulation := by simp [Bridge0.Init, newInitEvent', Refinement.refine]
+    strengthening := by simp [Bridge0.Init]
+    simulation := by simp [Bridge0.Init, Refinement.refine]
   }
 
 
@@ -71,7 +72,7 @@ def EnterFromMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                            · simp_arith
                              exact Hgrd₁
                            · assumption
-    abstract := Bridge0.EnterFromMainland.toEvent
+    abstract := Bridge0.EnterFromMainland
     strengthening := fun b1 => by simp [Machine.invariant, Refinement.refine, Bridge0.EnterFromMainland, newEvent']
                                   intros _ _ Hgd₁ _ b0 Href
                                   exact Eq.trans_lt (id Href.symm) Hgd₁
@@ -79,11 +80,10 @@ def EnterFromMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                                intros _ _ _ _ b0 Href
                                simp_arith
                                exact Href
-    abstract_ok := by simp [Bridge0.EnterFromMainland, newEvent']
   }
 
 def LeaveToMainland : REvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
-  newREvent' {
+  newREvent'' {
     guard := fun b1 => b1.nbFromIsland > 0
     action := fun b1 => { b1 with nbFromIsland := b1.nbFromIsland - 1 }
     safety := fun b1 => by simp [Machine.invariant]
@@ -110,6 +110,7 @@ def LeaveToMainland : REvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
     abstract_ok := by simp [Bridge0.LeaveToMainland, newEvent']
   }
 
+/-
 def EnterIsland : RConvergentEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   newConcreteREvent' Nat {
     guard := fun b1 => b1.nbToIsland > 0
@@ -213,6 +214,8 @@ by
       exact Nat.pos_of_ne_zero H₁
 
   done
+
+-/
 
 end Bridge1
 

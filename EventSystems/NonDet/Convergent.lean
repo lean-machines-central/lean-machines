@@ -219,23 +219,23 @@ def CoAnticipatedNDEvent_from_AnticipatedNDEvent [Preorder v] [Machine CTX M] (e
 def AnticipatedNDEvent_from_CoAnticipatedNDEvent [Preorder v] [Machine CTX M] (ev : CoAnticipatedNDEvent v M β α) : AnticipatedNDEvent v M α β :=
  ev
 
-instance [Preorder v] [Machine CTX M] : Contravariant (CoAnticipatedNDEvent v M γ) where
+instance [Preorder v] [Machine CTX M] : ContravariantFunctor (CoAnticipatedNDEvent v M γ) where
   contramap {α β} (f : β → α) event :=
-  let ev : _CoNDEvent M γ β := Contravariant.contramap f event.to_NDEvent
+  let ev : _CoNDEvent M γ β := ContravariantFunctor.contramap f event.to_NDEvent
   {
      to_NDEvent := ev
      po := {
       safety := fun m x => by revert ev
                               cases event
                               case mk _ev po =>
-                                simp [Contravariant.contramap]
+                                simp [ContravariantFunctor.contramap]
                                 intros Hinv Hgrd y m' Heff
                                 apply po.safety m (f x) Hinv Hgrd y m' Heff
       feasibility := fun m x => by intro Hinv
                                    revert ev
                                    cases event
                                    case mk _ev po =>
-                                     simp [Contravariant.contramap]
+                                     simp [ContravariantFunctor.contramap]
                                      apply po.feasibility m (f x) Hinv
 
       variant := event.po.variant
@@ -245,7 +245,7 @@ instance [Preorder v] [Machine CTX M] : Contravariant (CoAnticipatedNDEvent v M 
                                      revert ev
                                      cases event
                                      case mk _ev po =>
-                                       simp [Contravariant.contramap]
+                                       simp [ContravariantFunctor.contramap]
                                        intros Hgrd z m' Heff
                                        have Hni := po.nonIncreasing m (f x) Hinv Hgrd z m'
                                        apply Hni ; assumption
@@ -253,7 +253,7 @@ instance [Preorder v] [Machine CTX M] : Contravariant (CoAnticipatedNDEvent v M 
      }
   }
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariant (CoAnticipatedNDEvent v M γ) where
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariantFunctor (CoAnticipatedNDEvent v M γ) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
@@ -267,23 +267,23 @@ def CoConvergentNDEvent_from_ConvergentNDEvent [Preorder v] [WellFoundedLT v] [M
 def ConvergentNDEvent_from_CoConvergentNDEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : CoConvergentNDEvent v M β α) : ConvergentNDEvent v M α β :=
  ev
 
-instance [Preorder v] [WellFoundedLT v]  [Machine CTX M] : Contravariant (CoConvergentNDEvent v M γ) where
+instance [Preorder v] [WellFoundedLT v]  [Machine CTX M] : ContravariantFunctor (CoConvergentNDEvent v M γ) where
   contramap {α β} (f : β → α) event :=
-  let ev : _CoNDEvent M γ β := Contravariant.contramap f event.to_NDEvent
+  let ev : _CoNDEvent M γ β := ContravariantFunctor.contramap f event.to_NDEvent
   {
      to_NDEvent := ev
      po := {
       safety := fun m x => by revert ev
                               cases event
                               case mk _ev po =>
-                                simp [Contravariant.contramap]
+                                simp [ContravariantFunctor.contramap]
                                 intros Hinv Hgrd y m' Heff
                                 apply po.safety m (f x) Hinv Hgrd y m' Heff
       feasibility := fun m x => by intro Hinv
                                    revert ev
                                    cases event
                                    case mk _ev po =>
-                                     simp [Contravariant.contramap]
+                                     simp [ContravariantFunctor.contramap]
                                      apply po.feasibility m (f x) Hinv
 
       variant := event.po.variant
@@ -293,7 +293,7 @@ instance [Preorder v] [WellFoundedLT v]  [Machine CTX M] : Contravariant (CoConv
                                      revert ev
                                      cases event
                                      case mk _ev po =>
-                                       simp [Contravariant.contramap]
+                                       simp [ContravariantFunctor.contramap]
                                        intros Hgrd z m' Heff
                                        have Hni := po.nonIncreasing m (f x) Hinv Hgrd z m'
                                        apply Hni ; assumption
@@ -303,7 +303,7 @@ instance [Preorder v] [WellFoundedLT v]  [Machine CTX M] : Contravariant (CoConv
                                    revert ev
                                    cases event
                                    case mk _ev po =>
-                                     simp [Contravariant.contramap]
+                                     simp [ContravariantFunctor.contramap]
                                      intros Hgrd z m' Heff
                                      have Hcv := po.convergence m (f x) Hinv Hgrd z m'
                                      apply Hcv ; assumption
@@ -311,7 +311,7 @@ instance [Preorder v] [WellFoundedLT v]  [Machine CTX M] : Contravariant (CoConv
      }
   }
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariant (CoConvergentNDEvent v M γ) where
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariantFunctor (CoConvergentNDEvent v M γ) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
@@ -319,12 +319,12 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariant (
 
 instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedNDEvent v M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : AnticipatedNDEvent v M α γ) : AnticipatedNDEvent v M β δ :=
-  let ev' := AnticipatedNDEvent_from_CoAnticipatedNDEvent (Contravariant.contramap f (CoAnticipatedNDEvent_from_AnticipatedNDEvent ev))
+  let ev' := AnticipatedNDEvent_from_CoAnticipatedNDEvent (ContravariantFunctor.contramap f (CoAnticipatedNDEvent_from_AnticipatedNDEvent ev))
   g <$> ev'
 
 
 instance  [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedNDEvent v M) where
-  dimap_id := by simp [Profunctor.dimap, Contravariant.contramap]
+  dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
   dimap_comp f f' g g' := by funext event
                              have Hdc' := LawfulProfunctor.dimap_comp (pf:=_NDEvent M) f f' g g'
@@ -335,7 +335,7 @@ instance  [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedNDEvent v 
                                cases po
                                case mk safe feas =>
                                  simp at *
-                                 simp [Profunctor.dimap, Contravariant.contramap, Functor.map] at *
+                                 simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
                                  simp [*]
                                  clear Hdc'
                                  -- cast_heq does not work so I'm stuck ...
@@ -377,12 +377,12 @@ instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedNDEve
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (ConvergentNDEvent v M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : ConvergentNDEvent v M α γ) : ConvergentNDEvent v M β δ :=
-  let ev' := ConvergentNDEvent_from_CoConvergentNDEvent (Contravariant.contramap f (CoConvergentNDEvent_from_ConvergentNDEvent ev))
+  let ev' := ConvergentNDEvent_from_CoConvergentNDEvent (ContravariantFunctor.contramap f (CoConvergentNDEvent_from_ConvergentNDEvent ev))
   g <$> ev'
 
 
 instance  [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (ConvergentNDEvent v M) where
-  dimap_id := by simp [Profunctor.dimap, Contravariant.contramap]
+  dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
   dimap_comp f f' g g' := by funext event
                              have Hdc' := LawfulProfunctor.dimap_comp (pf:=_NDEvent M) f f' g g'
@@ -393,7 +393,7 @@ instance  [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (Con
                                cases po
                                case mk safe feas =>
                                  simp at *
-                                 simp [Profunctor.dimap, Contravariant.contramap, Functor.map] at *
+                                 simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
                                  simp [*]
                                  clear Hdc'
                                  -- cast_heq does not work so I'm stuck ...

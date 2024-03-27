@@ -217,7 +217,7 @@ instance [Machine CTX M]: LawfulArrow (_Event M) where
   arrow_assoc {α β γ δ} (f : _Event M α β) :=
     by simp [Arrow.arrow, Arrow.first]
 
-/- Contravariant functor -/
+/- ContravariantFunctor functor -/
 
 abbrev _CoEvent (M) [Machine CTX M] (α) (β) :=
   _Event M β α
@@ -230,13 +230,13 @@ def coEvent_from_Event [Machine CTX M] (ev : _Event M α β) : _CoEvent M β α 
 def Event_from_CoEvent [Machine CTX M] (ev : _CoEvent M β α) : _Event M α β :=
  ev
 
-instance [Machine CTX M] : Contravariant (_CoEvent M γ) where
+instance [Machine CTX M] : ContravariantFunctor (_CoEvent M γ) where
   contramap f ev := {
     guard := fun m x => ev.guard m (f x)
     action := fun m x => ev.action m (f x)
   }
 
-instance [Machine CTX M] : LawfullContravariant (_CoEvent M β) where
+instance [Machine CTX M] : LawfullContravariantFunctor (_CoEvent M β) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
@@ -244,7 +244,7 @@ instance [Machine CTX M] : LawfullContravariant (_CoEvent M β) where
 
 instance [Machine CTX M] : Profunctor (_Event M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : _Event M α γ) : _Event M β δ :=
-    let ev' := Event_from_CoEvent (Contravariant.contramap f (coEvent_from_Event ev))
+    let ev' := Event_from_CoEvent (ContravariantFunctor.contramap f (coEvent_from_Event ev))
     Functor.map g ev'
 
 instance [Machine CTX M] : LawfulProfunctor (_Event M) where
@@ -374,6 +374,7 @@ structure InitEventSpec' (M) [Machine CTX M] (α) where
     guard x
     → Machine.invariant (init x)
 
+@[simp]
 def InitEventSpec_from_InitEventSpec' [Machine CTX M] (ev : InitEventSpec' M α) : InitEventSpec M α Unit :=
   {
     guard := ev.guard
@@ -392,6 +393,7 @@ structure InitEventSpec'' (M) [Machine CTX M] where
     guard
     → Machine.invariant init
 
+@[simp]
 def InitEventSpec_from_InitEventSpec'' [Machine CTX M] (ev : InitEventSpec'' M) : InitEventSpec M Unit Unit :=
   {
     guard := fun () => ev.guard
@@ -646,22 +648,22 @@ def OrdinaryEvent_from_CoEvent [Machine CTX M] (ev : CoEvent M α β) : Ordinary
 def CoEvent_from_OrdinaryEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : CoEvent M β α := ev
 
 
-instance [Machine CTX M]: Contravariant (CoEvent M γ) where
+instance [Machine CTX M]: ContravariantFunctor (CoEvent M γ) where
   contramap {α β} (f : β → α) (ev : CoEvent M γ α) :=
   let event := let ev' := coEvent_from_Event ev.to_Event
-             let ev'' := Contravariant.contramap f ev'
+             let ev'' := ContravariantFunctor.contramap f ev'
              Event_from_CoEvent ev''
   {
     guard := event.guard
     action := event.action
     po := {
-      safety := fun m x => by simp [Contravariant.contramap]
+      safety := fun m x => by simp [ContravariantFunctor.contramap]
                               intros Hinv Hgrd
                               exact ev.po.safety m (f x) Hinv Hgrd
     }
   }
 
-instance [Machine CTX M] : LawfullContravariant (CoEvent M α) where
+instance [Machine CTX M] : LawfullContravariantFunctor (CoEvent M α) where
   cmap_id _ := by rfl
   cmap_comp _ _ := by rfl
 
@@ -676,7 +678,7 @@ instance [Machine CTX M] : Profunctor (OrdinaryEvent M) where
       po := {
         safety := fun m x => by simp [Profunctor.dimap]
                                 intros Hinv Hgrd
-                                let ev' := OrdinaryEvent_from_CoEvent (Contravariant.contramap f (CoEvent_from_OrdinaryEvent ev))
+                                let ev' := OrdinaryEvent_from_CoEvent (ContravariantFunctor.contramap f (CoEvent_from_OrdinaryEvent ev))
                                 let ev'' := g <$> ev'
                                 have Hsafe := ev''.po.safety m x Hinv
                                 revert Hsafe ev' ev'' ; simp

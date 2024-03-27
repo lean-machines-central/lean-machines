@@ -79,6 +79,74 @@ def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : REventSp
     }
   }
 
+structure REventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α)
+  extends EventSpec' M α where
+
+  abstract : OrdinaryEvent AM α Unit
+
+  strengthening (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → abstract.guard am x
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → let m' := action m x
+        let (z, am') := abstract.action am x
+        z = () ∧ refine am' m'
+
+@[simp]
+def REventSpec_from_REventSpec' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]  (ev : REventSpec' AM M α) : REventSpec AM M α Unit :=
+  {
+    guard := ev.guard
+    action := fun m x => ((), ev.action m x)
+    safety := ev.safety
+    abstract := ev.abstract
+    strengthening := ev.strengthening
+    simulation := ev.simulation
+  }
+
+@[simp]
+def newREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : REventSpec' AM M α) : OrdinaryREvent AM M α Unit :=
+  newREvent (REventSpec_from_REventSpec' ev)
+
+structure REventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  extends EventSpec'' M where
+
+  abstract : OrdinaryEvent AM Unit Unit
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → abstract.guard am ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → let m' := action m
+        let (z, am') := abstract.action am ()
+        z = () ∧ refine am' m'
+
+@[simp]
+def REventSpec_from_REventSpec'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]  (ev : REventSpec'' AM M) : REventSpec AM M Unit Unit :=
+  {
+    guard := fun m () => ev.guard m
+    action := fun m () => ((), ev.action m)
+    safety := fun m () => ev.safety m
+    abstract := ev.abstract
+    strengthening := fun m () => ev.strengthening m
+    simulation := fun m () => ev.simulation m
+  }
+
+@[simp]
+def newREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : REventSpec'' AM M) : OrdinaryREvent AM M Unit Unit :=
+  newREvent (REventSpec_from_REventSpec'' ev)
+
 structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α) (β)
   extends InitEventSpec M α β where
 
@@ -120,7 +188,7 @@ def REventSpec_from_InitREventSpec [instAM: Machine ACTX AM] [instM: Machine CTX
   }
 
 @[simp]
-def newInitREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (ev : InitREventSpec AM M α β) : OrdinaryREvent AM M α β :=
+def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec AM M α β) : OrdinaryREvent AM M α β :=
   newREvent (REventSpec_from_InitREventSpec ev)
 
 structure InitREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α)
@@ -138,6 +206,7 @@ structure InitREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement
       let (z, am') := abstract.action Machine.reset x
       z = () ∧ refine am' m'
 
+@[simp]
 def InitREventSpec_from_InitREventSpec' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec' AM M α) : InitREventSpec AM M α Unit :=
   {
     guard := ev.guard
@@ -149,7 +218,7 @@ def InitREventSpec_from_InitREventSpec' [Machine ACTX AM] [Machine CTX M] [Refin
   }
 
 @[simp]
-def newInitREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (ev : InitREventSpec' AM M α) : OrdinaryREvent AM M α Unit :=
+def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec' AM M α) : OrdinaryREvent AM M α Unit :=
   newREvent (REventSpec_from_InitREventSpec (InitREventSpec_from_InitREventSpec' ev))
 
 structure InitREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
@@ -167,6 +236,7 @@ structure InitREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinemen
       let (z, am') := abstract.action Machine.reset ()
       z = () ∧ refine am' m'
 
+@[simp]
 def InitREventSpec_from_InitREventSpec'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec'' AM M) : InitREventSpec AM M Unit Unit :=
   {
     guard := fun () => ev.guard
@@ -178,5 +248,5 @@ def InitREventSpec_from_InitREventSpec'' [Machine ACTX AM] [Machine CTX M] [Refi
   }
 
 @[simp]
-def newInitREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (ev : InitREventSpec'' AM M) : OrdinaryREvent AM M Unit Unit :=
+def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec'' AM M) : OrdinaryREvent AM M Unit Unit :=
   newREvent (REventSpec_from_InitREventSpec (InitREventSpec_from_InitREventSpec'' ev))

@@ -75,19 +75,19 @@ instance [Machine CTX M] : LawfulFunctor (_NDEvent M γ) where
                         simp [Heff, Heq₁, Heq₂]
 
 
--- There are two possible, distinct contravariant functors
+-- There are two possible, distinct ContravariantFunctor functors
 -- for non-deterministic events.
 
 -- The first operates on the output, hence it cannot be use
 -- in a profunctor context
-instance [Machine CTX M] : Contravariant (_NDEvent M γ) where
+instance [Machine CTX M] : ContravariantFunctor (_NDEvent M γ) where
   contramap f ev :=
   {
     guard := ev.guard
     effect := fun m x (y, m') => ev.effect m x ((f y), m')
   }
 
-instance [Machine CTX M] : LawfullContravariant (_NDEvent M β) where
+instance [Machine CTX M] : LawfullContravariantFunctor (_NDEvent M β) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
@@ -103,27 +103,27 @@ def NDEvent_from_CoNDEvent [Machine CTX M] (ev : _CoNDEvent M β α) : _NDEvent 
  ev
 
 
-instance [Machine CTX M] : Contravariant (_CoNDEvent M γ) where
+instance [Machine CTX M] : ContravariantFunctor (_CoNDEvent M γ) where
   contramap f ev :=
   {
      guard := fun m x => ev.guard m (f x)
      effect := fun m x (y, m')  => ev.effect m (f x) (y, m')
   }
 
-instance [Machine CTX M] : LawfullContravariant (_CoNDEvent M γ) where
+instance [Machine CTX M] : LawfullContravariantFunctor (_CoNDEvent M γ) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
 -- There is a unique possible profunctor instance
 instance [Machine CTX M] : Profunctor (_NDEvent M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : _NDEvent M α γ) : _NDEvent M β δ :=
-  let ev' := NDEvent_from_CoNDEvent (Contravariant.contramap f (CoNDEvent_from_NDEvent ev))
+  let ev' := NDEvent_from_CoNDEvent (ContravariantFunctor.contramap f (CoNDEvent_from_NDEvent ev))
   g <$> ev'
 
 instance [Machine CTX M] : LawfulProfunctor (_NDEvent M) where
-  dimap_id := by simp [Profunctor.dimap, Contravariant.contramap]
+  dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
-  dimap_comp f f' g g' := by simp [Profunctor.dimap, Contravariant.contramap, Functor.map]
+  dimap_comp f f' g g' := by simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map]
                              funext ev
                              simp
                              funext m x (y,m')
@@ -578,17 +578,17 @@ instance [Machine CTX M] : LawfulFunctor (OrdinaryNDEvent M γ) where
 /- XXX:
 --  The output contravariant functor not provable, because we would
 -- need a iso morphisme between α and β.
-instance [Machine CTX M] : Contravariant (OrdinaryNDEvent M γ) where
+instance [Machine CTX M] : ContravariantFunctor (OrdinaryNDEvent M γ) where
   contramap {α β} (f : β → α) event :=
-  let ev' : _NDEvent M γ β := Contravariant.contramap f event.to_NDEvent
+  let ev' : _NDEvent M γ β := ContravariantFunctor.contramap f event.to_NDEvent
   {
     guard := ev'.guard
     effect := ev'.effect
     po := {
-      safety := fun m x => by simp [ev', Contravariant.contramap]
+      safety := fun m x => by simp [ev', ContravariantFunctor.contramap]
                               intros Hinv Hgrd y m' Heff
                               apply event.po.safety m x Hinv Hgrd (f y) m' Heff
-      feasibility := fun m x => by simp [ev', Contravariant.contramap]
+      feasibility := fun m x => by simp [ev', ContravariantFunctor.contramap]
                                    intros Hinv Hgrd
                                    have Hfeas := event.po.feasibility m x Hinv Hgrd
                                    obtain ⟨y, m', Hfeas⟩ := Hfeas
@@ -612,9 +612,9 @@ def CoOrdinaryNDEvent_from_OrdinaryNDEvent [Machine CTX M] (ev : OrdinaryNDEvent
 def OrdinaryNDEvent_from_CoOrdinaryNDEvent [Machine CTX M] (ev : CoOrdinaryNDEvent M β α) : OrdinaryNDEvent M α β :=
  ev
 
-instance [Machine CTX M] : Contravariant (CoOrdinaryNDEvent M γ) where
+instance [Machine CTX M] : ContravariantFunctor (CoOrdinaryNDEvent M γ) where
   contramap {α β} (f : β → α) event :=
-  let ev : _CoNDEvent M γ β := Contravariant.contramap f event.to_NDEvent
+  let ev : _CoNDEvent M γ β := ContravariantFunctor.contramap f event.to_NDEvent
   {
      guard := ev.guard
      effect := ev.effect
@@ -623,7 +623,7 @@ instance [Machine CTX M] : Contravariant (CoOrdinaryNDEvent M γ) where
                               revert ev
                               cases event
                               case mk _ev po =>
-                                simp [Contravariant.contramap]
+                                simp [ContravariantFunctor.contramap]
                                 intros Hinv Hgrd y m' Heff
                                 apply po.safety m (f x) Hinv Hgrd y m' Heff
       feasibility := fun m x => by simp
@@ -631,24 +631,24 @@ instance [Machine CTX M] : Contravariant (CoOrdinaryNDEvent M γ) where
                                    revert ev
                                    cases event
                                    case mk _ev po =>
-                                     simp [Contravariant.contramap]
+                                     simp [ContravariantFunctor.contramap]
                                      apply po.feasibility m (f x) Hinv
 
      }
   }
 
-instance [Machine CTX M] : LawfullContravariant (CoOrdinaryNDEvent M γ) where
+instance [Machine CTX M] : LawfullContravariantFunctor (CoOrdinaryNDEvent M γ) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
 instance [Machine CTX M] : Profunctor (OrdinaryNDEvent M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : OrdinaryNDEvent M α γ) : OrdinaryNDEvent M β δ :=
-  let ev' := OrdinaryNDEvent_from_CoOrdinaryNDEvent (Contravariant.contramap f (CoOrdinaryNDEvent_from_OrdinaryNDEvent ev))
+  let ev' := OrdinaryNDEvent_from_CoOrdinaryNDEvent (ContravariantFunctor.contramap f (CoOrdinaryNDEvent_from_OrdinaryNDEvent ev))
   g <$> ev'
 
 
 instance [Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
-  dimap_id := by simp [Profunctor.dimap, Contravariant.contramap]
+  dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
   dimap_comp f f' g g' := by funext event
                              have Hdc' := LawfulProfunctor.dimap_comp (pf:=_NDEvent M) f f' g g'
@@ -659,7 +659,7 @@ instance [Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
                                cases po
                                case mk safe feas =>
                                  simp at *
-                                 simp [Profunctor.dimap, Contravariant.contramap, Functor.map] at *
+                                 simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
                                  simp [*]
                                  clear Hdc'
                                  apply cast_heq

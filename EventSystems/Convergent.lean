@@ -171,16 +171,16 @@ def AnticipatedEvent_from_CoAnticipatedEvent [Preorder v] [Machine CTX M] (ev : 
 @[simp]
 def CoAnticipatedEvent_from_AnticipatedEvent [Preorder v] [Machine CTX M] (ev : AnticipatedEvent v M α β) : CoAnticipatedEvent v M β α := ev
 
-instance [Preorder v] [Machine CTX M]: Contravariant (CoAnticipatedEvent v M γ) where
+instance [Preorder v] [Machine CTX M]: ContravariantFunctor (CoAnticipatedEvent v M γ) where
   contramap {α β} (f : β → α) (ev : CoAnticipatedEvent v M γ α) :=
   let event := let ev' := coEvent_from_Event ev.to_Event
-             let ev'' := Contravariant.contramap f ev'
+             let ev'' := ContravariantFunctor.contramap f ev'
              Event_from_CoEvent ev''
   {
     guard := event.guard
     action := event.action
     po := {
-      safety := fun m x => by simp [Contravariant.contramap]
+      safety := fun m x => by simp [ContravariantFunctor.contramap]
                               intros Hinv Hgrd
                               exact ev.po.safety m (f x) Hinv Hgrd
       variant := ev.po.variant
@@ -190,7 +190,7 @@ instance [Preorder v] [Machine CTX M]: Contravariant (CoAnticipatedEvent v M γ)
     }
   }
 
-instance [Preorder v] [Machine CTX M] : LawfullContravariant (CoAnticipatedEvent v M α) where
+instance [Preorder v] [Machine CTX M] : LawfullContravariantFunctor (CoAnticipatedEvent v M α) where
   cmap_id _ := by rfl
   cmap_comp _ _ := by rfl
 
@@ -203,16 +203,16 @@ def ConvergentEvent_from_CoConvergentEvent [Preorder v] [WellFoundedLT v] [Machi
 @[simp]
 def CoConvergentEvent_from_ConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : ConvergentEvent v M α β) : CoConvergentEvent v M β α := ev
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: Contravariant (CoConvergentEvent v M γ) where
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: ContravariantFunctor (CoConvergentEvent v M γ) where
   contramap {α β} (f : β → α) (ev : CoConvergentEvent v M γ α) :=
   let event := let ev' := coEvent_from_Event ev.to_Event
-             let ev'' := Contravariant.contramap f ev'
+             let ev'' := ContravariantFunctor.contramap f ev'
              Event_from_CoEvent ev''
   {
     guard := event.guard
     action := event.action
     po := {
-      safety := fun m x => by simp [Contravariant.contramap]
+      safety := fun m x => by simp [ContravariantFunctor.contramap]
                               intros Hinv Hgrd
                               exact ev.po.safety m (f x) Hinv Hgrd
       variant := ev.po.variant
@@ -225,7 +225,7 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: Contravariant (CoConver
     }
   }
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariant (CoConvergentEvent v M α) where
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariantFunctor (CoConvergentEvent v M α) where
   cmap_id _ := by rfl
   cmap_comp _ _ := by rfl
 
@@ -240,7 +240,7 @@ instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedEvent v M) where
       po := {
         safety := fun m x => by simp [Profunctor.dimap]
                                 intros Hinv Hgrd
-                                let ev' := AnticipatedEvent_from_CoAnticipatedEvent (Contravariant.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
+                                let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
                                 let ev'' := g <$> ev'
                                 have Hsafe := ev''.po.safety m x Hinv
                                 revert Hsafe ev' ev'' ; simp
@@ -251,10 +251,10 @@ instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedEvent v M) where
 
         nonIncreasing := fun m x => by simp
                                        intros Hinv Hgrd
-                                       let ev' := AnticipatedEvent_from_CoAnticipatedEvent (Contravariant.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
+                                       let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
                                        let ev'' := g <$> ev'
                                        have Hni := ev''.po.nonIncreasing m x Hinv
-                                       revert Hni ev' ev'' ; simp [Functor.map, Contravariant.contramap]
+                                       revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
                                        intro Hni
                                        apply Hni ; exact Hgrd
       }
@@ -295,7 +295,7 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (Convergent
       po := {
         safety := fun m x => by simp [Profunctor.dimap]
                                 intros Hinv Hgrd
-                                let ev' := ConvergentEvent_from_CoConvergentEvent (Contravariant.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+                                let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
                                 let ev'' := g <$> ev'
                                 have Hsafe := ev''.po.safety m x Hinv
                                 revert Hsafe ev' ev'' ; simp
@@ -306,19 +306,19 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (Convergent
 
         nonIncreasing := fun m x => by simp
                                        intros Hinv Hgrd
-                                       let ev' := ConvergentEvent_from_CoConvergentEvent (Contravariant.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+                                       let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
                                        let ev'' := g <$> ev'
                                        have Hni := ev''.po.nonIncreasing m x Hinv
-                                       revert Hni ev' ev'' ; simp [Functor.map, Contravariant.contramap]
+                                       revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
                                        intro Hni
                                        apply Hni ; exact Hgrd
 
         convergence := fun m x => by simp
                                      intros Hinv Hgrd
-                                     let ev' := ConvergentEvent_from_CoConvergentEvent (Contravariant.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+                                     let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
                                      let ev'' := g <$> ev'
                                      have Hni := ev''.po.convergence m x Hinv
-                                     revert Hni ev' ev'' ; simp [Functor.map, Contravariant.contramap]
+                                     revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
                                      intro Hni
                                      apply Hni ; exact Hgrd
       }
@@ -364,3 +364,5 @@ There are no Category or Arrow instances
 ==> probably needs more specific type classes to fix the precise constraints
 
 -/
+
+#check Category.id
