@@ -306,6 +306,46 @@ def newEvent {M} [Machine CTX M] (ev : EventSpec M α β) : OrdinaryEvent M α �
     }
   }
 
+structure EventSpec' (M) [Machine CTX M] (α) where
+  guard (m : M) (x : α) : Prop := True
+  action (m : M) (x : α) : M
+  safety (m : M) (x : α) :
+    Machine.invariant m
+    → guard m x
+    → Machine.invariant (action m x)
+
+@[simp]
+def EventSpec_from_EventSpec' [Machine CTX M] (ev : EventSpec' M α) : EventSpec M α Unit :=
+  {
+    guard := ev.guard
+    action := fun m x => ((), ev.action m x)
+    safety := fun m x => by simp ; apply ev.safety
+  }
+
+@[simp]
+def newEvent' {M} [Machine CTX M] (ev : EventSpec' M α) : OrdinaryEvent M α Unit :=
+  newEvent (EventSpec_from_EventSpec' ev)
+
+structure EventSpec'' (M) [Machine CTX M] where
+  guard (m : M) : Prop := True
+  action (m : M) : M
+  safety (m : M) :
+    Machine.invariant m
+    → guard m
+    → Machine.invariant (action m)
+
+@[simp]
+def EventSpec_from_EventSpec'' [Machine CTX M] (ev : EventSpec'' M) : EventSpec M Unit Unit :=
+  {
+    guard := fun m () => ev.guard m
+    action := fun m () => ((), ev.action m)
+    safety := fun m () => by simp ; apply ev.safety
+  }
+
+@[simp]
+def newEvent'' {M} [Machine CTX M] (ev : EventSpec'' M) : OrdinaryEvent M Unit Unit :=
+  newEvent (EventSpec_from_EventSpec'' ev)
+
 structure InitEventSpec (M) [Machine CTX M] (α) (β) where
   guard (x : α) : Prop := True
   init (x : α) : β × M
@@ -327,9 +367,52 @@ def EventSpec_from_InitEventSpec [Machine CTX M] (ev : InitEventSpec M α β) : 
 def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : OrdinaryEvent M α β :=
   newEvent (EventSpec_from_InitEventSpec ev)
 
+structure InitEventSpec' (M) [Machine CTX M] (α) where
+  guard (x : α) : Prop := True
+  init (x : α) : M
+  safety (x : α) :
+    guard x
+    → Machine.invariant (init x)
+
+def InitEventSpec_from_InitEventSpec' [Machine CTX M] (ev : InitEventSpec' M α) : InitEventSpec M α Unit :=
+  {
+    guard := ev.guard
+    init := fun x => ((), ev.init x)
+    safety := fun x => by simp ; apply ev.safety
+  }
+
+@[simp]
+def newInitEvent' {M} [Machine CTX M] (ev : InitEventSpec' M α) : OrdinaryEvent M α Unit :=
+  newEvent (EventSpec_from_InitEventSpec (InitEventSpec_from_InitEventSpec' ev))
+
+structure InitEventSpec'' (M) [Machine CTX M] where
+  guard : Prop := True
+  init : M
+  safety :
+    guard
+    → Machine.invariant init
+
+def InitEventSpec_from_InitEventSpec'' [Machine CTX M] (ev : InitEventSpec'' M) : InitEventSpec M Unit Unit :=
+  {
+    guard := fun () => ev.guard
+    init := fun () => ((), ev.init)
+    safety := fun () => by simp ; apply ev.safety
+  }
+
+@[simp]
+def newInitEvent'' {M} [Machine CTX M] (ev : InitEventSpec'' M) : OrdinaryEvent M Unit Unit :=
+  newEvent (EventSpec_from_InitEventSpec (InitEventSpec_from_InitEventSpec'' ev))
+
+
 def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   newEvent (EventSpec_from_Event (skip_Event M α)
                                  (by intros ; simp [skip_Event] ; assumption))
+
+/-
+   Algebraic properties
+-/
+
+/- Functor -/
 
 @[simp]
 def funEvent (M) [Machine CTX M] (f : α → β) : OrdinaryEvent M α β :=

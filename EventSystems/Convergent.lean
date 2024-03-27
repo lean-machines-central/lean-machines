@@ -160,17 +160,6 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulFunctor (Converg
   id_map := by intros ; rfl
   comp_map := by intros ; rfl
 
-/-
-
-There are no Category or Arrow instances
- - for example, Category.id  has no nonIncreasing argument
-   ==> or use a default zero ?
- - Category.comp is maybe possible (but non-trivial combination of variants)
-
-==> probably needs more specific type classes to fix the precise constraints
-
--/
-
 /- Contravariant functor -/
 
 abbrev CoAnticipatedEvent (v) [Preorder v] (M) [Machine CTX M] (α) (β) :=
@@ -364,3 +353,14 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentEvent v M) where
   -- XXX : at some point the laws should be demonstrated
+
+/-
+
+There are no Category or Arrow instances
+ - for example, Category.id  has no nonIncreasing argument
+   ==> or use a default zero ?
+ - Category.comp is maybe possible (but non-trivial combination of variants)
+
+==> probably needs more specific type classes to fix the precise constraints
+
+-/

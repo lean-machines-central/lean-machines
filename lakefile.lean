@@ -7,6 +7,8 @@ package «event-systems» where
 lean_lib «EventSystems» where
   -- add library configuration options here
 
+lean_lib «Examples» where
+
 @[default_target]
 lean_exe «event-systems» where
   root := `Main
