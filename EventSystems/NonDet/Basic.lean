@@ -7,6 +7,19 @@ structure _NDEvent (M) [Machine CTX M] (α) (β : Type)
 
   effect: M → α → (β × M) → Prop
 
+theorem _NDEvent.ext [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β):
+  ev₁.to_EventRoot = ev₂.to_EventRoot
+  → ev₁.effect = ev₂.effect
+  → ev₁ = ev₂ :=
+by
+  intros H₁ H₂
+  cases ev₁
+  case mk _evr₁ _eff₁ =>
+    cases ev₂
+    case mk _evr₃ _eff₂ =>
+      simp [*] at *
+      simp [H₁, H₂]
+
 @[simp]
 def _NDEvent_fromEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :=
 {
