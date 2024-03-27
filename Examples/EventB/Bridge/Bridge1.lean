@@ -1,3 +1,4 @@
+import Mathlib.Tactic
 
 import Examples.EventB.Bridge.Bridge0
 
@@ -82,7 +83,7 @@ def EnterFromMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                                exact Href
   }
 
-def LeaveToMainland : REvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
+def LeaveToMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   newREvent'' {
     guard := fun b1 => b1.nbFromIsland > 0
     action := fun b1 => { b1 with nbFromIsland := b1.nbFromIsland - 1 }
@@ -98,7 +99,7 @@ def LeaveToMainland : REvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                              · simp_arith [Hinv₁]
                                exact Nat.le_step Hinv₁
                              · exact Hgrd
-    abstract := Bridge0.LeaveToMainland.toEvent
+    abstract := Bridge0.LeaveToMainland
     strengthening := fun b1 => by simp [Machine.invariant, Refinement.refine, Bridge0.LeaveToMainland, newEvent']
                                   intros _ _ Hgrd b0 Href
                                   linarith
@@ -107,7 +108,6 @@ def LeaveToMainland : REvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                                rw [← Nat.add_sub_assoc]
                                · rw [←Href]
                                · exact Hgrd
-    abstract_ok := by simp [Bridge0.LeaveToMainland, newEvent']
   }
 
 /-
