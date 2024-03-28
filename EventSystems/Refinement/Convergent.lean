@@ -150,3 +150,101 @@ def newConvergentREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machin
       convergence := ev.convergence
     }
   }
+
+/-
+  Concrete event, i.e. new events refining skip
+
+  Remark : the output of the new event must be of the same
+           type as the input because Skip must be refined
+-/
+
+structure ConcreteREventSpec (v) [Preorder v] [WellFoundedLT v]
+                             (AM) [instAM: Machine ACTX AM]
+                             (M) [instM: Machine CTX M]
+                            [instR: Refinement AM M] (α)
+          extends _Variant (M:=M) v where
+
+  guard (m : M) (x : α) : Prop := True
+  action (m : M) (x : α) : M
+  safety (m : M) (x : α) :
+    Machine.invariant m
+    → guard m x
+    → Machine.invariant (action m x)
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine (self:=instR) am m
+      →  refine (self:=instR) am (action m x)
+
+  convergence (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := (action m x)
+      variant m' < variant m
+
+@[simp]
+def newConcreteREvent [Preorder v] [WellFoundedLT v]
+                       [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+   (ev : ConcreteREventSpec v AM M α) : ConvergentREvent v AM M α α :=
+  {
+     guard := ev.guard
+     action := fun m x => (x, ev.action m x)
+     po := {
+      safety := ev.safety
+      abstract := skip_Event AM α
+      strengthening := fun m x => by simp
+      simulation := fun m x => by simp
+                                  intros Hinv Hgrd am Href
+                                  apply ev.simulation m x Hinv Hgrd am Href
+      variant := ev.variant
+      nonIncreasing := fun m x => by simp
+                                     intros Hinv Hgrd
+                                     have Hcv := ev.convergence m x Hinv Hgrd
+                                     apply le_of_lt ; assumption
+      convergence := ev.convergence
+     }
+  }
+
+structure ConcreteREventSpec'' (v) [Preorder v] [WellFoundedLT v]
+                             (AM) [instAM: Machine ACTX AM]
+                             (M) [instM: Machine CTX M]
+                            [instR: Refinement AM M]
+          extends _Variant (M:=M) v where
+
+  guard (m : M) : Prop := True
+  action (m : M) : M
+  safety (m : M) :
+    Machine.invariant m
+    → guard m
+    → Machine.invariant (action m)
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine (self:=instR) am m
+      →  refine (self:=instR) am (action m)
+
+  convergence (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := (action m)
+      variant m' < variant m
+
+@[simp]
+def ConcreteREventSpec_from_ConcreteREventSpec'' [Preorder v] [WellFoundedLT v]
+                       [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+    (ev : ConcreteREventSpec'' v AM M) : ConcreteREventSpec v AM M Unit :=
+  {
+    guard := fun m () => ev.guard m
+    action := fun m () => ev.action m
+    safety := fun m () => ev.safety m
+    simulation := fun m () => ev.simulation m
+    convergence := fun m () => ev.convergence m
+  }
+
+@[simp]
+def newConcreteREvent'' [Preorder v] [WellFoundedLT v]
+                       [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+   (ev : ConcreteREventSpec'' v AM M) : ConvergentREvent v AM M Unit Unit :=
+   newConcreteREvent (ConcreteREventSpec_from_ConcreteREventSpec'' ev)

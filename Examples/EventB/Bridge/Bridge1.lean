@@ -1,8 +1,10 @@
 import Mathlib.Tactic
 
+import Examples.EventB.Bridge.Prelude
 import Examples.EventB.Bridge.Bridge0
 
 import EventSystems.Refinement.Basic
+import EventSystems.Refinement.Convergent
 
 
 namespace BridgeSpec
@@ -110,9 +112,9 @@ def LeaveToMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                                · exact Hgrd
   }
 
-/-
-def EnterIsland : RConvergentEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
-  newConcreteREvent' Nat {
+
+def EnterIsland : ConvergentREvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
+  newConcreteREvent'' {
     guard := fun b1 => b1.nbToIsland > 0
     action := fun b1 => ⟨b1.nbToIsland - 1, b1.nbOnIsland + 1, b1.nbFromIsland⟩
     safety := fun b1 => by simp [Machine.invariant]
@@ -138,8 +140,9 @@ def EnterIsland : RConvergentEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                                · exact Hgrd
   }
 
-def LeaveIsland : RConvergentEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
-  newConcreteREvent' Nat {
+
+def LeaveIsland : ConvergentREvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
+  newConcreteREvent'' {
     guard := fun b1 => b1.nbOnIsland > 0 ∧ b1.nbToIsland = 0
     action := fun b1 => ⟨b1.nbToIsland, b1.nbOnIsland - 1, b1.nbFromIsland + 1⟩
     safety := fun b1 => by simp [Machine.invariant]
@@ -172,7 +175,7 @@ theorem deadlockFreedom (m : Bridge1 ctx):
   → EnterFromMainland.guard m () ∨ LeaveToMainland.guard m ()
     ∨ EnterIsland.guard m () ∨ LeaveIsland.guard m () :=
 by
-  simp [Machine.invariant, EnterFromMainland, LeaveToMainland, EnterIsland, LeaveIsland, newConcreteREvent']
+  simp [Machine.invariant, EnterFromMainland, LeaveToMainland, EnterIsland, LeaveIsland]
   intro Hinv₁ Hinv₂
   have Hctx := ctx.maxCars_pos
   cases Hinv₂
@@ -214,8 +217,6 @@ by
       exact Nat.pos_of_ne_zero H₁
 
   done
-
--/
 
 end Bridge1
 
