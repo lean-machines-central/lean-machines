@@ -64,7 +64,6 @@ def Init : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
     simulation := by simp [Bridge0.Init, Refinement.refine]
   }
 
-
 def EnterFromMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   newREvent'' {
     guard := fun b1 => b1.totalCars < ctx.maxCars ∧ b1.nbFromIsland = 0

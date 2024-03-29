@@ -346,6 +346,11 @@ def EventSpec_from_EventSpec'' [Machine CTX M] (ev : EventSpec'' M) : EventSpec 
 def newEvent'' {M} [Machine CTX M] (ev : EventSpec'' M) : OrdinaryEvent M Unit Unit :=
   newEvent (EventSpec_from_EventSpec'' ev)
 
+/- Initialization events -/
+
+structure InitEvent (M) [Machine CTX M] (α) (β) extends _Event M α β where
+  po : _EventPO to_Event EventKind.InitDet
+
 structure InitEventSpec (M) [Machine CTX M] (α) (β) where
   guard (x : α) : Prop := True
   init (x : α) : β × M
@@ -364,8 +369,19 @@ def EventSpec_from_InitEventSpec [Machine CTX M] (ev : InitEventSpec M α β) : 
   }
 
 @[simp]
-def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : OrdinaryEvent M α β :=
-  newEvent (EventSpec_from_InitEventSpec ev)
+def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : InitEvent M α β :=
+  let evs := EventSpec_from_InitEventSpec ev
+  {
+    guard := evs.guard
+    action := evs.action
+    po := {
+      safety := evs.safety
+    }
+  }
+
+@[simp]
+def OrdinaryEvent.init [Machine CTX M] (ev : InitEvent M α β) (x : α)  : (β × M):=
+  ev.action Machine.reset x
 
 structure InitEventSpec' (M) [Machine CTX M] (α) where
   guard (x : α) : Prop := True
@@ -383,8 +399,8 @@ def InitEventSpec_from_InitEventSpec' [Machine CTX M] (ev : InitEventSpec' M α)
   }
 
 @[simp]
-def newInitEvent' {M} [Machine CTX M] (ev : InitEventSpec' M α) : OrdinaryEvent M α Unit :=
-  newEvent (EventSpec_from_InitEventSpec (InitEventSpec_from_InitEventSpec' ev))
+def newInitEvent' {M} [Machine CTX M] (ev : InitEventSpec' M α) : InitEvent M α Unit :=
+  newInitEvent (InitEventSpec_from_InitEventSpec' ev)
 
 structure InitEventSpec'' (M) [Machine CTX M] where
   guard : Prop := True
@@ -402,9 +418,8 @@ def InitEventSpec_from_InitEventSpec'' [Machine CTX M] (ev : InitEventSpec'' M) 
   }
 
 @[simp]
-def newInitEvent'' {M} [Machine CTX M] (ev : InitEventSpec'' M) : OrdinaryEvent M Unit Unit :=
-  newEvent (EventSpec_from_InitEventSpec (InitEventSpec_from_InitEventSpec'' ev))
-
+def newInitEvent'' {M} [Machine CTX M] (ev : InitEventSpec'' M) : InitEvent M Unit Unit :=
+  newInitEvent (InitEventSpec_from_InitEventSpec'' ev)
 
 def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   newEvent (EventSpec_from_Event (skip_Event M α)
