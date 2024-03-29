@@ -105,7 +105,13 @@ structure InitEvent (M) [Machine CTX M] (α) (β) extends _Event M α β where
   po : _InitEventPO to_Event EventKind.InitDet
 
 @[simp]
-def InitEvent.init [Machine CTX M] (ev : InitEvent M α β) := ev.action Machine.reset
+def InitEvent.init [Machine CTX M] (ev : InitEvent M α β) (x : α):= ev.action Machine.reset x
+
+@[simp]
+def InitEvent.init' [Machine CTX M] (ev : InitEvent M α Unit) (x : α) : M := (ev.init x).2
+
+@[simp]
+def InitEvent.init'' [Machine CTX M] (ev : InitEvent M Unit Unit) : M := ev.init' ()
 
 structure InitEventSpec (M) [Machine CTX M] (α) (β) where
   guard (x : α) : Prop := True

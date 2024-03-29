@@ -1,5 +1,6 @@
 
 import EventSystems.Event.Basic
+import EventSystems.Event.Ordinary
 import EventSystems.Event.Convergent
 
 class Refinement {ACTX : outParam (Type u₁)} (AM)
@@ -44,9 +45,15 @@ structure _REventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
         let (z, am') := abstract.action am x
         y = z ∧ refine am' m'
 
-
 structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _Event M α β where
   po : _REventPO (instR:=instR) to_Event (EventKind.TransDet Convergence.Ordinary)
+
+@[simp]
+def OrdinaryREvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : OrdinaryREvent AM M α β) : OrdinaryEvent M α β :=
+  {
+    to_Event := ev.to_Event
+    po := ev.po.to_EventPO
+  }
 
 structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α) (β)
   extends EventSpec M α β where
@@ -149,9 +156,49 @@ def newREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : REvent
 
 /--/ Initialization events -/
 
-structure InitREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _Event M α β where
-  po : _REventPO (instR:=instR) to_Event (EventKind.InitDet)
+structure _InitREventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+   (ev : _Event M α β) (kind : EventKind)
+   extends _InitEventPO ev kind where
 
+  abstract : _Event AM α β
+
+  strengthening (x : α):
+    ev.guard Machine.reset x
+    → ∀ am, refine (self:=instR) am Machine.reset
+      → abstract.guard am x
+
+  simulation (x : α):
+     ev.guard Machine.reset x
+    → ∀ am, refine (self:=instR) am Machine.reset
+      -- XXX : some constraint on output ?
+      --       (maybe a post_weakening requirement ?)
+      --       for now, let's go with equality because its transparent for the Event-B
+      --       refinement model
+      → let (y, m') := ev.action Machine.reset x
+        let (z, am') := abstract.action am x
+        y = z ∧ refine am' m'
+
+structure InitREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _Event M α β where
+  po : _InitREventPO (instR:=instR) to_Event (EventKind.InitDet)
+
+@[simp]
+def InitREvent.toInitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M α β) : InitEvent M α β :=
+{
+  to_Event:= ev.to_Event
+  po := ev.po.to_InitEventPO
+}
+
+@[simp]
+def InitREvent.init  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M α β) (x : α) : β × M :=
+  ev.action Machine.reset x
+
+@[simp]
+def InitREvent.init'  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M Unit β) : β × M :=
+  ev.init ()
+
+@[simp]
+def InitREvent.init''  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M Unit Unit) : M :=
+  ev.init'.2
 
 structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α) (β)
   extends InitEventSpec M α β where
@@ -174,25 +221,23 @@ def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : Init
     guard := fun m x => m = Machine.reset ∧ ev.guard x
     action := fun _ x => ev.init x
     po := {
-      safety := fun m x => by simp
-                              intros _ _ Hgrd
-                              apply ev.safety x Hgrd
+      safety := fun x => by simp
+                            intros Hgrd
+                            apply ev.safety x Hgrd
       abstract := ev.abstract.to_Event
-      strengthening := fun m x => by simp
-                                     intros _ Hm Hgrd am Href
-                                     rw [Hm] at Href
-                                     have Hst := ev.strengthening x Hgrd
-                                     have Hax := Refinement.refine_reset am Href
-                                     rw [Hax]
-                                     assumption
-      simulation := fun m x => by simp
-                                  intros _ Hm Hgrd am Href
-                                  rw [Hm] at Href
-                                  have Hax := Refinement.refine_reset am Href
-                                  rw [Hax]
-                                  have Hsim := ev.simulation x Hgrd
-                                  simp at Hsim
-                                  assumption
+      strengthening := fun x => by simp
+                                   intros Hgrd am Href
+                                   have Hst := ev.strengthening x Hgrd
+                                   have Hax := Refinement.refine_reset am Href
+                                   rw [Hax]
+                                   assumption
+      simulation := fun x => by simp
+                                intros Hgrd am Href
+                                have Hax := Refinement.refine_reset am Href
+                                rw [Hax]
+                                have Hsim := ev.simulation x Hgrd
+                                simp at Hsim
+                                assumption
     }
   }
 

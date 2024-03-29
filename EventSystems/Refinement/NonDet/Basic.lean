@@ -1,5 +1,6 @@
 
 import EventSystems.NonDet.Basic
+import EventSystems.NonDet.Ordinary
 import EventSystems.Refinement.Basic
 
 open Refinement
@@ -68,10 +69,46 @@ def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     }
   }
 
+/- Initialization events -/
+
+structure _InitRNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+   (ev : _NDEvent M α β) (kind : EventKind)
+   extends _InitNDEventPO ev kind where
+
+  abstract : _NDEvent AM α β
+
+  strengthening (x : α):
+    ev.guard Machine.reset x
+    → ∀ am, refine (self:=instR) am Machine.reset
+      → abstract.guard am x
+
+  simulation (x : α):
+    ev.guard Machine.reset x
+    → ∀ y, ∀ m', ev.effect Machine.reset x (y, m')
+      -- XXX : some constraint on output ?
+      → ∀ am, refine (self:=instR) am Machine.reset
+        → ∃ z, ∃ am', abstract.effect am x (z, am')
+                      → y = z ∧ refine am' m'
+
+structure InitRNDEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _NDEvent M α β where
+  po : _InitRNDEventPO (instR:=instR) to_NDEvent EventKind.InitNonDet
+
+@[simp]
+def InitRNDEvent.init  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRNDEvent AM M α β) (x : α) (nxt : β × M) :=
+  ev.effect Machine.reset x nxt
+
+@[simp]
+def InitRNDEvent.init'  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRNDEvent AM M Unit β) (nxt: β × M) :=
+  ev.init () nxt
+
+@[simp]
+def InitRNDEvent.init''  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRNDEvent AM M Unit Unit) (m : M) :=
+  ev.init' ((), m)
+
 structure InitRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α) (β)
   extends InitNDEventSpec M α β where
 
-  abstract : OrdinaryNDEvent AM α β
+  abstract : InitNDEvent AM α β
 
   strengthening (x : α):
     guard x
@@ -84,40 +121,100 @@ structure InitRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinemen
       → ∃ z, ∃ am', abstract.effect Machine.reset x (z, am')
                     → y = z ∧ refine am' m'
 
-def RNDEventSpec_from_InitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (ev : InitRNDEventSpec AM M α β) : RNDEventSpec AM M α β :=
-  {
-    guard := fun m x => m = Machine.reset ∧ ev.guard x
-    effect := fun _ x (y,m') => ev.init x (y, m')
-    safety := fun m x => by intro _ ⟨_, Hgrd⟩
-                            intros y m' Hinit
-                            simp at Hinit
-                            apply ev.safety x Hgrd y m' Hinit
-    feasibility := fun m x => by simp
-                                 intros _ _ Hgrd
-                                 have Hfeas := ev.feasibility x Hgrd
-                                 obtain ⟨y,m', Hini⟩ := Hfeas
-                                 exists y
-                                 exists m'
-    abstract := ev.abstract
-    strengthening := fun m x => by simp
-                                   intros _ Hrst Hgrd am Href
-                                   rw [Hrst] at Href
-                                   have Hax := refine_reset am Href
-                                   rw [Hax]
-                                   apply ev.strengthening x Hgrd
-    simulation := fun m x => by simp
-                                intros _ Hrst Hgrd y m' Hini am Href
-                                have Hsim := ev.simulation x Hgrd y m' Hini
-                                obtain ⟨z, am', Habs⟩ := Hsim
-                                exists z ; exists am'
-                                rw [Hrst] at Href
-                                have Hax := refine_reset am Href
-                                rw [Hax]
-                                exact Habs
-  }
-
 @[simp]
 def newInitRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (ev : InitRNDEventSpec AM M α β) : OrdinaryRNDEvent AM M α β :=
-  newRNDEvent (RNDEventSpec_from_InitRNDEventSpec ev)
+  (ev : InitRNDEventSpec AM M α β) : InitRNDEvent AM M α β :=
+  {
+    guard := fun m x => m = Machine.reset ∧ ev.guard x
+    effect := fun _ x (y, m') => ev.init x (y, m')
+    po := {
+      safety := fun x => by simp
+                            intros Hgrd y m' Hini
+                            apply ev.safety (y:=y) x Hgrd
+                            assumption
+      feasibility := fun x => by simp
+                                 intro Hgrd
+                                 apply ev.feasibility x Hgrd
+      abstract := ev.abstract.to_NDEvent
+      strengthening := fun x => by simp
+                                   intros Hgrd am Href
+                                   have Hstr := ev.strengthening x Hgrd
+                                   have Hax := refine_reset am Href
+                                   rw [Hax]
+                                   assumption
+      simulation := fun x => by simp
+                                intro Hgrd y m' Hini am Href
+                                have Hsim := ev.simulation x Hgrd y m' Hini
+                                have Hax := refine_reset am Href
+                                rw [Hax]
+                                assumption
+    }
+  }
+
+structure InitRNDEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α)
+  extends InitNDEventSpec M α Unit where
+
+  abstract : InitNDEvent AM α Unit
+
+  strengthening (x : α):
+    guard x
+    → abstract.guard Machine.reset x
+
+  simulation (x : α):
+    guard x
+    → ∀ m', init x ((), m')
+      → ∃ am', abstract.effect Machine.reset x ((), am')
+               → refine am' m'
+
+def InitRNDEventSpec_from_InitRNDEventSpec' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRNDEventSpec' AM M α) : InitRNDEventSpec AM M α Unit :=
+{
+  guard := ev.guard
+  init := ev.init
+  safety := ev.safety
+  feasibility := ev.feasibility
+  abstract := ev.abstract
+  strengthening := ev.strengthening
+  simulation := fun x => by simp
+                            intros Hgrd y m' Hini
+                            have Hsim := ev.simulation x Hgrd m' Hini
+                            exists ()
+}
+
+@[simp]
+def newInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : InitRNDEventSpec' AM M α) : InitRNDEvent AM M α Unit :=
+  newInitRNDEvent (InitRNDEventSpec_from_InitRNDEventSpec' ev)
+
+structure InitRNDEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  extends InitNDEventSpec M Unit Unit where
+
+  abstract : InitNDEvent AM Unit Unit
+
+  strengthening:
+    guard ()
+    → abstract.guard Machine.reset ()
+
+  simulation:
+    guard ()
+    → ∀ m', init () ((), m')
+      → ∃ am', abstract.effect Machine.reset () ((), am')
+               → refine am' m'
+
+def InitRNDEventSpec_from_InitRNDEventSpec'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRNDEventSpec'' AM M) : InitRNDEventSpec AM M Unit Unit :=
+{
+  guard := ev.guard
+  init := ev.init
+  safety := ev.safety
+  feasibility := ev.feasibility
+  abstract := ev.abstract
+  strengthening := fun () => ev.strengthening
+  simulation := fun () => by simp
+                             intros Hgrd _ m' Hini
+                             have Hsim := ev.simulation Hgrd m' Hini
+                             exists ()
+}
+
+@[simp]
+def newInitRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : InitRNDEventSpec'' AM M) : InitRNDEvent AM M Unit Unit :=
+  newInitRNDEvent (InitRNDEventSpec_from_InitRNDEventSpec'' ev)

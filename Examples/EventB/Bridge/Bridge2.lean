@@ -57,10 +57,9 @@ by
   simp [Machine.invariant]
 
 theorem Bridge2.abstract_ref (b : Bridge2 ctx):
-  Machine.invariant b → refine b b.toBridge1 :=
+  Machine.invariant b → refine b.toBridge1 b :=
 by
   simp [refine]
-
 
 instance: Refinement (Bridge1 ctx) (Bridge2 ctx) where
   refine := Bridge2.refine
@@ -82,9 +81,9 @@ by
   intros _ Href Href'
   rw [←Href, ←Href']
 
-def Init : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+def Init : InitREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
   newInitREvent'' {
-    init := let b1 : Bridge1 ctx := Bridge1.Init.init ()
+    init := let b1 : Bridge1 ctx := Bridge1.Init.init''
             { b1  with mainlandTL := Color.Green , islandTL := Color.Red,
                        mainlandPass := false, islandPass := true }
     safety := by simp [Machine.invariant, invariant₁, invariant₂, invariant₃, invariant₄, invariant₅]
@@ -95,8 +94,8 @@ def Init : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
     simulation := by simp [Bridge1.Init, newInitEvent', Refinement.refine, Bridge2.refine, Machine.invariant]
   }
 
-def EnterFromMainland₁ : REvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newREvent' {
+def EnterFromMainland₁ : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+  newREvent'' {
     guard := fun b2 => b2.mainlandTL = Color.Green ∧ b2.nbOnIsland + b2.nbToIsland + 1 ≠ ctx.maxCars
 
     action := fun b2 => { b2 with nbToIsland := b2.nbToIsland + 1
@@ -122,7 +121,7 @@ def EnterFromMainland₁ : REvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
                              simp [Hleft]
                              exact Nat.le_of_lt Hleft
 
-    abstract := Bridge1.EnterFromMainland.toEvent
+    abstract := Bridge1.EnterFromMainland.toOrdinaryEvent
 
     strengthening := fun b2 => by simp [Bridge1.EnterFromMainland, Refinement.refine, Bridge2.refine, Machine.invariant, invariant₁, invariant₂, invariant₃, invariant₄, invariant₅]
                                   intros Hinv₁ _ Hinv₃ _ _ _ _ Hgrd₁ _
@@ -130,11 +129,10 @@ def EnterFromMainland₁ : REvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
 
     simulation := fun b2 => by simp [Machine.invariant, Refinement.refine, Bridge2.refine, Bridge1.EnterFromMainland]
 
-    abstract_ok := by simp [Bridge1.EnterFromMainland, Bridge0.EnterFromMainland, newEvent']
   }
 
-def EnterFromMainland₂ : REvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newREvent' {
+def EnterFromMainland₂ : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+  newREvent'' {
     guard := fun b2 => b2.mainlandTL = Color.Green ∧ b2.nbOnIsland + b2.nbToIsland + 1 = ctx.maxCars
     action := fun b2 => { b2 with nbToIsland := b2.nbToIsland + 1
                                   mainlandTL := Color.Red
@@ -147,7 +145,7 @@ def EnterFromMainland₂ : REvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
                            rw [←Hgrd₂]
                            simp_arith
 
-    abstract := Bridge1.EnterFromMainland.toEvent
+    abstract := Bridge1.EnterFromMainland.toOrdinaryEvent
 
     strengthening := fun b2 => by simp [Bridge1.EnterFromMainland, Refinement.refine, Bridge2.refine, Machine.invariant, invariant₁, invariant₂, invariant₃, invariant₄, invariant₅]
                                   intros Hinv₁ _ Hinv₃ _ _ _ _ Hgrd₁ _
@@ -155,10 +153,13 @@ def EnterFromMainland₂ : REvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
 
     simulation := fun b2 => by simp [Machine.invariant, Refinement.refine, Bridge2.refine, Bridge1.EnterFromMainland, invariant₁, invariant₂, invariant₃, invariant₄, invariant₅]
 
-    abstract_ok := by simp [Bridge1.EnterFromMainland, Bridge0.EnterFromMainland, newEvent']
   }
 
-def LeaveToMainland : REvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+/-
+
+TODO from here
+
+def LeaveToMainland : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
   newAbstractREvent {
     event := Bridge1.LeaveToMainland.toEvent
     lift := fun b2 _ => b2.toBridge1
@@ -387,6 +388,8 @@ def IslandTLGreen : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :
 
     simulation := fun b2 => by simp [Refinement.refine, refine]
   }
+
+-/
 
 end Bridge2
 
