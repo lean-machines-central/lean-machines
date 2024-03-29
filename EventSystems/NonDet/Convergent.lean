@@ -1,7 +1,7 @@
 
 import Mathlib.Order.RelClasses
 
-import EventSystems.Convergent
+import EventSystems.Event.Convergent
 import EventSystems.NonDet.Basic
 
 /- Anticipated events -/

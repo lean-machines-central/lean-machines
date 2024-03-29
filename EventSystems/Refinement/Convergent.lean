@@ -1,6 +1,6 @@
 
 import EventSystems.Refinement.Basic
-import EventSystems.Convergent
+import EventSystems.Event.Convergent
 
 open Refinement
 

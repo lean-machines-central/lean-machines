@@ -1,5 +1,5 @@
 
-import EventSystems.Basic
+import EventSystems.Event.Basic
 
 namespace BridgeSpec
 

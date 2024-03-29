@@ -1,6 +1,6 @@
 
-import EventSystems.Basic
-import EventSystems.Convergent
+import EventSystems.Event.Basic
+import EventSystems.Event.Convergent
 
 class Refinement {ACTX : outParam (Type u₁)} (AM)
                  [Machine ACTX AM]
