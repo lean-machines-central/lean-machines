@@ -96,8 +96,13 @@ def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
 
 /- Initialization events (a kind of Ordinary event...) -/
 
+structure _InitEventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
+  safety (x : α):
+    ev.guard Machine.reset x
+    → Machine.invariant (ev.action Machine.reset x).snd
+
 structure InitEvent (M) [Machine CTX M] (α) (β) extends _Event M α β where
-  po : _EventPO to_Event EventKind.InitDet
+  po : _InitEventPO to_Event EventKind.InitDet
 
 @[simp]
 def InitEvent.init [Machine CTX M] (ev : InitEvent M α β) := ev.action Machine.reset
@@ -110,23 +115,15 @@ structure InitEventSpec (M) [Machine CTX M] (α) (β) where
     → Machine.invariant (init x).snd
 
 @[simp]
-def EventSpec_from_InitEventSpec [Machine CTX M] (ev : InitEventSpec M α β) : EventSpec M α β :=
+def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : InitEvent M α β :=
   {
     guard := fun m x => m = Machine.reset ∧ ev.guard x
     action := fun _ x => ev.init x
-    safety := fun m x => by simp
-                            intros
-                            apply ev.safety x ; assumption
-  }
-
-@[simp]
-def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : InitEvent M α β :=
-  let evs := EventSpec_from_InitEventSpec ev
-  {
-    guard := evs.guard
-    action := evs.action
     po := {
-      safety := evs.safety
+      safety := fun x => by simp
+                            intro Hgrd
+                            apply ev.safety x Hgrd
+
     }
   }
 
