@@ -94,6 +94,81 @@ def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   newEvent (EventSpec_from_Event (skip_Event M α)
                                  (by intros ; simp [skip_Event] ; assumption))
 
+/- Initialization events (a kind of Ordinary event...) -/
+
+structure InitEvent (M) [Machine CTX M] (α) (β) extends _Event M α β where
+  po : _EventPO to_Event EventKind.InitDet
+
+@[simp]
+def InitEvent.init [Machine CTX M] (ev : InitEvent M α β) := ev.action Machine.reset
+
+structure InitEventSpec (M) [Machine CTX M] (α) (β) where
+  guard (x : α) : Prop := True
+  init (x : α) : β × M
+  safety (x : α) :
+    guard x
+    → Machine.invariant (init x).snd
+
+@[simp]
+def EventSpec_from_InitEventSpec [Machine CTX M] (ev : InitEventSpec M α β) : EventSpec M α β :=
+  {
+    guard := fun m x => m = Machine.reset ∧ ev.guard x
+    action := fun _ x => ev.init x
+    safety := fun m x => by simp
+                            intros
+                            apply ev.safety x ; assumption
+  }
+
+@[simp]
+def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : InitEvent M α β :=
+  let evs := EventSpec_from_InitEventSpec ev
+  {
+    guard := evs.guard
+    action := evs.action
+    po := {
+      safety := evs.safety
+    }
+  }
+
+structure InitEventSpec' (M) [Machine CTX M] (α) where
+  guard (x : α) : Prop := True
+  init (x : α) : M
+  safety (x : α) :
+    guard x
+    → Machine.invariant (init x)
+
+@[simp]
+def InitEventSpec_from_InitEventSpec' [Machine CTX M] (ev : InitEventSpec' M α) : InitEventSpec M α Unit :=
+  {
+    guard := ev.guard
+    init := fun x => ((), ev.init x)
+    safety := fun x => by simp ; apply ev.safety
+  }
+
+@[simp]
+def newInitEvent' {M} [Machine CTX M] (ev : InitEventSpec' M α) : InitEvent M α Unit :=
+  newInitEvent (InitEventSpec_from_InitEventSpec' ev)
+
+structure InitEventSpec'' (M) [Machine CTX M] where
+  guard : Prop := True
+  init : M
+  safety :
+    guard
+    → Machine.invariant init
+
+@[simp]
+def InitEventSpec_from_InitEventSpec'' [Machine CTX M] (ev : InitEventSpec'' M) : InitEventSpec M Unit Unit :=
+  {
+    guard := fun () => ev.guard
+    init := fun () => ((), ev.init)
+    safety := fun () => by simp ; apply ev.safety
+  }
+
+@[simp]
+def newInitEvent'' {M} [Machine CTX M] (ev : InitEventSpec'' M) : InitEvent M Unit Unit :=
+  newInitEvent (InitEventSpec_from_InitEventSpec'' ev)
+
+
 /-
    Algebraic properties
 -/

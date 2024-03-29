@@ -2,6 +2,7 @@
 import Mathlib.Order.RelClasses
 
 import EventSystems.Event.Basic
+import EventSystems.Event.Ordinary
 
 structure _Variant (v) [Preorder v] [Machine CTX M] where
   variant : M → v

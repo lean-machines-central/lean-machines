@@ -1,5 +1,6 @@
 
 import EventSystems.Event.Basic
+import EventSystems.Event.Ordinary
 
 namespace BridgeSpec
 
@@ -17,7 +18,7 @@ instance: Machine Context (Bridge0 ctx) where
 
 namespace Bridge0
 
-def Init : OrdinaryEvent (Bridge0 ctx) Unit Unit := newInitEvent'' {
+def Init : InitEvent (Bridge0 ctx) Unit Unit := newInitEvent'' {
   init := { nbCars := 0 }
   safety := by simp [Machine.invariant]
 }

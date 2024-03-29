@@ -55,7 +55,7 @@ by
 
 namespace Bridge1
 
-def Init : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
+def Init : InitREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   newInitREvent'' {
     init := ⟨0, 0, 0⟩
     safety := by simp [Machine.invariant]

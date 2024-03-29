@@ -147,10 +147,16 @@ def REventSpec_from_REventSpec'' [Machine ACTX AM] [Machine CTX M] [Refinement A
 def newREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : REventSpec'' AM M) : OrdinaryREvent AM M Unit Unit :=
   newREvent (REventSpec_from_REventSpec'' ev)
 
+/--/ Initialization events -/
+
+structure InitREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _Event M α β where
+  po : _REventPO (instR:=instR) to_Event (EventKind.InitDet)
+
+
 structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α) (β)
   extends InitEventSpec M α β where
 
-  abstract : OrdinaryEvent AM α β
+  abstract : InitEvent AM α β
 
   strengthening (x : α):
     guard x
@@ -163,38 +169,37 @@ structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement 
       y = z ∧ refine am' m'
 
 @[simp]
-def REventSpec_from_InitREventSpec [instAM: Machine ACTX AM] [instM: Machine CTX M] [instR: Refinement AM M] (ev : InitREventSpec AM M α β) : REventSpec AM M α β :=
+def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec AM M α β) : InitREvent AM M α β :=
   {
-    toEventSpec := EventSpec_from_InitEventSpec ev.toInitEventSpec
-    abstract := ev.abstract
-    strengthening := fun m x => by simp
-                                   intros _ Hm Hgrd am Href
-                                   simp [Hm] at Href
-                                   have Ham := @Refinement.refine_reset ACTX AM instAM CTX M instM instR am Href
-                                   have Hstr := ev.strengthening x Hgrd
-                                   simp [Ham, Hstr]
-
-    simulation := fun m x => by simp
-                                intros _ Hm Hgrd am Href
-                                rw [Hm] at Href
-                                have Ham := @Refinement.refine_reset ACTX AM instAM CTX M instM instR am Href
-                                simp [Ham]
-                                have Hsim := ev.simulation x Hgrd
-                                cases Hsim
-                                case intro Hsim₁ Hsim₂ =>
-                                  simp [Hsim₁, Hsim₂]
-
-
+    guard := fun m x => m = Machine.reset ∧ ev.guard x
+    action := fun _ x => ev.init x
+    po := {
+      safety := fun m x => by simp
+                              intros _ _ Hgrd
+                              apply ev.safety x Hgrd
+      abstract := ev.abstract.to_Event
+      strengthening := fun m x => by simp
+                                     intros _ Hm Hgrd am Href
+                                     rw [Hm] at Href
+                                     have Hst := ev.strengthening x Hgrd
+                                     have Hax := Refinement.refine_reset am Href
+                                     rw [Hax]
+                                     assumption
+      simulation := fun m x => by simp
+                                  intros _ Hm Hgrd am Href
+                                  rw [Hm] at Href
+                                  have Hax := Refinement.refine_reset am Href
+                                  rw [Hax]
+                                  have Hsim := ev.simulation x Hgrd
+                                  simp at Hsim
+                                  assumption
+    }
   }
-
-@[simp]
-def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec AM M α β) : OrdinaryREvent AM M α β :=
-  newREvent (REventSpec_from_InitREventSpec ev)
 
 structure InitREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α)
   extends InitEventSpec' M α where
 
-  abstract : OrdinaryEvent AM α Unit
+  abstract : InitEvent AM α Unit
 
   strengthening (x : α):
     guard x
@@ -218,13 +223,13 @@ def InitREventSpec_from_InitREventSpec' [Machine ACTX AM] [Machine CTX M] [Refin
   }
 
 @[simp]
-def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec' AM M α) : OrdinaryREvent AM M α Unit :=
-  newREvent (REventSpec_from_InitREventSpec (InitREventSpec_from_InitREventSpec' ev))
+def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec' AM M α) : InitREvent AM M α Unit :=
+  newInitREvent (InitREventSpec_from_InitREventSpec' ev)
 
 structure InitREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   extends InitEventSpec'' M  where
 
-  abstract : OrdinaryEvent AM Unit Unit
+  abstract : InitEvent AM Unit Unit
 
   strengthening (x : α):
     guard
@@ -248,5 +253,5 @@ def InitREventSpec_from_InitREventSpec'' [Machine ACTX AM] [Machine CTX M] [Refi
   }
 
 @[simp]
-def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec'' AM M) : OrdinaryREvent AM M Unit Unit :=
-  newREvent (REventSpec_from_InitREventSpec (InitREventSpec_from_InitREventSpec'' ev))
+def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREventSpec'' AM M) : InitREvent AM M Unit Unit :=
+  newInitREvent (InitREventSpec_from_InitREventSpec'' ev)

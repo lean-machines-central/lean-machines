@@ -1,6 +1,7 @@
 
 import EventSystems.Event.Prelude
 import EventSystems.Event.Basic
+import EventSystems.Event.Ordinary
 
 structure _NDEvent (M) [Machine CTX M] (α) (β : Type)
   extends _EventRoot M α where
