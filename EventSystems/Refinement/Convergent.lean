@@ -172,6 +172,94 @@ def newConvergentREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machin
     }
   }
 
+structure ConvergentREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α)
+  extends _Variant v (M:=M), EventSpec' M α where
+
+  abstract : _Event AM α Unit
+
+  strengthening (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → abstract.guard am x
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → let m' := action m x
+        let (z, am') := abstract.action am x
+        z = () ∧ refine am' m'
+
+  convergence (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := (action m x)
+      variant m' < variant m
+
+@[simp]
+def ConvergentREventSpec'.toConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : ConvergentREventSpec' v AM M α) : ConvergentREventSpec v AM M α Unit :=
+  {
+    toEventSpec := EventSpec_from_EventSpec' (ev.toEventSpec')
+    abstract := ev.abstract
+    strengthening := ev.strengthening
+    simulation := ev.simulation
+    variant := ev.variant
+    convergence := ev.convergence
+  }
+
+@[simp]
+def newConvergentREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : ConvergentREventSpec' v AM M α) : ConvergentREvent v AM M α Unit :=
+  newConvergentREvent ev.toConvergentREventSpec
+
+structure ConvergentREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  extends _Variant v (M:=M), EventSpec'' M where
+
+  abstract : _Event AM Unit Unit
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → abstract.guard am ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → let m' := action m
+        let (z, am') := abstract.action am ()
+        z = () ∧ refine am' m'
+
+  convergence (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := (action m)
+      variant m' < variant m
+
+@[simp]
+def ConvergentREventSpec''.toConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : ConvergentREventSpec'' v AM M) : ConvergentREventSpec v AM M Unit Unit :=
+  {
+    toEventSpec := EventSpec_from_EventSpec'' (ev.toEventSpec'')
+    abstract := ev.abstract
+    strengthening := fun m () => by simp ; apply ev.strengthening
+    simulation := fun m () => by simp
+                                 intros Hinv Hgrd am Href
+                                 have Hsim := ev.simulation m Hinv Hgrd am Href
+                                 simp at Hsim
+                                 assumption
+    variant := ev.variant
+    convergence := fun m () => by simp ; apply ev.convergence
+  }
+
+@[simp]
+def newConvergentREvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : ConvergentREventSpec'' v AM M) : ConvergentREvent v AM M Unit Unit :=
+  newConvergentREvent ev.toConvergentREventSpec
+
 /-
   Concrete event, i.e. new events refining skip
 

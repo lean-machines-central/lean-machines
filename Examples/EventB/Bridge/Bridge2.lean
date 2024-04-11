@@ -242,12 +242,9 @@ def EnterIsland : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
     step_variant := fun b2 _ => by simp
   }
 
-/-
 
-TODO from here
-
-def LeaveIsland₁ : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newRConvergentEvent' {
+def LeaveIsland₁ : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+  newConvergentREvent'' {
     guard := fun b2 => b2.islandTL = Color.Green ∧ b2.nbOnIsland ≠ 1
 
     action := fun b2 => { b2 with nbFromIsland := b2.nbFromIsland + 1
@@ -272,32 +269,33 @@ def LeaveIsland₁ : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
                                · assumption
                                · apply Nat.le_of_pred_lt ; simp_arith [Hinv₂.1]
 
-    variant := fun b2 => Bridge1.LeaveIsland.variant b2.toBridge1
+    variant := fun b2 => Bridge1.LeaveIsland.po.variant b2.toBridge1
 
     convergence := fun b2 => by simp
                                 intros Hinv Hgrd₁ _
-                                simp [Bridge1.LeaveIsland, newConcreteREvent']
+                                simp [Bridge1.LeaveIsland]
                                 simp [Machine.invariant, invariant₂] at Hinv
                                 simp [*] at *
                                 simp [@tsub_lt_self_iff, Hinv]
 
-    abstract := Bridge1.LeaveIsland.toEvent
+    abstract := Bridge1.LeaveIsland.to_Event
 
     strengthening := fun b2 => by simp
                                   intro Hinv Hgrd₁ _
-                                  simp [Refinement.refine, refine, Bridge1.LeaveIsland, newConcreteREvent']
+                                  simp [Refinement.refine, refine, Bridge1.LeaveIsland]
                                   simp [Machine.invariant, invariant₂] at Hinv
                                   simp [Hinv, Hgrd₁]
 
     simulation := fun b2 => by simp
                                intros _ _ _ am
-                               simp [Refinement.refine, refine, Bridge1.LeaveIsland, newConcreteREvent']
+                               simp [Refinement.refine, refine, Bridge1.LeaveIsland]
                                intro Href
                                simp [←Href] at *
   }
 
-def LeaveIsland₂ : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newRConvergentEvent' {
+
+def LeaveIsland₂ : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+  newConvergentREvent'' {
     guard := fun b2 => b2.islandTL = Color.Green ∧ b2.nbOnIsland = 1
 
     action := fun b2 => { b2 with nbFromIsland := b2.nbFromIsland + 1
@@ -318,29 +316,30 @@ def LeaveIsland₂ : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
                              rw [Nat.add_comm]
                              assumption
 
-    variant := fun b2 => Bridge1.LeaveIsland.variant b2.toBridge1
+    variant := fun b2 => Bridge1.LeaveIsland.po.variant b2.toBridge1
 
     convergence := fun b2 => by simp
                                 intros Hinv _ Hgrd₂
-                                simp [Bridge1.LeaveIsland, newConcreteREvent']
+                                simp [Bridge1.LeaveIsland]
                                 simp [Machine.invariant, invariant₂] at Hinv
                                 simp [*] at *
 
-    abstract := Bridge1.LeaveIsland.toEvent
+    abstract := Bridge1.LeaveIsland.to_Event
 
     strengthening := fun b2 => by simp
                                   intro Hinv Hgrd₁ _
-                                  simp [Refinement.refine, refine, Bridge1.LeaveIsland, newConcreteREvent']
+                                  simp [Refinement.refine, refine, Bridge1.LeaveIsland]
                                   simp [Machine.invariant, invariant₂] at Hinv
                                   simp [Hinv, Hgrd₁]
 
     simulation := fun b2 => by simp
                                intros _ _ _ am
-                               simp [Refinement.refine, refine, Bridge1.LeaveIsland, newConcreteREvent']
+                               simp [Refinement.refine, refine, Bridge1.LeaveIsland]
                                intro Href
                                simp [←Href] at *
 
   }
+
 
 @[simp]
 def bval (b : Bool) : Nat :=
@@ -348,8 +347,8 @@ def bval (b : Bool) : Nat :=
   | false => 0
   | true => 1
 
-def MailandTLGreen : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newConcreteREvent' Nat {
+def MailandTLGreen : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+  newConcreteREvent'' {
     guard := fun b2 => b2.mainlandTL = Color.Red ∧ b2.nbToIsland + b2.nbOnIsland < ctx.maxCars ∧ b2.nbFromIsland = 0 ∧ b2.islandPass = true
 
     action := fun b2 => { b2 with mainlandTL := Color.Green
@@ -372,8 +371,8 @@ def MailandTLGreen : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
     simulation := fun b2 => by simp [Refinement.refine, refine]
   }
 
-def IslandTLGreen : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newConcreteREvent' Nat {
+def IslandTLGreen : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+  newConcreteREvent'' {
     guard := fun b2 => b2.islandTL = Color.Red ∧ b2.nbOnIsland > 0 ∧ b2.nbToIsland = 0 ∧ b2.mainlandPass = true
 
     action := fun b2 => { b2 with mainlandTL := Color.Red
@@ -396,7 +395,6 @@ def IslandTLGreen : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :
     simulation := fun b2 => by simp [Refinement.refine, refine]
   }
 
--/
 
 end Bridge2
 
