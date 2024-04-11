@@ -16,6 +16,16 @@ structure _AnticipatedREventPO (v) [Preorder v]  [Machine ACTX AM] [Machine CTX 
 structure AnticipatedREvent (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _Event M α β where
   po : _AnticipatedREventPO v (instR:=instR) to_Event (EventKind.TransDet Convergence.Anticipated)
 
+@[simp]
+def AnticipatedREvent.toAnticipatedEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+  (ev : AnticipatedREvent v AM M α β) : AnticipatedEvent v M α β :=
+  { to_Event := ev.to_Event
+    po := {
+      safety := ev.po.safety
+      variant := ev.po.variant
+      nonIncreasing := ev.po.nonIncreasing
+    } }
+
 structure AnticipatedREventSpecFromOrdinary (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α) (β)
   extends _Variant v, REventSpec AM M α β where
 
@@ -104,6 +114,17 @@ structure _ConvergentREventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACTX A
 
 structure ConvergentREvent (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _Event M α β where
   po : _ConvergentREventPO v (instR:=instR) to_Event (EventKind.TransDet Convergence.Convergent)
+
+@[simp]
+def ConvergentREvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+  (ev : ConvergentREvent v AM M α β) : ConvergentEvent v M α β :=
+  { to_Event := ev.to_Event
+    po := {
+      safety := ev.po.safety
+      variant := ev.po.variant
+      nonIncreasing := ev.po.nonIncreasing
+      convergence := ev.po.convergence
+    } }
 
 structure ConvergentREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α) (β)
   extends _Variant v (M:=M), EventSpec M α β where

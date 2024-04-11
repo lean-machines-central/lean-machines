@@ -172,8 +172,8 @@ def unlift (b1 : Bridge1 ctx) (b2 : Bridge2 ctx) : Bridge2 ctx :=
 def LeaveToMainland : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
   newAbstractREvent {
     event := Bridge1.LeaveToMainland.toOrdinaryEvent
-    lift := fun b2 _ => lift b2
-    lift_ref := fun b2 _ => lift_ref b2
+    lift := lift
+    lift_ref := lift_ref
     refine_uniq := refine_uniq
     unlift := fun _ b1' b2 _ => unlift b1' b2
     step_ref := fun b2 x => by simp [Refinement.refine, refine]
@@ -199,57 +199,52 @@ def LeaveToMainland : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
 
   }
 
+def EnterIsland : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+  newAbstractConvergentREvent {
+    event := Bridge1.EnterIsland.toConvergentEvent
+    lift := lift
+    lift_ref := lift_ref
+    refine_uniq := refine_uniq
+    unlift := fun _ b1' b2 _ => unlift b1' b2
+    step_ref := fun b2 x => by simp [Refinement.refine, refine]
+    step_safe := fun b2 x =>   by simp
+                                  intros Hinv Hgrd
+                                  have Hainv := Refinement.refine_safe b2.toBridge1 b2 Hinv rfl
+                                  have Hsafe:= Bridge1.EnterIsland.po.safety b2.toBridge1 x Hainv Hgrd
+                                  simp [Bridge1.EnterIsland, Machine.invariant
+                                       , invariant₁, invariant₂, invariant₃, invariant₄, invariant₅] at *
+                                  obtain ⟨Hinv₁, Hinv₂, Hinv₃, Hinv₄, Hinv₅, Hinv₆⟩ := Hinv
+                                  simp [*] at *
+                                  cases Hinv₃
+                                  case inl Hinv₃ =>
+                                    simp [*] at *
+                                    have Hcut: b2.mainlandTL = Color.Green ∨ b2.mainlandTL = Color.Red := by
+                                      cases b2.mainlandTL <;> trivial
+                                    cases Hcut
+                                    case inl Hcut =>
+                                      simp [*] at *
+                                      have Hcalc := by calc  b2.nbToIsland - 1 + (b2.nbOnIsland + 1) = b2.nbToIsland - 1 + 1  + b2.nbOnIsland := by simp_arith
+                                                             _ =   b2.nbToIsland + b2.nbOnIsland := by rw [Nat.sub_add_cancel]
+                                                                                                       exact Hgrd
+                                      rw [Hcalc]
+                                      simp [Hinv₁]
+                                    case inr Hcut =>
+                                      simp [*] at *
+                                  case inr Hinv₃ =>
+                                    simp [*] at *
+                                    have Hcut: b2.islandTL = Color.Green ∨ b2.islandTL = Color.Red := by
+                                      cases b2.islandTL <;> trivial
+                                    cases Hcut
+                                    case inl Hcut =>
+                                      simp [*] at *
+                                    case inr Hcut =>
+                                      simp [*] at *
+    step_variant := fun b2 _ => by simp
+  }
+
 /-
 
 TODO from here
-
-def EnterIsland : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newAbstractRConvergentEvent Nat {
-    event := Bridge1.EnterIsland.toEvent
-    lift := fun b2 _ => b2.toBridge1
-    lift_ref := fun b2 => by simp [Refinement.refine, refine]
-    refine_uniq := fun b2 b1a b1b => by apply refine_uniq
-    unlift := fun b2 _ b1' _ => { b2 with toBridge1 := b1' }
-    lift_unlift := fun b2 _ => by simp
-    step_ref := fun b2 x => by simp [Refinement.refine, refine]
-    step_inv := fun b2 x =>   by simp
-                                 intros Hinv Hgrd
-                                 have Hainv := Refinement.refine_inv b2 b2.toBridge1 Hinv rfl
-                                 have Hsafe:= Bridge1.EnterIsland.toEvent.safety b2.toBridge1 x Hainv Hgrd
-                                 simp [Bridge1.EnterIsland, newConcreteREvent', Machine.invariant
-                                      , invariant₁, invariant₂, invariant₃, invariant₄, invariant₅] at *
-                                 obtain ⟨Hinv₁, Hinv₂, Hinv₃, Hinv₄, Hinv₅, Hinv₆⟩ := Hinv
-                                 simp [*] at *
-                                 cases Hinv₃
-                                 case inl Hinv₃ =>
-                                   simp [*] at *
-                                   have Hcut: b2.mainlandTL = Color.Green ∨ b2.mainlandTL = Color.Red := by
-                                     cases b2.mainlandTL <;> trivial
-                                   cases Hcut
-                                   case inl Hcut =>
-                                     simp [*] at *
-                                     have Hcalc := by calc  b2.nbToIsland - 1 + (b2.nbOnIsland + 1) = b2.nbToIsland - 1 + 1  + b2.nbOnIsland := by simp_arith
-                                                            _ =   b2.nbToIsland + b2.nbOnIsland := by rw [Nat.sub_add_cancel]
-                                                                                                      exact Hgrd
-                                     rw [Hcalc]
-                                     simp [Hinv₁]
-                                   case inr Hcut =>
-                                     simp [*] at *
-                                 case inr Hinv₃ =>
-                                   simp [*] at *
-                                   have Hcut: b2.islandTL = Color.Green ∨ b2.islandTL = Color.Red := by
-                                     cases b2.islandTL <;> trivial
-                                   cases Hcut
-                                   case inl Hcut =>
-                                     simp [*] at *
-                                   case inr Hcut =>
-                                     simp [*] at *
-
-    abstract_cnv := Bridge1.EnterIsland.toConvergentEvent
-    abstract_cnv_prop := by simp
-    cvariant := fun b2 => Bridge1.EnterIsland.variant b2.toBridge1
-    cvariant_prop := fun b2 _ => by simp
-  }
 
 def LeaveIsland₁ : RConvergentEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
   newRConvergentEvent' {
