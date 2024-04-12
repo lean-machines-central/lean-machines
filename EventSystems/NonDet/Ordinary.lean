@@ -67,6 +67,60 @@ def newNDEvent {M} [Machine CTX M] (ev : NDEventSpec M α β) : OrdinaryNDEvent 
     }
   }
 
+structure NDEventSpec' (M) [Machine CTX M] (α) where
+  guard (m : M) (x : α) : Prop := True
+  effect (m : M) (x : α) (m' : M) : Prop
+
+  safety (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ m', effect m x m'
+            → Machine.invariant m'
+
+  feasibility (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∃ m', effect m x m'
+
+@[simp]
+def NDEventSpec_from_NDEventSpec' [Machine CTX M] (ev : NDEventSpec' M α) : NDEventSpec M α Unit :=
+  { guard := ev.guard
+    effect := fun m x ((), m') => ev.effect m x m'
+    safety := fun m x => by simp ; apply ev.safety
+    feasibility := fun m x => by simp ; apply ev.feasibility
+  }
+
+@[simp]
+def newNDEvent' {M} [Machine CTX M] (ev : NDEventSpec' M α) : OrdinaryNDEvent M α Unit :=
+  newNDEvent (NDEventSpec_from_NDEventSpec' ev)
+
+structure NDEventSpec'' (M) [Machine CTX M] where
+  guard (m : M) : Prop := True
+  effect (m : M) (m' : M) : Prop
+
+  safety (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ m', effect m m'
+            → Machine.invariant m'
+
+  feasibility (m : M):
+    Machine.invariant m
+    → guard m
+    → ∃ m', effect m m'
+
+@[simp]
+def NDEventSpec_from_NDEventSpec'' [Machine CTX M] (ev : NDEventSpec'' M) : NDEventSpec M Unit Unit :=
+  { guard := fun m _ => ev.guard m
+    effect := fun m () ((), m') => ev.effect m m'
+    safety := fun m () => by simp ; apply ev.safety <;> assumption
+    feasibility := fun m x => by simp ; apply ev.feasibility
+  }
+
+@[simp]
+def newNDEvent'' {M} [Machine CTX M] (ev : NDEventSpec'' M) : OrdinaryNDEvent M Unit Unit :=
+  newNDEvent (NDEventSpec_from_NDEventSpec'' ev)
+
 /- Initialiazation events -/
 
 structure _InitNDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) where
