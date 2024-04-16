@@ -2,9 +2,12 @@ import Mathlib.Tactic
 
 import EventSystems.Event.Basic
 import EventSystems.Event.Ordinary
+import EventSystems.Event.Convergent
 import EventSystems.NonDet.Ordinary
 
 import Examples.EventB.Courses.Prelude
+
+namespace CoursesSpec
 
 structure M0.Context where
   availableCourses : Finset Course
@@ -37,12 +40,12 @@ def M0.invariant₂ (m : M0 ctx)  :=
   m.openedCourses.card ≤  ctx.maxOpenedCourses
 
 @[simp]
-def emptyM0 (ctx : M0.Context) : M0 ctx:= {openedCourses := ∅}
+def M0.reset (ctx : M0.Context) : M0 ctx:= {openedCourses := ∅}
 
 instance: Machine M0.Context (M0 ctx) where
   context := ctx
   invariant m := M0.invariant₁ m ∧ M0.invariant₂ m
-  reset := emptyM0 ctx
+  reset := M0.reset ctx
 
 namespace M0
 
@@ -101,7 +104,7 @@ by
   contradiction
 
 @[simp]
-def action (m m' : M0 ctx) :=
+def effect (m m' : M0 ctx) :=
   ∃ cs : Finset Course, cs ⊆ ctx.availableCourses
     ∧ cs ≠ ∅
     ∧ m'.openedCourses = m.openedCourses ∪ cs
@@ -109,7 +112,7 @@ def action (m m' : M0 ctx) :=
 
 theorem PO_safety₁ (m : M0 ctx):
   invariant₁ m
-  → ∀m', action m m' → invariant₁ m' :=
+  → ∀m', effect m m' → invariant₁ m' :=
 by
   simp [invariant₁, invariant₂]
   intros Hinv₁ m' cs Hact₁ _ Hact₃ _
@@ -118,13 +121,13 @@ by
 
 theorem PO_safety₂ (m : M0 ctx):
   invariant₂ m → guard m
-  → ∀m', action m m' → invariant₂ m' :=
+  → ∀m', effect m m' → invariant₂ m' :=
 by
   simp [invariant₂]
 
 theorem PO_Feasibility (m : M0 ctx):
   invariant₂ m → guard m
-  → ∃ m', OpenCourses.action m m' :=
+  → ∃ m', effect m m' :=
 by
   simp [invariant₁, invariant₂]
   intros Hinv₂ Hgrd
@@ -154,10 +157,10 @@ by
 
 end OpenCourses
 
-def OpenCourses : OrdinaryNDEvent (M0 ctx) Unit Unit := newNonDetEvent'' {
+def OpenCourses : OrdinaryNDEvent (M0 ctx) Unit Unit := newNDEvent'' {
   guard := OpenCourses.guard
-  action := OpenCourses.action
-  safety := fun m => by simp [Machine.invariant, -OpenCourses.guard, -OpenCourses.action]
+  effect := OpenCourses.effect
+  safety := fun m => by simp [Machine.invariant, -OpenCourses.guard, -OpenCourses.effect]
                         intros Hinv₁ Hinv₂ Hgrd m' Hact
                         constructor
                         · apply OpenCourses.PO_safety₁ <;> assumption
@@ -166,3 +169,89 @@ def OpenCourses : OrdinaryNDEvent (M0 ctx) Unit Unit := newNonDetEvent'' {
                              intros
                              apply OpenCourses.PO_Feasibility <;> assumption
 }
+
+namespace CloseCourses
+
+@[simp]
+def guard (m : M0 ctx) (cs : Finset Course) :=
+  cs ⊆ m.openedCourses ∧ cs ≠ ∅
+
+@[simp]
+def action (m : M0 ctx) (cs : Finset Course) : M0 ctx :=
+  { openedCourses := m.openedCourses \ cs}
+
+theorem PO_safety₁ (m : M0 ctx) (cs : Finset Course):
+  invariant₁ m
+  → invariant₁ (action m cs) :=
+by
+  simp [invariant₁]
+  intros Hinv₁
+  have H₁ : m.openedCourses \ cs ⊆ m.openedCourses := by
+    apply Finset.sdiff_subset
+  exact Finset.Subset.trans H₁ Hinv₁
+
+theorem PO_safety₂ (cs : Finset Course) (m : M0 ctx):
+  invariant₂ m
+  → invariant₂ (action m cs) :=
+by
+  simp [invariant₂]
+  intros Hinv₂
+  have H₁ : (m.openedCourses \ cs).card ≤ m.openedCourses.card := by
+    apply Finset_le_sdiff_sub
+  apply le_trans (b:=Finset.card m.openedCourses) <;> assumption
+
+@[local simp]
+def variant (m : M0 ctx) := m.openedCourses.card
+
+theorem PO_nonIncreasing (m : M0 ctx) (cs : Finset Course):
+  variant (action m cs) ≤ variant m :=
+by
+  simp
+  apply Finset_le_sdiff_sub
+
+theorem PO_convergence (m : M0 ctx) (cs : Finset Course):
+  guard m cs
+  → variant (action m cs) < variant m :=
+by
+  simp
+  intros Hgrd₁ Hgrd₂
+  have Hgrd₁': cs.card ≤ m.openedCourses.card := by
+    exact Finset.card_le_card Hgrd₁
+
+  have H₁ := PO_nonIncreasing m cs ; simp at H₁
+  apply lt_of_le_of_ne
+  · assumption
+  · intro Hcontra
+    rw [Finset.card_sdiff] at Hcontra
+    · have H₂: cs.card ≠ 0 := by
+          intro Hzero
+          have H₂ : cs = ∅ := by apply Finset.card_eq_zero.1 ; assumption
+          contradiction
+      have H₃ : cs.card = 0 := by
+        apply Nat_sub_zero (a:=m.openedCourses.card)
+        · have H₂' : 0 < cs.card := by exact Nat.pos_of_ne_zero H₂
+          exact Nat.lt_of_lt_of_le H₂' Hgrd₁'
+        · assumption
+      contradiction
+    · assumption
+
+end CloseCourses
+
+def CloseCourses : ConvergentEvent Nat (M0 ctx) (Finset Course) Unit := newConvergentEvent' {
+  guard := CloseCourses.guard
+  action := CloseCourses.action
+  safety := fun m => by simp [Machine.invariant, -CloseCourses.guard, -CloseCourses.action]
+                        intros Hinv₁ Hinv₂ Hgrd _
+                        constructor
+                        · apply CloseCourses.PO_safety₁ ; assumption
+                        · apply CloseCourses.PO_safety₂ ; assumption
+  variant := CloseCourses.variant
+  convergence := fun cs m => by simp [Machine.invariant, -CloseCourses.guard]
+                                intros
+                                apply CloseCourses.PO_convergence
+                                assumption
+  }
+
+end M0
+
+end CoursesSpec

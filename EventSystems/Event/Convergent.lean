@@ -122,6 +122,48 @@ def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Mach
     }
   }
 
+structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α)
+  extends _Variant v, EventSpec' M α where
+
+  convergence (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := (action m x)
+      variant m' < variant m
+
+@[simp]
+def ConvergentEventSpec'.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec' v M α) : ConvergentEventSpec v M α Unit :=
+  {
+    toEventSpec := EventSpec_from_EventSpec' ev.toEventSpec'
+    variant := ev.variant
+    convergence := ev.convergence
+  }
+
+@[simp]
+def newConvergentEvent' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec' v M α ) : ConvergentEvent v M α Unit :=
+  newConvergentEvent ev.toConvergentEventSpec
+
+structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M]
+  extends _Variant v, EventSpec'' M where
+
+  convergence (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := (action m)
+      variant m' < variant m
+
+@[simp]
+def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEventSpec v M Unit Unit :=
+  {
+    toEventSpec := EventSpec_from_EventSpec'' ev.toEventSpec''
+    variant := ev.variant
+    convergence := fun m () => by apply ev.convergence
+  }
+
+@[simp]
+def newConvergentEvent'' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEvent v M Unit Unit :=
+  newConvergentEvent ev.toConvergentEventSpec
+
 /- Algebraic properties -/
 
 @[simp]
