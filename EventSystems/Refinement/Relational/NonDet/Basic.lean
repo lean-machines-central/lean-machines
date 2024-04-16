@@ -1,7 +1,7 @@
 
 import EventSystems.NonDet.Basic
 import EventSystems.NonDet.Ordinary
-import EventSystems.Refinement.Basic
+import EventSystems.Refinement.Relational.Basic
 
 open Refinement
 
@@ -175,7 +175,7 @@ def InitRNDEventSpec_from_InitRNDEventSpec' [Machine ACTX AM] [Machine CTX M] [R
   abstract := ev.abstract
   strengthening := ev.strengthening
   simulation := fun x => by simp
-                            intros Hgrd y m' Hini
+                            intros Hgrd _ m' Hini
                             have Hsim := ev.simulation x Hgrd m' Hini
                             exists ()
 }

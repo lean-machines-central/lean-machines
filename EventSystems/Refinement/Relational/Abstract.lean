@@ -3,8 +3,8 @@
   Reuse of abstract events
 -/
 
-import EventSystems.Refinement.Basic
-import EventSystems.Refinement.Convergent
+import EventSystems.Refinement.Relational.Basic
+import EventSystems.Refinement.Relational.Convergent
 
 open Refinement
 

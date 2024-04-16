@@ -3,8 +3,8 @@ import Mathlib.Tactic
 import Examples.EventB.Bridge.Prelude
 import Examples.EventB.Bridge.Bridge0
 
-import EventSystems.Refinement.Basic
-import EventSystems.Refinement.Convergent
+import EventSystems.Refinement.Relational.Basic
+import EventSystems.Refinement.Relational.Convergent
 
 
 namespace BridgeSpec

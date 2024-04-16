@@ -1,5 +1,5 @@
 
-import EventSystems.Refinement.Basic
+import EventSystems.Refinement.Relational.Basic
 import EventSystems.Event.Convergent
 
 open Refinement
