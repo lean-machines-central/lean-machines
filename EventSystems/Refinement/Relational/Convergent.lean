@@ -261,20 +261,21 @@ def newConvergentREvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mach
   newConvergentREvent ev.toConvergentREventSpec
 
 /-
+/-
   Concrete event, i.e. new events refining skip
+  ... here generalized to support an output type β
 
-  Remark : the output of the new event must be of the same
-           type as the input because Skip must be refined
 -/
 
 structure ConcreteREventSpec (v) [Preorder v] [WellFoundedLT v]
                              (AM) [instAM: Machine ACTX AM]
                              (M) [instM: Machine CTX M]
-                            [instR: Refinement AM M] (α)
+                            [instR: Refinement AM M] (α) (β)
           extends _Variant (M:=M) v where
 
   guard (m : M) (x : α) : Prop := True
   action (m : M) (x : α) : M
+  output (m : M) (x : α) : β
   safety (m : M) (x : α) :
     Machine.invariant m
     → guard m x
@@ -295,13 +296,13 @@ structure ConcreteREventSpec (v) [Preorder v] [WellFoundedLT v]
 @[simp]
 def newConcreteREvent [Preorder v] [WellFoundedLT v]
                        [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-   (ev : ConcreteREventSpec v AM M α) : ConvergentREvent v AM M α α :=
+   (ev : ConcreteREventSpec v AM M α β) : ConvergentREvent v AM M α β :=
   {
      guard := ev.guard
-     action := fun m x => (x, ev.action m x)
+     action := fun m x => (ev.output m x, ev.action m x)
      po := {
       safety := ev.safety
-      abstract := skip_Event AM α
+      abstract := funskip_Event AM ev.output
       strengthening := fun m x => by simp
       simulation := fun m x => by simp
                                   intros Hinv Hgrd am Href
@@ -357,3 +358,5 @@ def newConcreteREvent'' [Preorder v] [WellFoundedLT v]
                        [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
    (ev : ConcreteREventSpec'' v AM M) : ConvergentREvent v AM M Unit Unit :=
    newConcreteREvent (ConcreteREventSpec_from_ConcreteREventSpec'' ev)
+
+-/

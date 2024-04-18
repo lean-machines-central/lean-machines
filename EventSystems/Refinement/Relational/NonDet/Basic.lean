@@ -69,6 +69,82 @@ def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     }
   }
 
+structure RNDEventSpec' (AM) [Machine ACTX AM]
+                        (M) [Machine CTX M]
+                        [Refinement AM M] (α)
+  extends NDEventSpec' M α where
+
+  abstract : OrdinaryNDEvent AM α Unit
+
+  strengthening (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → abstract.guard am x
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ m', effect m x m'
+      → ∀ am, refine am m
+        → ∃ am', abstract.effect am x ((), am')
+                  → refine am' m'
+
+def RNDEventSpec'.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : RNDEventSpec' AM M α) : RNDEventSpec AM M α Unit :=
+  {
+    toNDEventSpec := ev.toNDEventSpec'.toNDEventSpec
+    abstract := ev.abstract
+    strengthening := ev.strengthening
+    simulation := fun m x => by simp
+                                intros Hinv Hgrd m' Heff am Href
+                                have Hsim := ev.simulation m x Hinv Hgrd m' Heff am Href
+                                exists ()
+  }
+
+@[simp]
+def newRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : RNDEventSpec' AM M α) : OrdinaryRNDEvent AM M α Unit :=
+  newRNDEvent ev.toRNDEventSpec
+
+structure RNDEventSpec'' (AM) [Machine ACTX AM]
+                         (M) [Machine CTX M]
+                         [Refinement AM M]
+  extends NDEventSpec'' M where
+
+  abstract : OrdinaryNDEvent AM Unit Unit
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → abstract.guard am ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ m', effect m m'
+      → ∀ am, refine am m
+        → ∃ am', abstract.effect am () ((), am')
+                  → refine am' m'
+
+def RNDEventSpec''.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : RNDEventSpec'' AM M) : RNDEventSpec AM M Unit Unit :=
+  {
+    toNDEventSpec := ev.toNDEventSpec''.toNDEventSpec
+    abstract := ev.abstract
+    strengthening := fun m () => by apply ev.strengthening
+    simulation := fun m () => by simp
+                                 intros Hinv Hgrd m' Heff am Href
+                                 have Hsim := ev.simulation m Hinv Hgrd m' Heff am Href
+                                 exists ()
+  }
+
+@[simp]
+def newRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : RNDEventSpec'' AM M) : OrdinaryRNDEvent AM M Unit Unit :=
+  newRNDEvent ev.toRNDEventSpec
+
 /- Initialization events -/
 
 structure _InitRNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]

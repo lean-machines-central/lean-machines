@@ -66,6 +66,12 @@ def fun_Event  (M) [Machine CTX M] (f : α → β) : _Event M α β :=
   action := fun m x => (f x, m)
 }
 
+@[simp]
+def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : _Event M α β :=
+{
+  action := fun m x => (xf m x, m)
+}
+
 /- Functor -/
 
 def map_Event [Machine CTX M] (f : α → β) (ev : _Event M γ α)  : _Event M γ β :=

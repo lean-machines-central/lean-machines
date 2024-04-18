@@ -29,6 +29,11 @@ def _NDEvent_fromEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β 
                                   m'' = m' ∧ x'' = x'
 }
 
+def skip_NDEVent [Machine CTX M] : _NDEvent M α β :=
+  {
+    effect := fun m _ (_, m') => m' = m
+  }
+
 -- The functor instance is existential, not suprising given the relational context
 instance [Machine CTX M] : Functor (_NDEvent M γ) where
   map f ev :=

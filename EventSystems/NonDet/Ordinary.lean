@@ -83,7 +83,7 @@ structure NDEventSpec' (M) [Machine CTX M] (α) where
     → ∃ m', effect m x m'
 
 @[simp]
-def NDEventSpec_from_NDEventSpec' [Machine CTX M] (ev : NDEventSpec' M α) : NDEventSpec M α Unit :=
+def NDEventSpec'.toNDEventSpec [Machine CTX M] (ev : NDEventSpec' M α) : NDEventSpec M α Unit :=
   { guard := ev.guard
     effect := fun m x ((), m') => ev.effect m x m'
     safety := fun m x => by simp ; apply ev.safety
@@ -92,7 +92,7 @@ def NDEventSpec_from_NDEventSpec' [Machine CTX M] (ev : NDEventSpec' M α) : NDE
 
 @[simp]
 def newNDEvent' {M} [Machine CTX M] (ev : NDEventSpec' M α) : OrdinaryNDEvent M α Unit :=
-  newNDEvent (NDEventSpec_from_NDEventSpec' ev)
+  newNDEvent ev.toNDEventSpec
 
 structure NDEventSpec'' (M) [Machine CTX M] where
   guard (m : M) : Prop := True
@@ -110,7 +110,7 @@ structure NDEventSpec'' (M) [Machine CTX M] where
     → ∃ m', effect m m'
 
 @[simp]
-def NDEventSpec_from_NDEventSpec'' [Machine CTX M] (ev : NDEventSpec'' M) : NDEventSpec M Unit Unit :=
+def NDEventSpec''.toNDEventSpec [Machine CTX M] (ev : NDEventSpec'' M) : NDEventSpec M Unit Unit :=
   { guard := fun m _ => ev.guard m
     effect := fun m () ((), m') => ev.effect m m'
     safety := fun m () => by simp ; apply ev.safety <;> assumption
@@ -119,7 +119,7 @@ def NDEventSpec_from_NDEventSpec'' [Machine CTX M] (ev : NDEventSpec'' M) : NDEv
 
 @[simp]
 def newNDEvent'' {M} [Machine CTX M] (ev : NDEventSpec'' M) : OrdinaryNDEvent M Unit Unit :=
-  newNDEvent (NDEventSpec_from_NDEventSpec'' ev)
+  newNDEvent ev.toNDEventSpec
 
 /- Initialiazation events -/
 
