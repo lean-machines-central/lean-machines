@@ -29,6 +29,7 @@ def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :
                                   m'' = m' ∧ x'' = x'
 }
 
+@[simp]
 def skip_NDEVent [Machine CTX M] : _NDEvent M α β :=
   {
     effect := fun m _ (_, m') => m' = m
