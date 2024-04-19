@@ -57,7 +57,7 @@ structure RDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement A
 @[simp]
 def newRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : RDetEventSpec AM M α β) : OrdinaryRDetEvent AM M α β :=
   {
-    to_Event := _Event_from_EventSpec ev.toEventSpec
+    to_Event := ev.to_Event
     po := {
       safety := ev.safety
       abstract := ev.abstract.to_NDEvent
@@ -85,11 +85,49 @@ structure RDetEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement 
         ∃ am', abstract.effect am x ((), am')
                ∧ refine am' m'
 
-def RDetEventSpec'.toRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def RDetEventSpec'.toRDetEventSpec  [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : RDetEventSpec' AM M α) : RDetEventSpec AM M α Unit :=
   {
     toEventSpec := ev.toEventSpec
+    abstract := ev.abstract
+    strengthening := ev.strengthening
+    simulation := ev.simulation
   }
 
 @[simp]
-def newRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : RDetEventSpec AM M α β) : OrdinaryRDetEvent AM M α β :=
+def newRDetEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : RDetEventSpec' AM M α) : OrdinaryRDetEvent AM M α Unit :=
+  newRDetEvent ev.toRDetEventSpec
+
+structure RDetEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  extends EventSpec'' M where
+
+  abstract : OrdinaryNDEvent AM Unit Unit
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → abstract.guard am ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → let m' := action m
+        ∃ am', abstract.effect am () ((), am')
+               ∧ refine am' m'
+
+def RDetEventSpec''.toRDetEventSpec  [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : RDetEventSpec'' AM M) : RDetEventSpec AM M Unit Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    abstract := ev.abstract
+    strengthening := fun m _ => ev.strengthening m
+    simulation := fun m _ => ev.simulation m
+  }
+
+@[simp]
+def newRDetEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : RDetEventSpec'' AM M) : OrdinaryRDetEvent AM M Unit Unit :=
+  newRDetEvent ev.toRDetEventSpec
