@@ -20,12 +20,12 @@ structure ConcreteREventSpec (v) [Preorder v] [WellFoundedLT v]
     Machine.invariant m
     → guard m x
     → ∀ am, refine (self:=instR) am m
-      →  refine (self:=instR) am (action m x)
+      →  refine (self:=instR) am (action m x).2
 
   convergence (m : M) (x : α):
     Machine.invariant m
     → guard m x
-    → let m' := (action m x)
+    → let m' := (action m x).2
       variant m' < variant m
 
 @[simp]

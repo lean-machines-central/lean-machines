@@ -48,8 +48,56 @@ structure AnticipatedNDEventSpec (v) [Preorder v] {CTX} (M) [Machine CTX M] (α)
                    → variant m' ≤ variant m
 
 @[simp]
-def newAnticipatedNDEvent {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedNDEventSpec v M α β) : AnticipatedNDEvent v M α β :=
+def newAnticipatedNDEvent [Preorder v] [Machine CTX M] (ev : AnticipatedNDEventSpec v M α β) : AnticipatedNDEvent v M α β :=
   AnticipatedNDEvent_fromOrdinary (newNDEvent ev.toNDEventSpec) ev.to_Variant.variant ev.nonIncreasing
+
+structure AnticipatedNDEventSpec' (v) [Preorder v] {CTX} (M) [Machine CTX M] (α)
+  extends _Variant v, NDEventSpec' M α where
+
+  nonIncreasing (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ m',  effect m x m'
+             → variant m' ≤ variant m
+
+@[simp]
+def AnticipatedNDEventSpec'.toAnticipatedNDEventSpec [Preorder v] [Machine CTX M]
+  (ev : AnticipatedNDEventSpec' v M α) : AnticipatedNDEventSpec v M α Unit :=
+  {
+    toNDEventSpec := ev.toNDEventSpec
+    variant := ev.variant
+    nonIncreasing := fun m x => by simp
+                                   intros Hinv Hgrd m' Heff
+                                   apply ev.nonIncreasing m x Hinv Hgrd ; assumption
+  }
+
+@[simp]
+def newAnticipatedNDEvent' [Preorder v] [Machine CTX M] (ev : AnticipatedNDEventSpec' v M α) : AnticipatedNDEvent v M α Unit :=
+  newAnticipatedNDEvent ev.toAnticipatedNDEventSpec
+
+structure AnticipatedNDEventSpec'' (v) [Preorder v] {CTX} (M) [Machine CTX M]
+  extends _Variant v, NDEventSpec'' M where
+
+  nonIncreasing (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ m',  effect m m'
+             → variant m' ≤ variant m
+
+@[simp]
+def AnticipatedNDEventSpec''.toAnticipatedNDEventSpec [Preorder v] [Machine CTX M]
+  (ev : AnticipatedNDEventSpec'' v M) : AnticipatedNDEventSpec v M Unit Unit :=
+  {
+    toNDEventSpec := ev.toNDEventSpec
+    variant := ev.variant
+    nonIncreasing := fun m x => by simp
+                                   intros Hinv Hgrd m' Heff
+                                   apply ev.nonIncreasing m Hinv Hgrd ; assumption
+  }
+
+@[simp]
+def newAnticipatedNDEvent'' [Preorder v] [Machine CTX M] (ev : AnticipatedNDEventSpec'' v M) : AnticipatedNDEvent v M Unit Unit :=
+  newAnticipatedNDEvent ev.toAnticipatedNDEventSpec
 
 /- Convergent events -/
 
@@ -123,6 +171,54 @@ def ConvergentNDEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Ma
       convergence := hconv
     }
   }
+
+structure ConvergentNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α)
+  extends _Variant v, NDEventSpec' M α where
+
+  convergence (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ m',  effect m x m'
+             → variant m' < variant m
+
+@[simp]
+def ConvergentNDEventSpec'.toConvergentNDEventSpec [Preorder v] [WellFoundedLT v] {M} [Machine CTX M]
+  (ev : ConvergentNDEventSpec' v M α) : ConvergentNDEventSpec v M α Unit :=
+  {
+    toNDEventSpec := ev.toNDEventSpec
+    variant := ev.variant
+    convergence := fun m x => by simp
+                                 intros Hinv Hgrd m' Heff
+                                 apply ev.convergence <;> assumption
+  }
+
+@[simp]
+def newConvergentNDEvent' [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : ConvergentNDEventSpec' v M α) : ConvergentNDEvent v M α Unit :=
+  newConvergentNDEvent ev.toConvergentNDEventSpec
+
+structure ConvergentNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M]
+  extends _Variant v, NDEventSpec'' M where
+
+  convergence (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ m',  effect m m'
+             → variant m' < variant m
+
+@[simp]
+def ConvergentNDEventSpec''.toConvergentNDEventSpec [Preorder v] [WellFoundedLT v] [Machine CTX M]
+  (ev : ConvergentNDEventSpec'' v M) : ConvergentNDEventSpec v M Unit Unit :=
+  {
+    toNDEventSpec := ev.toNDEventSpec
+    variant := ev.variant
+    convergence := fun m x => by simp
+                                 intros Hinv Hgrd m' Heff
+                                 apply ev.convergence <;> assumption
+  }
+
+@[simp]
+def newConvergentNDEvent'' [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : ConvergentNDEventSpec'' v M) : ConvergentNDEvent v M Unit Unit :=
+  newConvergentNDEvent ev.toConvergentNDEventSpec
 
 /- Algebraic properties -/
 

@@ -201,7 +201,7 @@ structure ConvergentREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine
 def ConvergentREventSpec'.toConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConvergentREventSpec' v AM M α) : ConvergentREventSpec v AM M α Unit :=
   {
-    toEventSpec := EventSpec_from_EventSpec' (ev.toEventSpec')
+    toEventSpec := ev.toEventSpec
     abstract := ev.abstract
     strengthening := ev.strengthening
     simulation := ev.simulation
@@ -243,7 +243,7 @@ structure ConvergentREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machin
 def ConvergentREventSpec''.toConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConvergentREventSpec'' v AM M) : ConvergentREventSpec v AM M Unit Unit :=
   {
-    toEventSpec := EventSpec_from_EventSpec'' (ev.toEventSpec'')
+    toEventSpec := ev.toEventSpec
     abstract := ev.abstract
     strengthening := fun m () => by simp ; apply ev.strengthening
     simulation := fun m () => by simp

@@ -18,8 +18,8 @@ structure _NDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) 
 structure OrdinaryNDEvent (M) [Machine CTX M] (α) (β) extends _NDEvent M α β where
   po : _NDEventPO to_NDEvent  (EventKind.TransNonDet Convergence.Ordinary)
 
-def OrdinaryNDEvent_fromOrdinaryEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryNDEvent M α β :=
-  let event := _NDEvent_fromEvent ev.to_Event
+def OrdinaryEvent.toOrdinaryNDEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryNDEvent M α β :=
+  let event := ev.to_Event.to_NDEvent
 {
   guard := event.guard
   effect := event.effect
@@ -187,7 +187,7 @@ structure InitNDEventSpec' (M) [Machine CTX M] (α) where
     → ∃ m, init x m
 
 @[simp]
-def InitNDEventSpec_from_InitNDEventSpec' [Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEventSpec M α Unit :=
+def InitNDEventSpec'.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEventSpec M α Unit :=
   {
     guard := ev.guard
     init := fun x ((), m) => ev.init x m
@@ -201,7 +201,7 @@ def InitNDEventSpec_from_InitNDEventSpec' [Machine CTX M] (ev : InitNDEventSpec'
 
 @[simp]
 def newInitNDEvent' [Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEvent M α Unit :=
-  newInitNDEvent (InitNDEventSpec_from_InitNDEventSpec' ev)
+  newInitNDEvent ev.toInitNDEventSpec
 
 structure InitNDEventSpec'' (M) [Machine CTX M] where
   guard : Prop := True
@@ -217,7 +217,7 @@ structure InitNDEventSpec'' (M) [Machine CTX M] where
     → ∃ m, init m
 
 @[simp]
-def InitNDEventSpec_from_InitNDEventSpec'' [Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEventSpec M Unit Unit :=
+def InitNDEventSpec''.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEventSpec M Unit Unit :=
   {
     guard := fun () => ev.guard
     init := fun () ((), m) => ev.init m
@@ -231,7 +231,7 @@ def InitNDEventSpec_from_InitNDEventSpec'' [Machine CTX M] (ev : InitNDEventSpec
 
 @[simp]
 def newInitNDEvent'' [Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEvent M Unit Unit :=
-  newInitNDEvent (InitNDEventSpec_from_InitNDEventSpec'' ev)
+  newInitNDEvent ev.toInitNDEventSpec
 
 /- Algebraic properties -/
 

@@ -132,8 +132,8 @@ structure AnticipatedRNDEventSpecFromAnticipated (v) [Preorder v] (AM) [Machine 
     → guard m x
     → ∀ y, ∀ m', effect m x (y, m')
                    → ∀ am, refine am m
-                           → ∃ z, ∃ am', abstract.effect am x (z, am')
-                                         → y = z ∧ refine am' m'
+                           → ∃ am', abstract.effect am x (y, am')
+                                    ∧ refine am' m'
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -175,7 +175,7 @@ structure AnticipatedRNDEventSpecFromAnticipated' (v) [Preorder v] (AM) [Machine
     → ∀ m', effect m x m'
             → ∀ am, refine am m
                     → ∃ am', abstract.effect am x ((), am')
-                             → refine am' m'
+                             ∧ refine am' m'
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -194,9 +194,8 @@ def AnticipatedRNDEventSpecFromAnticipated'.toAnticipatedRNDEventSpecFromAnticip
     abstract := ev.abstract
     strengthening := ev.strengthening
     simulation := fun m x => by simp
-                                intros Hinv Hgrd m' Heff am Href
-                                exists ()
-                                apply ev.simulation <;> assumption
+                                intros Hinv Hgrd _ m' Heff am Href
+                                apply ev.simulation m x Hinv Hgrd m' Heff am Href
   }
 
 @[simp]
@@ -221,7 +220,7 @@ structure AnticipatedRNDEventSpecFromAnticipated'' (v) [Preorder v] (AM) [Machin
     → ∀ m', effect m m'
             → ∀ am, refine am m
                     → ∃ am', abstract.effect am () ((), am')
-                             → refine am' m'
+                             ∧ refine am' m'
 
   nonIncreasing (m : M):
     Machine.invariant m
@@ -240,8 +239,7 @@ def AnticipatedRNDEventSpecFromAnticipated''.toAnticipatedRNDEventSpecFromAntici
     abstract := ev.abstract
     strengthening := fun m _ => by apply ev.strengthening
     simulation := fun m x => by simp
-                                intros Hinv Hgrd m' Heff am Href
-                                exists ()
+                                intros Hinv Hgrd _ m' Heff am Href
                                 apply ev.simulation <;> assumption
   }
 
@@ -295,8 +293,8 @@ structure ConvergentRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machin
     → guard m x
     → ∀ y, ∀ m', effect m x (y, m')
                    → ∀ am, refine am m
-                           → ∃ z, ∃ am', abstract.effect am x (z, am')
-                                         → y = z ∧ refine am' m'
+                           → ∃ am', abstract.effect am x (y, am')
+                                    ∧ refine am' m'
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -342,7 +340,7 @@ structure ConvergentRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machi
     → ∀ m', effect m x m'
             → ∀ am, refine am m
                     → ∃ am', abstract.effect am x ((), am')
-                             → refine am' m'
+                             ∧ refine am' m'
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -358,8 +356,7 @@ def ConvergentRNDEventSpec'.toConvergentRNDEventSpec [Preorder v] [WellFoundedLT
     abstract := ev.abstract
     strengthening := ev.strengthening
     simulation := fun m x => by simp
-                                intros Hinv Hgrd m' Heff am Href
-                                exists ()
+                                intros Hinv Hgrd _ m' Heff am Href
                                 apply ev.simulation <;> assumption
     variant := ev.variant
     convergence := fun m x => by simp
@@ -389,7 +386,7 @@ structure ConvergentRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Mach
     → ∀ m', effect m m'
             → ∀ am, refine am m
                     → ∃ am', abstract.effect am () ((), am')
-                             → refine am' m'
+                             ∧ refine am' m'
 
   convergence (m : M):
     Machine.invariant m
@@ -405,8 +402,7 @@ def ConvergentRNDEventSpec''.toConvergentRNDEventSpec [Preorder v] [WellFoundedL
     abstract := ev.abstract
     strengthening := fun m _ => by apply ev.strengthening
     simulation := fun m x => by simp
-                                intros Hinv Hgrd m' Heff am Href
-                                exists ()
+                                intros Hinv Hgrd _ m' Heff am Href
                                 apply ev.simulation <;> assumption
     variant := ev.variant
     convergence := fun m x => by simp

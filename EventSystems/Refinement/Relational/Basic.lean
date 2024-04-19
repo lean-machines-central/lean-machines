@@ -77,7 +77,7 @@ structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M
 @[simp]
 def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : REventSpec AM M α β) : OrdinaryREvent AM M α β :=
   {
-    to_Event := _Event_from_EventSpec ev.toEventSpec
+    to_Event := ev.to_Event
     po := {
       safety := ev.safety
       abstract := ev.abstract.to_Event

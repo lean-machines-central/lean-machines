@@ -22,7 +22,7 @@ by
       simp [H₁, H₂]
 
 @[simp]
-def _NDEvent_fromEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :=
+def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :=
 {
   guard := ev.guard
   effect := fun m x (x'', m'') => let (x', m') := ev.action m x

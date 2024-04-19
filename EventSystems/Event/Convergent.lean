@@ -134,7 +134,7 @@ structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [Machine C
 @[simp]
 def ConvergentEventSpec'.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec' v M α) : ConvergentEventSpec v M α Unit :=
   {
-    toEventSpec := EventSpec_from_EventSpec' ev.toEventSpec'
+    toEventSpec := ev.toEventSpec
     variant := ev.variant
     convergence := ev.convergence
   }
@@ -155,7 +155,7 @@ structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [Machine 
 @[simp]
 def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEventSpec v M Unit Unit :=
   {
-    toEventSpec := EventSpec_from_EventSpec'' ev.toEventSpec''
+    toEventSpec := ev.toEventSpec
     variant := ev.variant
     convergence := fun m () => by apply ev.convergence
   }
