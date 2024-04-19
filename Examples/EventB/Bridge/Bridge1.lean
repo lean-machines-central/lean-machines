@@ -5,6 +5,7 @@ import Examples.EventB.Bridge.Bridge0
 
 import EventSystems.Refinement.Relational.Basic
 import EventSystems.Refinement.Relational.Convergent
+import EventSystems.Refinement.Relational.Concrete
 
 
 namespace BridgeSpec
@@ -112,7 +113,7 @@ def LeaveToMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   }
 
 
-def EnterIsland : ConvergentREvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
+def EnterIsland : ConvergentRDetEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   newConcreteREvent'' {
     guard := fun b1 => b1.nbToIsland > 0
     action := fun b1 => ⟨b1.nbToIsland - 1, b1.nbOnIsland + 1, b1.nbFromIsland⟩
@@ -140,7 +141,7 @@ def EnterIsland : ConvergentREvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   }
 
 
-def LeaveIsland : ConvergentREvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
+def LeaveIsland : ConvergentRDetEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   newConcreteREvent'' {
     guard := fun b1 => b1.nbOnIsland > 0 ∧ b1.nbToIsland = 0
     action := fun b1 => ⟨b1.nbToIsland, b1.nbOnIsland - 1, b1.nbFromIsland + 1⟩
