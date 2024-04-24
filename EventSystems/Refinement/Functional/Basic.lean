@@ -74,7 +74,7 @@ structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM
 @[simp]
 def newFREvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M] (ev : FREventSpec AM M α β) : OrdinaryREvent AM M α β :=
   {
-    to_Event := _Event_from_EventSpec ev.toEventSpec
+    to_Event := ev.toEventSpec.to_Event
     po := {
       safety := ev.safety
       abstract := ev.abstract.to_Event
@@ -119,7 +119,7 @@ structure FREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement A
 def FREventSpec'.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : FREventSpec' AM M α) : FREventSpec AM M α Unit :=
   {
-    toEventSpec := EventSpec_from_EventSpec' ev.toEventSpec'
+    toEventSpec := ev.toEventSpec
     abstract := ev.abstract
     strengthening := ev.strengthening
     simulation := fun m x => by apply ev.simulation
@@ -150,7 +150,7 @@ structure FREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement 
 def FREventSpec''.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : FREventSpec'' AM M) : FREventSpec AM M Unit Unit :=
   {
-    toEventSpec := EventSpec_from_EventSpec'' ev.toEventSpec''
+    toEventSpec := ev.toEventSpec
     abstract := ev.abstract
     strengthening := fun m _ => by apply ev.strengthening
     simulation := fun m _ => by apply ev.simulation
@@ -212,7 +212,7 @@ structure InitFREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefineme
 @[simp]
 def InitFREventSpec'.toInitFREventSpec  [Machine ACTX AM] [Machine CTX M] [FRefinement AM M] (ev : InitFREventSpec' AM M α) : InitFREventSpec AM M α Unit :=
   {
-    toInitEventSpec := InitEventSpec_from_InitEventSpec' ev.toInitEventSpec'
+    toInitEventSpec := ev.toInitEventSpec
     abstract := ev.abstract
     simulation := fun x => by simp
                               intro Hgrd
@@ -241,7 +241,7 @@ structure InitFREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinem
 @[simp]
 def InitFREventSpec''.toInitFREventSpec  [Machine ACTX AM] [Machine CTX M] [FRefinement AM M] (ev : InitFREventSpec'' AM M) : InitFREventSpec AM M Unit Unit :=
   {
-    toInitEventSpec := InitEventSpec_from_InitEventSpec'' ev.toInitEventSpec''
+    toInitEventSpec := ev.toInitEventSpec
     abstract := ev.abstract
     simulation := fun () => by simp
                                apply ev.simulation
