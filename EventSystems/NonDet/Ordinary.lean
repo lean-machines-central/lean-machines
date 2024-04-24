@@ -48,16 +48,15 @@ structure NDEventSpec (M) [Machine CTX M] (α) (β) where
     → ∃ y, ∃ m', effect m x (y, m')
 
 @[simp]
-def _NDEvent_from_NDEventSpec [Machine CTX M] (ev : NDEventSpec M α β) : _NDEvent M α β :=
+def NDEventSpec.to_NDEvent [Machine CTX M] (ev : NDEventSpec M α β) : _NDEvent M α β :=
   { guard := ev.guard
     effect := ev.effect
   }
 
 @[simp]
 def newNDEvent {M} [Machine CTX M] (ev : NDEventSpec M α β) : OrdinaryNDEvent M α β :=
-  let event := _NDEvent_from_NDEventSpec ev
-  { guard := event.guard
-    effect := event.effect
+  {
+    to_NDEvent := ev.to_NDEvent
     po := { safety := fun m x => by simp
                                     intros Hinv Hgrd
                                     apply ev.safety <;> assumption

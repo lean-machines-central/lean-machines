@@ -53,9 +53,8 @@ structure RNDEventSpec {ACTX} (AM) [Machine ACTX AM]
 @[simp]
 def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : RNDEventSpec AM M α β) : OrdinaryRNDEvent AM M α β :=
-  let event := _NDEvent_from_NDEventSpec ev.toNDEventSpec
-  { guard := event.guard
-    effect := event.effect
+  {
+    to_NDEvent := ev.to_NDEvent
     po := { safety := fun m x => by simp
                                     intros Hinv Hgrd
                                     apply ev.safety <;> assumption
