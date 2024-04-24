@@ -48,9 +48,7 @@ structure AbstractREventSpec (AM) [Machine ACTX AM]
       → Machine.invariant (unlift (lift m) am' m x)
 
 @[simp]
-def newAbstractREvent {ACTX} {AM} [Machine ACTX AM]
-                       {CTX} {M} [Machine CTX M]
-                       [instR:Refinement AM M]
+def newAbstractREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
   (abs : AbstractREventSpec AM M α β) : OrdinaryREvent AM M α β :=
   { guard := fun (m : M) (x : α) => abs.event.guard (abs.lift m) x
     action := fun (m : M) (x : α) => let am := abs.lift m
