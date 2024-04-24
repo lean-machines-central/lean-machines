@@ -12,7 +12,7 @@ import EventSystems.Refinement.Relational.NonDet.Det.Convergent
 
 open Refinement
 
-structure ConcreteEventSpec (v) [Preorder v] [WellFoundedLT v]
+structure ConcreteREventSpec (v) [Preorder v] [WellFoundedLT v]
                              (AM) [instAM: Machine ACTX AM]
                              (M) [instM: Machine CTX M]
                             [instR: Refinement AM M] (α) (β)
@@ -31,14 +31,14 @@ structure ConcreteEventSpec (v) [Preorder v] [WellFoundedLT v]
       variant m' < variant m
 
 @[simp]
-def newConcreteEvent [Preorder v] [WellFoundedLT v]
+def newConcreteREvent [Preorder v] [WellFoundedLT v]
                        [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-   (ev : ConcreteEventSpec v AM M α β) : ConvergentRDetEvent v AM M α β :=
+   (ev : ConcreteREventSpec v AM M α β) : ConvergentRDetEvent v AM M α β :=
   {
     to_Event := ev.to_Event
     po := {
       safety := ev.safety
-      abstract := skip_NDEVent
+      abstract := skip_NDEvent
       strengthening := fun m x => by simp
       simulation := fun m x => by simp ; apply ev.simulation
       variant := ev.variant
@@ -56,7 +56,7 @@ def newConcreteEvent [Preorder v] [WellFoundedLT v]
   XXX : some redundancy below because of a strange unification issue ...
 -/
 
-structure ConcreteEventSpec' (v) [Preorder v] [WellFoundedLT v]
+structure ConcreteREventSpec' (v) [Preorder v] [WellFoundedLT v]
                              (AM) [instAM: Machine ACTX AM]
                              (M) [instM: Machine CTX M]
                             [instR: Refinement AM M] (α)
@@ -75,14 +75,14 @@ structure ConcreteEventSpec' (v) [Preorder v] [WellFoundedLT v]
       variant m' < variant m
 
 @[simp]
-def newConcreteEvent' [Preorder v] [WellFoundedLT v]
+def newConcreteREvent' [Preorder v] [WellFoundedLT v]
                        [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-   (ev : ConcreteEventSpec' v AM M α) : ConvergentRDetEvent v AM M α Unit :=
+   (ev : ConcreteREventSpec' v AM M α) : ConvergentRDetEvent v AM M α Unit :=
   {
     to_Event := ev.toEventSpec.to_Event
     po := {
       safety := ev.safety
-      abstract := skip_NDEVent
+      abstract := skip_NDEvent
       strengthening := fun m x => by simp
       simulation := fun m x => by simp ; apply ev.simulation
       variant := ev.variant
@@ -95,7 +95,7 @@ def newConcreteEvent' [Preorder v] [WellFoundedLT v]
     }
   }
 
-structure ConcreteEventSpec'' (v) [Preorder v] [WellFoundedLT v]
+structure ConcreteREventSpec'' (v) [Preorder v] [WellFoundedLT v]
                              (AM) [instAM: Machine ACTX AM]
                              (M) [instM: Machine CTX M]
                              [instR: Refinement AM M]
@@ -114,14 +114,14 @@ structure ConcreteEventSpec'' (v) [Preorder v] [WellFoundedLT v]
       variant m' < variant m
 
 @[simp]
-def newConcreteEvent'' [Preorder v] [WellFoundedLT v]
+def newConcreteREvent'' [Preorder v] [WellFoundedLT v]
                        [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-   (ev : ConcreteEventSpec'' v AM M) : ConvergentRDetEvent v AM M Unit Unit :=
+   (ev : ConcreteREventSpec'' v AM M) : ConvergentRDetEvent v AM M Unit Unit :=
   {
     to_Event := ev.toEventSpec.to_Event
     po := {
       safety := fun m _ => ev.safety m
-      abstract := skip_NDEVent
+      abstract := skip_NDEvent
       strengthening := fun m x => by simp
       simulation := fun m x => by simp ; apply ev.simulation
       variant := ev.variant
