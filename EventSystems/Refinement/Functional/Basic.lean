@@ -1,4 +1,5 @@
 
+import EventSystems.Event.Basic
 import EventSystems.Refinement.Relational.Basic
 
 class FRefinement {ACTX : outParam (Type u₁)} (AM)
@@ -71,6 +72,22 @@ structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM
       let (z, am') := abstract.action (lift m) x
       y = z ∧ am' = (lift m')
 
+theorem lift_strengthening [Machine CTX M] [Machine ACTX AM] [self: FRefinement AM M]
+   (m : M) (x : α) (agrd : AM → α → Prop) (grd : M → α → Prop)
+   (Hst: Machine.invariant m
+         → grd m x
+         → agrd (lift m) x) :
+  Machine.invariant m
+  → grd m x
+  → ∀ (am : AM), refine am m
+                 → agrd am x :=
+by
+  intros Hinv Hgrd am Href
+  have Href' := lift_ref (self:=self) m Hinv
+  have Huniq := refine_uniq (self:=self) am (lift m) m Hinv Href Href'
+  rw [Huniq]
+  exact Hst Hinv Hgrd
+
 @[simp]
 def newFREvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M] (ev : FREventSpec AM M α β) : OrdinaryREvent AM M α β :=
   {
@@ -78,12 +95,7 @@ def newFREvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M] (ev :
     po := {
       safety := ev.safety
       abstract := ev.abstract.to_Event
-      strengthening := fun m x => by simp
-                                     intros Hinv Hgrd am Href
-                                     have Href' := lift_ref (self:=instFR) m Hinv
-                                     have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
-                                     rw [Huniq]
-                                     apply ev.strengthening <;> assumption
+      strengthening := fun m x => lift_strengthening m x ev.abstract.guard ev.guard (ev.strengthening m x)
 
       simulation := fun m x => by simp
                                   intros Hinv Hgrd am Href
