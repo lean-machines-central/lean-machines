@@ -28,9 +28,9 @@ structure _RNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M
 structure OrdinaryRNDEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β) extends _NDEvent M α β where
   po : _RNDEventPO (instR:=instR) to_NDEvent (EventKind.TransNonDet Convergence.Ordinary)
 
-structure RNDEventSpec {ACTX} (AM) [Machine ACTX AM]
-                        {CTX} (M) [Machine CTX M]
-                        [Refinement AM M] (α) (β)
+structure RNDEventSpec (AM) [Machine ACTX AM]
+                       (M) [Machine CTX M]
+                      [Refinement AM M] (α) (β)
   extends NDEventSpec M α β where
 
   abstract : OrdinaryNDEvent AM α β
