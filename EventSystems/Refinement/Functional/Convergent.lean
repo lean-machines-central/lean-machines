@@ -60,6 +60,86 @@ def newAnticipatedFREventfromOrdinary [Preorder v] [Machine ACTX AM] [Machine CT
     }
   }
 
+structure AnticipatedFREventSpecFromOrdinary' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M] (α)
+  extends _Variant (M:=M) v, EventSpec' M α where
+
+  abstract : OrdinaryEvent AM α Unit
+
+  strengthening (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → abstract.guard (lift m) x
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := action m x
+      let ((), am') := abstract.action (lift m) x
+      am' = (lift m')
+
+  nonIncreasing (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := action m x
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedFREventSpecFromOrdinary'.toAnticipatedFREventSpecFromOrdinary [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (ev : AnticipatedFREventSpecFromOrdinary' v AM M α) : AnticipatedFREventSpecFromOrdinary v AM M α Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    abstract := ev.abstract
+    strengthening := ev.strengthening
+    simulation := fun m x => by simp ; apply ev.simulation
+    variant := ev.variant
+    nonIncreasing := ev.nonIncreasing
+  }
+
+@[simp]
+def newAnticipatedFREventfromOrdinary' [Preorder v] [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
+  (ev : AnticipatedFREventSpecFromOrdinary' v AM M α) : AnticipatedREvent v AM M α Unit :=
+  newAnticipatedFREventfromOrdinary ev.toAnticipatedFREventSpecFromOrdinary
+
+structure AnticipatedFREventSpecFromOrdinary'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+  extends _Variant (M:=M) v, EventSpec'' M where
+
+  abstract : OrdinaryEvent AM Unit Unit
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → abstract.guard (lift m) ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := action m
+      let ((), am') := abstract.action (lift m) ()
+      am' = (lift m')
+
+  nonIncreasing (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := action m
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedFREventSpecFromOrdinary''.toAnticipatedFREventSpecFromOrdinary [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (ev : AnticipatedFREventSpecFromOrdinary'' v AM M) : AnticipatedFREventSpecFromOrdinary v AM M Unit Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    abstract := ev.abstract
+    strengthening := fun m _ => ev.strengthening m
+    simulation := fun m _ => by simp ; apply ev.simulation
+    variant := ev.variant
+    nonIncreasing := fun m _ => ev.nonIncreasing m
+  }
+
+@[simp]
+def newAnticipatedFREventfromOrdinary'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (ev : AnticipatedFREventSpecFromOrdinary'' v AM M) : AnticipatedREvent v AM M Unit Unit :=
+  newAnticipatedFREventfromOrdinary ev.toAnticipatedFREventSpecFromOrdinary
+
 structure AnticipatedFREventSpecFromAnticipated (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M] (α) (β)
   extends _Variant (M:=M) v, EventSpec M α β where
 
@@ -113,6 +193,86 @@ def newAnticipatedFREventfromAnticipated [Preorder v] [Machine ACTX AM] [Machine
       nonIncreasing := ev.nonIncreasing
     }
   }
+
+structure AnticipatedFREventSpecFromAnticipated' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M] (α)
+  extends _Variant (M:=M) v, EventSpec' M α where
+
+  abstract : AnticipatedEvent v AM α Unit
+
+  strengthening (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → abstract.guard (lift m) x
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := action m x
+      let ((), am') := abstract.action (lift m) x
+      am' = (lift m')
+
+  nonIncreasing (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := action m x
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedFREventSpecFromAnticipated'.toAnticipatedFREventSpecFromAnticipated [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (ev : AnticipatedFREventSpecFromAnticipated' v AM M α) : AnticipatedFREventSpecFromAnticipated v AM M α Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    abstract := ev.abstract
+    strengthening := ev.strengthening
+    simulation := fun m x => by simp ; apply ev.simulation
+    variant := ev.variant
+    nonIncreasing := ev.nonIncreasing
+  }
+
+@[simp]
+def newAnticipatedFREventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (ev : AnticipatedFREventSpecFromAnticipated' v AM M α) : AnticipatedREvent v AM M α Unit :=
+  newAnticipatedFREventfromAnticipated ev.toAnticipatedFREventSpecFromAnticipated
+
+structure AnticipatedFREventSpecFromAnticipated'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+  extends _Variant (M:=M) v, EventSpec'' M where
+
+  abstract : AnticipatedEvent v AM Unit Unit
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → abstract.guard (lift m) ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := action m
+      let ((), am') := abstract.action (lift m) x
+      am' = (lift m')
+
+  nonIncreasing (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := action m
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedFREventSpecFromAnticipated''.toAnticipatedFREventSpecFromAnticipated [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (ev : AnticipatedFREventSpecFromAnticipated'' v AM M) : AnticipatedFREventSpecFromAnticipated v AM M Unit Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    abstract := ev.abstract
+    strengthening := fun m _ => ev.strengthening m
+    simulation := fun m _ => by simp ; apply ev.simulation
+    variant := ev.variant
+    nonIncreasing := fun m _ => ev.nonIncreasing m
+  }
+
+@[simp]
+def newAnticipatedFREventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (ev : AnticipatedFREventSpecFromAnticipated'' v AM M) : AnticipatedREvent v AM M Unit Unit :=
+  newAnticipatedFREventfromAnticipated ev.toAnticipatedFREventSpecFromAnticipated
 
 structure ConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M] (α) (β)
   extends _Variant (M:=M) v, EventSpec M α β where
