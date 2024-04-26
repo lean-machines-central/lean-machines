@@ -66,6 +66,7 @@ structure FRNDEventSpec' (AM) [Machine ACTX AM]
     → ∀ m', effect m x m'
       → abstract.effect (lift m) x ((), (lift m'))
 
+@[simp]
 def FRNDEventSpec'.toFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : FRNDEventSpec' AM M α) : FRNDEventSpec AM M α Unit :=
   {
@@ -100,6 +101,7 @@ structure FRNDEventSpec'' (AM) [Machine ACTX AM]
     → ∀ m', effect m m'
       → abstract.effect (lift m) () ((), (lift m'))
 
+@[simp]
 def FRNDEventSpec''.toFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : FRNDEventSpec'' AM M) : FRNDEventSpec AM M Unit Unit :=
   {
