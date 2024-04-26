@@ -137,6 +137,97 @@ def newAnticipatedRDetEvent_fromAnticipated [Preorder v] [Machine ACTX AM] [Mach
     }
   }
 
+structure AnticipatedRDetEventSpec_fromAnticipated' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α)
+  extends EventSpec' M α where
+
+  abstract : AnticipatedNDEvent v AM α Unit
+
+  strengthening (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → abstract.guard am x
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → let m' := action m x
+        ∃ am', abstract.effect am x ((), am')
+               ∧ refine am' m'
+
+  variant (m : M) : v
+
+  nonIncreasing (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := action m x
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedRDetEventSpec_fromAnticipated'.toAnticipatedRDetEventSpec_fromAnticipated
+  [Preorder v] [Machine ACTX AM] [Machine CTX M] [instFR: Refinement AM M]
+  (ev : AnticipatedRDetEventSpec_fromAnticipated' v AM M α) : AnticipatedRDetEventSpec_fromAnticipated v AM M α Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    abstract := ev.abstract
+    strengthening := ev.strengthening
+    simulation := ev.simulation
+    variant := ev.variant
+    nonIncreasing := ev.nonIncreasing
+  }
+
+@[simp]
+def newAnticipatedRDetEvent_fromAnticipated' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : AnticipatedRDetEventSpec_fromAnticipated' v AM M α) : AnticipatedRDetEvent v AM M α Unit :=
+  newAnticipatedRDetEvent_fromAnticipated ev.toAnticipatedRDetEventSpec_fromAnticipated
+
+structure AnticipatedRDetEventSpec_fromAnticipated'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  extends EventSpec'' M where
+
+  abstract : AnticipatedNDEvent v AM Unit Unit
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → abstract.guard am ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → let m' := action m
+        ∃ am', abstract.effect am () ((), am')
+               ∧ refine am' m'
+
+  variant (m : M) : v
+
+  nonIncreasing (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := action m
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedRDetEventSpec_fromAnticipated''.toAnticipatedRDetEventSpec_fromAnticipated
+  [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : AnticipatedRDetEventSpec_fromAnticipated'' v AM M) : AnticipatedRDetEventSpec_fromAnticipated v AM M Unit Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    abstract := ev.abstract
+    strengthening := fun m _ => ev.strengthening m
+    simulation := fun m _ => ev.simulation m
+    variant := ev.variant
+    nonIncreasing := fun m _ => ev.nonIncreasing m
+  }
+
+@[simp]
+def newAnticipatedRDetEvent_fromAnticipated'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : AnticipatedRDetEventSpec_fromAnticipated'' v AM M) : AnticipatedRDetEvent v AM M Unit Unit :=
+  newAnticipatedRDetEvent_fromAnticipated ev.toAnticipatedRDetEventSpec_fromAnticipated
+
+
 structure _ConvergentRDetEventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
           (ev : _Event M α β) (kind : EventKind)
           extends _AnticipatedRDetEventPO v (instR:=instR) ev kind  where
