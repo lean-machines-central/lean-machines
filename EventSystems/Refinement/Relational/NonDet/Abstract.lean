@@ -90,7 +90,9 @@ def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M
           have Hainv := refine_safe (abs.lift m) m Hinv Href
           have Hainv' := abs.event.po.safety (abs.lift m) x Hainv Hagrd y (abs.lift m') Heff
           apply abs.step_conc m x Hinv Hagrd y m' Heff Hainv'
-          -- this is the safety proof ! (need to reuse)
+          -- this is the safety proof ! (TODO : reuse)
         apply abs.lift_ref ; assumption
     }
   }
+
+-- TODO :  Abstract anticipated and convergent
