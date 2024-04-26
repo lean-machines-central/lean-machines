@@ -8,6 +8,7 @@ import «EventSystems».Refinement.Relational.Convergent
 
 import «Examples».EventB.Bridge.Bridge0
 import «Examples».EventB.Bridge.Bridge1
+import «Examples».EventB.Bridge.Bridge2
 
 
 

@@ -1,5 +1,6 @@
 
 import EventSystems.Event.Ordinary
+import EventSystems.Refinement.Relational.Convergent
 import EventSystems.Refinement.Relational.NonDet.Det.Basic
 import EventSystems.Refinement.Relational.NonDet.Convergent
 
@@ -241,6 +242,19 @@ structure _ConvergentRDetEventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACT
 structure ConvergentRDetEvent (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β)
   extends _Event M α β where
   po : _ConvergentRDetEventPO v (instR:=instR) to_Event (EventKind.TransDet Convergence.Convergent)
+
+@[simp]
+def ConvergentRDetEvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+  (ev : ConvergentRDetEvent v AM M α β) : ConvergentEvent v M α β :=
+  {
+    to_Event := ev.to_Event
+    po := {
+      to_EventPO := ev.po.to_AnticipatedRDetEventPO.to_EventPO
+      variant := ev.po.variant
+      nonIncreasing := ev.po.nonIncreasing
+      convergence := ev.po.convergence
+    }
+  }
 
 structure ConvergentRDetEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M] (α) (β)
   extends EventSpec M α β where

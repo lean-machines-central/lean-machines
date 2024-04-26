@@ -347,7 +347,7 @@ def bval (b : Bool) : Nat :=
   | false => 0
   | true => 1
 
-def MailandTLGreen : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+def MailandTLGreen : ConvergentRDetEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
   newConcreteREvent'' {
     guard := fun b2 => b2.mainlandTL = Color.Red ∧ b2.nbToIsland + b2.nbOnIsland < ctx.maxCars ∧ b2.nbFromIsland = 0 ∧ b2.islandPass = true
 
@@ -371,7 +371,7 @@ def MailandTLGreen : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
     simulation := fun b2 => by simp [Refinement.refine, refine]
   }
 
-def IslandTLGreen : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
+def IslandTLGreen : ConvergentRDetEvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
   newConcreteREvent'' {
     guard := fun b2 => b2.islandTL = Color.Red ∧ b2.nbOnIsland > 0 ∧ b2.nbToIsland = 0 ∧ b2.mainlandPass = true
 
