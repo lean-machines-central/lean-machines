@@ -55,7 +55,8 @@ structure RDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement A
                ∧ refine am' m'
 
 @[simp]
-def newRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : RDetEventSpec AM M α β) : OrdinaryRDetEvent AM M α β :=
+def newRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : RDetEventSpec AM M α β) : OrdinaryRDetEvent AM M α β :=
   {
     to_Event := ev.to_Event
     po := {
@@ -192,7 +193,8 @@ structure InitRDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refineme
               ∧ refine am' m'
 
 @[simp]
-def newInitRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRDetEventSpec AM M α β) : InitRDetEvent AM M α β :=
+def newInitRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : InitRDetEventSpec AM M α β) : InitRDetEvent AM M α β :=
   {
     guard := fun m x => m = Machine.reset ∧ ev.guard x
     action := fun _ x => ev.init x
