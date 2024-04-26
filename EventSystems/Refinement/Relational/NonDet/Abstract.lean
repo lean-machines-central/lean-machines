@@ -24,11 +24,11 @@ structure AbstractRNDEventSpec (AM) [Machine ACTX AM]
     → ∀ y, ∀ am', event.effect (lift m) x (y, am')
                   → Machine.invariant (unlift (lift m) am' m x)
 
-  step_unlift (m : M) (x : α):
+  step_conc (m : M) (x : α):
     Machine.invariant m
     → event.guard (lift m) x
     → ∀ y, ∀ m', event.effect (lift m) x (y, lift m')
-                  → Machine.invariant (unlift (lift m) (lift m') m x)
+                  → Machine.invariant (lift m')
                   → Machine.invariant m'
 
   lift_unlift (m : M) (am am' : AM) (x : α):
@@ -45,13 +45,11 @@ def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M
     po := {
       safety := fun m x => by
         simp
-        intros Hinv Hgrd y m' Heff
+        intros Hinv Hagrd y m' Heff
         have Href := abs.lift_ref m Hinv
         have Hainv := refine_safe (abs.lift m) m Hinv Href
-        have Hainv' := abs.event.po.safety (abs.lift m) x Hainv Hgrd y (abs.lift m') Heff
-        have Hssafe := abs.step_safe m x Hinv Hgrd y (abs.lift m') Heff
-        have Hsunlift := abs.step_unlift m x Hinv Hgrd y m' Heff Hssafe
-        exact Hsunlift
+        have Hainv' := abs.event.po.safety (abs.lift m) x Hainv Hagrd y (abs.lift m') Heff
+        apply abs.step_conc m x Hinv Hagrd y m' Heff Hainv'
 
       feasibility := fun m x => by
         simp
@@ -91,9 +89,7 @@ def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M
           have Href := abs.lift_ref m Hinv
           have Hainv := refine_safe (abs.lift m) m Hinv Href
           have Hainv' := abs.event.po.safety (abs.lift m) x Hainv Hagrd y (abs.lift m') Heff
-          have Hssafe := abs.step_safe m x Hinv Hagrd y (abs.lift m') Heff
-          have Hsunlift := abs.step_unlift m x Hinv Hagrd y m' Heff Hssafe
-          exact Hsunlift
+          apply abs.step_conc m x Hinv Hagrd y m' Heff Hainv'
           -- this is the safety proof ! (need to reuse)
         apply abs.lift_ref ; assumption
     }
