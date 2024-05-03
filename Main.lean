@@ -10,6 +10,8 @@ import «Examples».EventB.Bridge.Bridge0
 import «Examples».EventB.Bridge.Bridge1
 import «Examples».EventB.Bridge.Bridge2
 
+import «Examples».EventB.Courses.M0
+import «Examples».EventB.Courses.M1
 
 
 def main : IO Unit :=

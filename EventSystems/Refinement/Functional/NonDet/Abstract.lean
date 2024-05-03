@@ -43,13 +43,6 @@ structure AbstractFRNDEventSpec (AM) [Machine ACTX AM]
     → ∀ y, ∀ am', event.effect (lift m) x (y, am')
                   → Machine.invariant (unlift (lift m) am' m x)
 
-  step_conc (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → ∀ y, ∀ m', event.effect (lift m) x (y, lift m')
-                  → Machine.invariant (M:=AM) (lift m')
-                  → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM) (x : α):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m x) = am'
@@ -62,7 +55,6 @@ def AbstractFRNDEventSpec.toAbstractRNDEventSpec [Machine ACTX AM] [Machine CTX 
     event := ev.event
     step_ref := ev.step_ref
     step_safe := ev.step_safe
-    step_conc := ev.step_conc
     lift_unlift := ev.lift_unlift
   }
 
@@ -90,13 +82,6 @@ structure AbstractFRNDEventSpec' (AM) [Machine ACTX AM]
     → ∀ am', event.effect (lift m) x ((), am')
              → Machine.invariant (unlift (lift m) am' m x)
 
-  step_conc (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → ∀ m', event.effect (lift m) x ((), lift m')
-            → Machine.invariant (M:=AM) (lift m')
-            → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM) (x : α):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m x) = am'
@@ -109,7 +94,6 @@ def AbstractFRNDEventSpec'.toAbstractFRNDEventSpec [Machine ACTX AM] [Machine CT
     event := ev.event
     step_ref := fun m x Hinv Hgrd _ => ev.step_ref m x Hinv Hgrd
     step_safe := fun m x Hinv Hgrd _ => ev.step_safe m x Hinv Hgrd
-    step_conc := fun m x Hinv Hgrd _ => ev.step_conc m x Hinv Hgrd
     lift_unlift := ev.lift_unlift
   }
 
@@ -137,13 +121,6 @@ structure AbstractFRNDEventSpec'' (AM) [Machine ACTX AM]
     → ∀ am', event.effect (lift m) () ((), am')
              → Machine.invariant (unlift (lift m) am' m ())
 
-  step_conc (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → ∀ m', event.effect (lift m) () ((), lift m')
-            → Machine.invariant (M:=AM) (lift m')
-            → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m ()) = am'
@@ -156,7 +133,6 @@ def AbstractFRNDEventSpec''.toAbstractFRNDEventSpec [Machine ACTX AM] [Machine C
     event := ev.event
     step_ref := fun m _ Hinv Hgrd _ => ev.step_ref m Hinv Hgrd
     step_safe := fun m _ Hinv Hgrd _ => ev.step_safe m Hinv Hgrd
-    step_conc := fun m _ Hinv Hgrd _ => ev.step_conc m Hinv Hgrd
     lift_unlift := fun m am am' _ => ev.lift_unlift m am am'
   }
 
@@ -186,13 +162,6 @@ structure AbstractAnticipatedFRNDEventSpec
     → ∀ y, ∀ am', event.effect (lift m) x (y, am')
                   → Machine.invariant (unlift (lift m) am' m x)
 
-  step_conc (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → ∀ y, ∀ m', event.effect (lift m) x (y, lift m')
-                  → Machine.invariant (M:=AM) (lift m')
-                  → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM) (x : α):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m x) = am'
@@ -205,7 +174,6 @@ def AbstractAnticipatedFRNDEventSpec.toAbstractAnticipatedRNDEventSpec [Preorder
     event := ev.event
     step_ref := ev.step_ref
     step_safe := ev.step_safe
-    step_conc := ev.step_conc
     lift_unlift := ev.lift_unlift
   }
 
@@ -235,13 +203,6 @@ structure AbstractAnticipatedFRNDEventSpec'
     → ∀ am', event.effect (lift m) x ((), am')
              → Machine.invariant (unlift (lift m) am' m x)
 
-  step_conc (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → ∀ m', event.effect (lift m) x ((), lift m')
-            → Machine.invariant (M:=AM) (lift m')
-            → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM) (x : α):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m x) = am'
@@ -254,7 +215,6 @@ def AbstractAnticipatedFRNDEventSpec'.toAbstractAnticipatedFRNDEventSpec [Preord
     event := ev.event
     step_ref := fun m x Hinv Hgrd _ => ev.step_ref m x Hinv Hgrd
     step_safe := fun m x Hinv Hgrd _ => ev.step_safe m x Hinv Hgrd
-    step_conc := fun m x Hinv Hgrd _ => ev.step_conc m x Hinv Hgrd
     lift_unlift := ev.lift_unlift
   }
 
@@ -284,13 +244,6 @@ structure AbstractAnticipatedFRNDEventSpec''
     → ∀ am', event.effect (lift m) () ((), am')
              → Machine.invariant (unlift (lift m) am' m ())
 
-  step_conc (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → ∀ m', event.effect (lift m) () ((), lift m')
-            → Machine.invariant (M:=AM) (lift m')
-            → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m ()) = am'
@@ -303,7 +256,6 @@ def AbstractAnticipatedFRNDEventSpec''.toAbstractAnticipatedFRNDEventSpec [Preor
     event := ev.event
     step_ref := fun m _ Hinv Hgrd _ => ev.step_ref m Hinv Hgrd
     step_safe := fun m _ Hinv Hgrd _ => ev.step_safe m Hinv Hgrd
-    step_conc := fun m _ Hinv Hgrd _ => ev.step_conc m Hinv Hgrd
     lift_unlift := fun m am' am _ => ev.lift_unlift m am' am
   }
 
@@ -333,13 +285,6 @@ structure AbstractConvergentFRNDEventSpec
     → ∀ y, ∀ am', event.effect (lift m) x (y, am')
                   → Machine.invariant (unlift (lift m) am' m x)
 
-  step_conc (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → ∀ y, ∀ m', event.effect (lift m) x (y, lift m')
-                  → Machine.invariant (M:=AM) (lift m')
-                  → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM) (x : α):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m x) = am'
@@ -352,7 +297,6 @@ def AbstractConvergentFRNDEventSpec.toAbstractConvergentRNDEventSpec [Preorder v
     event := ev.event
     step_ref := ev.step_ref
     step_safe := ev.step_safe
-    step_conc := ev.step_conc
     lift_unlift := ev.lift_unlift
   }
 
@@ -382,13 +326,6 @@ structure AbstractConvergentFRNDEventSpec'
     → ∀ am', event.effect (lift m) x ((), am')
              → Machine.invariant (unlift (lift m) am' m x)
 
-  step_conc (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → ∀ m', event.effect (lift m) x ((), lift m')
-            → Machine.invariant (M:=AM) (lift m')
-            → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM) (x : α):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m x) = am'
@@ -401,7 +338,6 @@ def AbstractConvergentFRNDEventSpec'.toAbstractConvergentFRNDEventSpec [Preorder
     event := ev.event
     step_ref := fun m x Hinv Hgrd _ => ev.step_ref m x Hinv Hgrd
     step_safe := fun m x Hinv Hgrd _ => ev.step_safe m x Hinv Hgrd
-    step_conc := fun m x Hinv Hgrd _ => ev.step_conc m x Hinv Hgrd
     lift_unlift := ev.lift_unlift
   }
 
@@ -431,13 +367,6 @@ structure AbstractConvergentFRNDEventSpec''
     → ∀ am', event.effect (lift m) () ((), am')
              → Machine.invariant (unlift (lift m) am' m ())
 
-  step_conc (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → ∀ m', event.effect (lift m) () ((), lift m')
-            → Machine.invariant (M:=AM) (lift m')
-            → Machine.invariant (M:=M) m'
-
   lift_unlift (m : M) (am am' : AM):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m ()) = am'
@@ -450,7 +379,6 @@ def AbstractConvergentFRNDEventSpec''.toAbstractConvergentFRNDEventSpec [Preorde
     event := ev.event
     step_ref := fun m _ Hinv Hgrd _ => ev.step_ref m Hinv Hgrd
     step_safe := fun m _ Hinv Hgrd _ => ev.step_safe m Hinv Hgrd
-    step_conc := fun m _ Hinv Hgrd _ => ev.step_conc m Hinv Hgrd
     lift_unlift := fun m am' am _ => ev.lift_unlift m am' am
   }
 

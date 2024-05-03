@@ -19,12 +19,8 @@ structure AbstractSRNDEventSpec (AM) [Machine ACTX AM]
     → ∀ y, ∀ am', event.effect (lift m) x (y, am')
                   → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
-def AbstractSRNDEventSpec.toAbstractSFNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractSRNDEventSpec.toAbstractFRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
   (ev : AbstractSRNDEventSpec AM M α β) : AbstractFRNDEventSpec AM M α β :=
   {
     event := ev.event
@@ -45,11 +41,6 @@ def AbstractSRNDEventSpec.toAbstractSFNDEventSpec  [Machine ACTX AM] [Machine CT
       intros Hinv Hgrd _ am' Heff
       exact ev.step_inv m x Hinv Hgrd _ am' Heff
 
-    step_conc := fun m x => by
-      intros Hinv Hgrd y m' Heff _
-      have Hsi := ev.step_inv m x Hinv Hgrd y (lift m') Heff
-      rw [ev.unlift_lift] at Hsi <;> assumption
-
     lift_unlift := fun m am am' x => by
       simp
       intros Hinv Hainv'
@@ -59,7 +50,7 @@ def AbstractSRNDEventSpec.toAbstractSFNDEventSpec  [Machine ACTX AM] [Machine CT
 @[simp]
 def newAbstractSRNDEvent [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractSRNDEventSpec AM M α β) : OrdinaryRNDEvent AM M α β :=
-  newAbstractFRNDEvent ev.toAbstractSFNDEventSpec
+  newAbstractFRNDEvent ev.toAbstractFRNDEventSpec
 
 structure AbstractSRNDEventSpec' (AM) [Machine ACTX AM]
                              (M) [Machine CTX M]
@@ -74,17 +65,12 @@ structure AbstractSRNDEventSpec' (AM) [Machine ACTX AM]
     → ∀ am', event.effect (lift m) x ((), am')
              → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
 def AbstractSRNDEventSpec'.toAbstractSRNDEventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractSRNDEventSpec' AM M α) : AbstractSRNDEventSpec AM M α Unit :=
   {
     event := ev.event
     step_inv := fun m x Hinv Hgrd _ => ev.step_inv m x Hinv Hgrd
-    unlift_lift := ev.unlift_lift
   }
 
 @[simp]
@@ -105,17 +91,12 @@ structure AbstractSRNDEventSpec'' (AM) [Machine ACTX AM]
     → ∀ am', event.effect (lift m) () ((), am')
              → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
 def AbstractSRNDEventSpec''.toAbstractSRNDEventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractSRNDEventSpec'' AM M) : AbstractSRNDEventSpec AM M Unit Unit :=
   {
     event := ev.event
     step_inv := fun m _ Hinv Hgrd _ => ev.step_inv m Hinv Hgrd
-    unlift_lift := ev.unlift_lift
   }
 
 @[simp]
@@ -137,12 +118,8 @@ structure AbstractAnticipatedSRNDEventSpec (v) [Preorder v]
     → ∀ y, ∀ am', event.effect (lift m) x (y, am')
                   → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
-def AbstractAnticipatedSRNDEventSpec.toAbstractAnticipatedSFNDEventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractAnticipatedSRNDEventSpec.toAbstractAnticipatedFRNDEventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
   (ev : AbstractAnticipatedSRNDEventSpec v AM M α β) : AbstractAnticipatedFRNDEventSpec v AM M α β :=
   {
     event := ev.event
@@ -163,11 +140,6 @@ def AbstractAnticipatedSRNDEventSpec.toAbstractAnticipatedSFNDEventSpec [Preorde
       intros Hinv Hgrd _ am' Heff
       exact ev.step_inv m x Hinv Hgrd _ am' Heff
 
-    step_conc := fun m x => by
-      intros Hinv Hgrd y m' Heff _
-      have Hsi := ev.step_inv m x Hinv Hgrd y (lift m') Heff
-      rw [ev.unlift_lift] at Hsi <;> assumption
-
     lift_unlift := fun m am am' x => by
       simp
       intros Hinv Hainv'
@@ -177,7 +149,7 @@ def AbstractAnticipatedSRNDEventSpec.toAbstractAnticipatedSFNDEventSpec [Preorde
 @[simp]
 def newAbstractAnticipatedSRNDEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractAnticipatedSRNDEventSpec v AM M α β) : AnticipatedRNDEvent v AM M α β :=
-  newAbstractAnticipatedFRNDEvent ev.toAbstractAnticipatedSFNDEventSpec
+  newAbstractAnticipatedFRNDEvent ev.toAbstractAnticipatedFRNDEventSpec
 
 structure AbstractAnticipatedSRNDEventSpec' (v) [Preorder v]
                              (AM) [Machine ACTX AM]
@@ -193,17 +165,12 @@ structure AbstractAnticipatedSRNDEventSpec' (v) [Preorder v]
     → ∀ am', event.effect (lift m) x ((), am')
              → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
 def AbstractAnticipatedSRNDEventSpec'.toAbstractAnticipatedSRNDEventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractAnticipatedSRNDEventSpec' v AM M α) : AbstractAnticipatedSRNDEventSpec v AM M α Unit :=
   {
     event := ev.event
     step_inv := fun m x Hinv Hgrd _ => ev.step_inv m x Hinv Hgrd
-    unlift_lift := ev.unlift_lift
   }
 
 @[simp]
@@ -225,17 +192,12 @@ structure AbstractAnticipatedSRNDEventSpec'' (v) [Preorder v]
     → ∀ am', event.effect (lift m) () ((), am')
              → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
 def AbstractAnticipatedSRNDEventSpec''.toAbstractAnticipatedSRNDEventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractAnticipatedSRNDEventSpec'' v AM M) : AbstractAnticipatedSRNDEventSpec v AM M Unit Unit :=
   {
     event := ev.event
     step_inv := fun m _ Hinv Hgrd _ => ev.step_inv m Hinv Hgrd
-    unlift_lift := ev.unlift_lift
   }
 
 @[simp]
@@ -257,12 +219,8 @@ structure AbstractConvergentSRNDEventSpec (v) [Preorder v] [WellFoundedLT v]
     → ∀ y, ∀ am', event.effect (lift m) x (y, am')
                   → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
-def AbstractConvergentSRNDEventSpec.toAbstractConvergentSFNDEventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractConvergentSRNDEventSpec.toAbstractConvergentFRNDEventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
   (ev : AbstractConvergentSRNDEventSpec v AM M α β) : AbstractConvergentFRNDEventSpec v AM M α β :=
   {
     event := ev.event
@@ -283,11 +241,6 @@ def AbstractConvergentSRNDEventSpec.toAbstractConvergentSFNDEventSpec [Preorder 
       intros Hinv Hgrd _ am' Heff
       exact ev.step_inv m x Hinv Hgrd _ am' Heff
 
-    step_conc := fun m x => by
-      intros Hinv Hgrd y m' Heff _
-      have Hsi := ev.step_inv m x Hinv Hgrd y (lift m') Heff
-      rw [ev.unlift_lift] at Hsi <;> assumption
-
     lift_unlift := fun m am am' x => by
       simp
       intros Hinv Hainv'
@@ -297,7 +250,7 @@ def AbstractConvergentSRNDEventSpec.toAbstractConvergentSFNDEventSpec [Preorder 
 @[simp]
 def newAbstractConvergentSRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractConvergentSRNDEventSpec v AM M α β) : ConvergentRNDEvent v AM M α β :=
-  newAbstractConvergentFRNDEvent ev.toAbstractConvergentSFNDEventSpec
+  newAbstractConvergentFRNDEvent ev.toAbstractConvergentFRNDEventSpec
 
 structure AbstractConvergentSRNDEventSpec' (v) [Preorder v] [WellFoundedLT v]
                              (AM) [Machine ACTX AM]
@@ -313,17 +266,12 @@ structure AbstractConvergentSRNDEventSpec' (v) [Preorder v] [WellFoundedLT v]
     → ∀ am', event.effect (lift m) x ((), am')
              → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
 def AbstractConvergentSRNDEventSpec'.toAbstractConvergentSRNDEventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractConvergentSRNDEventSpec' v AM M α) : AbstractConvergentSRNDEventSpec v AM M α Unit :=
   {
     event := ev.event
     step_inv := fun m x Hinv Hgrd _ => ev.step_inv m x Hinv Hgrd
-    unlift_lift := ev.unlift_lift
   }
 
 @[simp]
@@ -345,17 +293,12 @@ structure AbstractConvergentSRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v]
     → ∀ am', event.effect (lift m) () ((), am')
              → Machine.invariant (unlift m am')
 
-  unlift_lift  (m m' : M):
-    Machine.invariant m
-    → unlift (self:=instSR) m (lift m') = m'
-
 @[simp]
 def AbstractConvergentSRNDEventSpec''.toAbstractConvergentSRNDEventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (ev : AbstractConvergentSRNDEventSpec'' v AM M) : AbstractConvergentSRNDEventSpec v AM M Unit Unit :=
   {
     event := ev.event
     step_inv := fun m _ Hinv Hgrd _ => ev.step_inv m Hinv Hgrd
-    unlift_lift := ev.unlift_lift
   }
 
 @[simp]

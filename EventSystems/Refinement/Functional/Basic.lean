@@ -30,13 +30,13 @@ by
 
 @[simp]
 def defaultRefine {AM} [Machine ACTX AM] {M} [Machine CTX M]
-  (abs : M → AM) (m : M) (am : AM) :=
+  (abs : M → AM) (am : AM) (m : M) :=
   am = abs m
 
 theorem defaultRefine_safe {AM} [Machine ACTX AM] {M} [Machine CTX M]
-  (abs : M → AM) (m : M) (am : AM) (Habs: Machine.invariant m → Machine.invariant (abs m)):
+  (abs : M → AM)  (am : AM) (m : M) (Habs: Machine.invariant m → Machine.invariant (abs m)):
     Machine.invariant m
-    → defaultRefine abs m am
+    → defaultRefine abs am m
     → Machine.invariant am :=
 by
   intros Hinv Href
@@ -48,7 +48,7 @@ by
 theorem defaultRefine_ref {AM} [Machine ACTX AM] {M} [Machine CTX M]
   (abs : M → AM) (m : M) (am am' : AM):
   Machine.invariant m
-    → defaultRefine abs m am → defaultRefine abs m am'
+    → defaultRefine abs am m → defaultRefine abs am' m
     → am = am' :=
 by
   simp

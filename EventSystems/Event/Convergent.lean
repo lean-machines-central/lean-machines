@@ -68,6 +68,7 @@ structure ConvergentEvent (v) [Preorder v]  [WellFoundedLT v] (M) [Machine CTX M
           extends (_Event M α β)  where
   po : _ConvergentEventPO v to_Event (EventKind.TransDet Convergence.Convergent)
 
+@[simp]
 def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
   (variant : M → v)
   (Hconv: ∀ (m : M) (x : α),

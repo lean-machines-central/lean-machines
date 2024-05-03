@@ -1,4 +1,9 @@
 
+import EventSystems.Refinement.Strong.Basic
+import EventSystems.Refinement.Strong.NonDet.Abstract
+import EventSystems.Refinement.Strong.Convergent
+import EventSystems.Refinement.Strong.Concrete
+
 import Examples.EventB.Courses.M0
 
 namespace CoursesSpec
@@ -21,19 +26,6 @@ structure M1.Context extends ParticipantsCtx, InstructorsCtx
 structure M1 (ctx : M1.Context) extends M0 ctx.toContext where
   inscriptions : Finset (Course × Member)
 
-/-
-theorem M1.ctx₁ (_ : M1 ctx):
-  ctx.maxOpenedCourses > 0 :=
-by
-  cases ctx.toContext ; simp [*]
-
-theorem M1.ctx₂ (_ : M1 ctx):
-  ctx.maxOpenedCourses ≤ ctx.availableCourses.card :=
-by
-  cases ctx.toContext ; simp [*]
-
--/
-
 def M1.invariant₁ (m : M1 ctx) : Prop :=
   m.inscriptions ⊆ m.openedCourses ×ˢ ctx.participants
 
@@ -52,6 +44,7 @@ by
 def M1.invariant₂ (m : M1 ctx) : Prop :=
   ∀ i ∈ m.inscriptions, ctx.instr_fun i.1 ≠ i.2
 
+@[simp]
 def M1.reset : M1 ctx :=
   let m0 := M0.reset ctx.toContext
   { m0 with inscriptions := ∅ }
@@ -107,25 +100,29 @@ by
       · simp [M1.invariant₂] at *
         assumption
 
-/-
-
-TODO
 
 instance: SRefinement (M0 ctx.toContext) (M1 ctx) where
-  refine := defaultRefine M1.lift
-  refine_inv m am := by simp
-                        intros Hinv Hlift
-                        rw [Hlift]
-                        apply M1.lift_safe
-                        assumption
+  refine := fun am m => defaultRefine M1.lift am m
+
+  refine_safe m am := by
+    simp
+    intros Hinv Hlift
+    rw [Hlift]
+    apply M1.lift_safe
+    assumption
+
   refine_uniq m am am' := by simp
                              intros _ Ham Ham'
                              rw [Ham, ←Ham']
+
   lift := M1.lift
   lift_ref m := by simp
 
   unlift := M1.unlift
   lift_unlift m am' := by simp
+
+  refine_reset := fun ctx => by
+    simp [Machine.reset]
 
 namespace M1
 namespace Init
@@ -150,7 +147,7 @@ by
 
 end Init
 
-def Init : SRInitEvent (M0 ctx.toContext) (M1 ctx) Unit Unit := newSRInitEvent' {
+def Init : InitREvent (M0 ctx.toContext) (M1 ctx) Unit Unit := newInitSREvent'' {
   init := Init.init
   safety := by simp [Machine.invariant, M1.Init.PO_safety₁, M1.Init.PO_safety₂]
                constructor
@@ -158,29 +155,34 @@ def Init : SRInitEvent (M0 ctx.toContext) (M1 ctx) Unit Unit := newSRInitEvent' 
                · apply M0.Init.PO_safety₂
   abstract := M0.Init
   strengthening := by simp [M0.Init, newInitEvent']
-  simulation := by rfl
+  simulation := by simp [M0.Init, FRefinement.lift, Init.init]
 }
 
-def OpenCourses : SRNDEvent (M0 ctx.toContext) (M1 ctx) Unit Unit :=
-  newAbstractSRNDEvent' {
-    event := M0.OpenCourses.toNDEvent
-    step_inv := fun m1 m1' =>
-      by simp [Machine.invariant, M0.OpenCourses, FRefinement.lift, SRefinement.unlift]
-         intros _ _ Hinv₁ Hinv₂ _ cs _ _ Hact₃ _ Hainv'₁ Hainv'₂
-         constructor
-         · assumption
-         · constructor
-           · assumption
-           · constructor
-             · simp [invariant₁] at *
-               rw [Hact₃]
-               have Hcup: m1.openedCourses ×ˢ ctx.participants ⊆ (m1.openedCourses ∪ cs) ×ˢ ctx.participants := by
+def OpenCourses : OrdinaryRNDEvent (M0 ctx.toContext) (M1 ctx) Unit Unit :=
+  newAbstractSRNDEvent'' {
+    event := M0.OpenCourses
+    step_inv := fun m1 => by
+      simp [Machine.invariant, M0.OpenCourses, FRefinement.lift, SRefinement.unlift]
+      intros Hinv₁ _ Hinv₃ Hinv₄ _ m0 cs Heff₁ _ Heff₃ Heff₄
+      have Hctx₁ := ctx.maxCourses_prop₁
+      have _ := ctx.maxCourses_prop₂
+      constructor
+      · simp [M0.invariant₁] at *
+        rw [Heff₃]
+        exact Finset.union_subset Hinv₁ Heff₁
+      constructor
+      · simp [M0.invariant₂] at *
+        exact Heff₄
+      constructor
+      · simp [invariant₁] at *
+        have Hcup: m1.openedCourses ×ˢ ctx.participants ⊆ (m1.openedCourses ∪ cs) ×ˢ ctx.participants := by
                  apply Finset.product_subset_product_left
                  · apply Finset.subset_union_left
-               exact Finset.Subset.trans Hinv₁ Hcup
-             · simp [invariant₂] at *
-               assumption
-    event_ok := by simp [M0.OpenCourses]
+        rw [Heff₃]
+        apply Finset.Subset.trans Hinv₃ ; assumption
+      -- last
+      assumption
+
   }
 
 namespace CloseCourses
@@ -259,7 +261,7 @@ theorem PO_strengthening (m1 : M1 ctx) (cs : Finset Course):
   Machine.invariant m1
     → guard m1 cs
     → let m0 : M0 ctx.toContext := FRefinement.lift m1
-      M0.CloseCourses.toEvent.guard m0 cs :=
+      M0.CloseCourses.to_Event.guard m0 cs :=
 by
   simp [FRefinement.lift, M0.CloseCourses, newConvergentEvent]
 
@@ -267,13 +269,13 @@ theorem PO_simulation (m1 : M1 ctx) (cs : Finset Course):
   Machine.invariant m1
     → guard m1 cs
     → let m0 : M0 ctx.toContext := FRefinement.lift m1
-      M0.CloseCourses.toEvent.action m0 cs = FRefinement.lift (action m1 cs) :=
+      (M0.CloseCourses.to_Event.action m0 cs).2 = FRefinement.lift (action m1 cs) :=
 by
-  simp [FRefinement.lift, M0.CloseCourses, newConvergentEvent]
+  simp [FRefinement.lift, M0.CloseCourses]
 
 end CloseCourses
 
-def CloseCourses : SRConvergentEvent Nat (M0 ctx.toContext) (M1 ctx) (Finset Course) (Finset Course):= newSRConvergentEvent {
+def CloseCourses : ConvergentREvent Nat (M0 ctx.toContext) (M1 ctx) (Finset Course) Unit := newConvergentSREvent' {
   guard := CloseCourses.guard
   action := CloseCourses.action
   safety := fun m cs => by intros Hinv _
@@ -283,13 +285,13 @@ def CloseCourses : SRConvergentEvent Nat (M0 ctx.toContext) (M1 ctx) (Finset Cou
                            constructor
                            · apply M0.CloseCourses.PO_safety₁ ; simp [Hinv]
                            · apply M0.CloseCourses.PO_safety₂ ; simp [Hinv]
-  absParam := id
-  abstract := M0.CloseCourses.toEvent
+  abstract := M0.CloseCourses.to_Event
   variant := CloseCourses.variant
   convergence := CloseCourses.PO_convergence
   strengthening := CloseCourses.PO_strengthening
   simulation := CloseCourses.PO_simulation
 }
+
 
 namespace Register
 
@@ -370,8 +372,8 @@ by
 
 end Register
 
-def Register : SRConvergentEvent Nat (M0 ctx.toContext) (M1 ctx) (Member × Course) (Member × Course) :=
-  newConcreteSREvent {
+def Register : ConvergentRDetEvent Nat (M0 ctx.toContext) (M1 ctx) (Member × Course) Unit :=
+  newConcreteSREvent' {
     guard := fun m (p,c) => Register.guard m p c
     action := fun m (p,c) => Register.action m p c
     safety := fun m (p,c) => by simp [Machine.invariant]
@@ -395,7 +397,5 @@ def Register : SRConvergentEvent Nat (M0 ctx.toContext) (M1 ctx) (Member × Cour
   }
 
 end M1
-
--/
 
 end CoursesSpec
