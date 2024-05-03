@@ -15,6 +15,7 @@ structure _AbstractFRNDEventSpec (AM) [Machine ACTX AM]
 
   unlift (am am' : AM) (m : M) (x : α): M
 
+@[simp]
 def _AbstractFRNDEventSpec.to_AbstractREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
   (ev : _AbstractFRNDEventSpec AM M α) : _AbstractREventSpec AM M α :=
   {
