@@ -96,6 +96,7 @@ def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     to_Event := ev.to_Event
     po := {
       safety := ev.safety
+      abstract := abs.to_Event
       strengthening := ev.strengthening
       simulation := ev.simulation
     }
