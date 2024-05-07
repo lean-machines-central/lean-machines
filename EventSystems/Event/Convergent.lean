@@ -40,6 +40,16 @@ def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (ev : Ord
     }
   }
 
+@[simp]
+def AnticipatedEvent.toOrdinaryEvent [Preorder v] [Machine CTX M]
+  (ev : AnticipatedEvent v M α β) : OrdinaryEvent M α β :=
+  {
+    to_Event := ev.to_Event
+    po := {
+      safety := ev.po.safety
+    }
+  }
+
 structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [Machine CTX M] (α) (β)
   extends _Variant v, EventSpec M α β where
 
@@ -91,6 +101,29 @@ def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M} [Machin
     convergence := Hconv
   }
  }
+
+@[simp]
+def ConvergentEvent.toOrdinaryEvent [Preorder v] [WellFoundedLT v] [Machine CTX M]
+  (ev : ConvergentEvent v M α β) : OrdinaryEvent M α β :=
+  {
+    to_Event := ev.to_Event
+    po := {
+      safety := ev.po.safety
+    }
+  }
+
+@[simp]
+def ConvergentEvent.toAnticipatedEvent [Preorder v] [WellFoundedLT v] [Machine CTX M]
+  (ev : ConvergentEvent v M α β) : AnticipatedEvent v M α β :=
+  {
+    to_Event := ev.to_Event
+    po := {
+      safety := ev.po.safety
+      variant := ev.po.variant
+      nonIncreasing := ev.po.nonIncreasing
+    }
+  }
+
 
 structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α) (β)
   extends _Variant v, EventSpec M α β where
