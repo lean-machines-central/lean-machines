@@ -48,12 +48,13 @@ structure _REventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
         let (z, am') := abstract.action am (lift_in x)
         lift_out y = z ∧ refine am' m'
 
-structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α β) (α':=α) (β':=β)
-  extends _Event M α β where
+structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  (α β) (α':=α) (β':=β) extends _Event M α β where
   po : _REventPO (instR:=instR) to_Event (EventKind.TransDet Convergence.Ordinary) α' β'
 
 @[simp]
-def OrdinaryREvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : OrdinaryREvent AM M α β α' β') : OrdinaryEvent M α β :=
+def OrdinaryREvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (ev : OrdinaryREvent AM M α β α' β') : OrdinaryEvent M α β :=
   {
     to_Event := ev.to_Event
     po := ev.po.to_EventPO
@@ -62,8 +63,6 @@ def OrdinaryREvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement
 structure _REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : _Event AM α' β')
   extends EventSpec M α β where
-
-  -- abstract : OrdinaryEvent AM α' β'
 
   lift_in : α → α'
   lift_out : β → β'
