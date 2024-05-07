@@ -66,6 +66,16 @@ def newAnticipatedREventfromOrdinary [Preorder v] [Machine ACTX AM] [Machine CTX
   (abs : OrdinaryEvent AM α' β') (ev : AnticipatedREventSpecFromOrdinary v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : AnticipatedREvent v AM M α β α' β' :=
   _newAnticipatedREvent abs.to_Event ev.to_AnticipatedREventSpec
 
+@[simp]
+def newAnticipatedREventfromOrdinary' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryEvent AM α' Unit) (ev : AnticipatedREventSpecFromOrdinary v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs) : AnticipatedREvent v AM M α Unit α' Unit :=
+  newAnticipatedREventfromOrdinary abs ev
+
+@[simp]
+def newAnticipatedREventfromOrdinary'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryEvent AM Unit Unit) (ev : AnticipatedREventSpecFromOrdinary v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs) : AnticipatedREvent v AM M Unit Unit :=
+  newAnticipatedREventfromOrdinary abs ev
+
 structure AnticipatedREventSpecFromAnticipated (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : AnticipatedEvent v AM α' β')
   extends _AnticipatedREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_Event where
@@ -74,6 +84,16 @@ structure AnticipatedREventSpecFromAnticipated (v) [Preorder v] (AM) [Machine AC
 def newAnticipatedREventfromAnticipated [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : AnticipatedEvent v AM α' β') (ev : AnticipatedREventSpecFromAnticipated v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : AnticipatedREvent v AM M α β α' β' :=
   _newAnticipatedREvent abs.to_Event ev.to_AnticipatedREventSpec
+
+@[simp]
+def newAnticipatedREventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : AnticipatedEvent v AM α' Unit) (ev : AnticipatedREventSpecFromAnticipated v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs) : AnticipatedREvent v AM M α Unit α' Unit :=
+  newAnticipatedREventfromAnticipated abs ev
+
+@[simp]
+def newAnticipatedREventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : AnticipatedEvent v AM Unit Unit) (ev : AnticipatedREventSpecFromAnticipated v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs) : AnticipatedREvent v AM M Unit Unit :=
+  newAnticipatedREventfromAnticipated abs ev
 
 structure _ConvergentREventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : _Event M α β) (kind : EventKind) (α') (β')
@@ -134,3 +154,13 @@ def newConvergentREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machin
       convergence := ev.convergence
     }
   }
+
+@[simp]
+def newConvergentREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM α' Unit) (ev : ConvergentREventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs) : ConvergentREvent v AM M α Unit α' Unit :=
+  newConvergentREvent abs ev
+
+@[simp]
+def newConvergentREvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM Unit Unit) (ev : ConvergentREventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs) : ConvergentREvent v AM M Unit Unit :=
+  newConvergentREvent abs ev
