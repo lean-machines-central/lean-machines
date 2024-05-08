@@ -130,10 +130,6 @@ structure _InitREventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM
   simulation (x : α):
      ev.guard Machine.reset x
     → ∀ am, refine (self:=instR) am Machine.reset
-      -- XXX : some constraint on output ?
-      --       (maybe a post_weakening requirement ?)
-      --       for now, let's go with equality because its transparent for the Event-B
-      --       refinement model
       → let (y, m') := ev.action Machine.reset x
         let (z, am') := abstract.action am (lift_in x)
         lift_out y = z ∧ refine am' m'

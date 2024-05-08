@@ -37,6 +37,8 @@ def newConcreteREvent [Preorder v] [WellFoundedLT v]
   {
     to_Event := ev.to_Event
     po := {
+      lift_in := id
+      lift_out := id
       safety := ev.safety
       abstract := skip_NDEvent
       strengthening := fun m x => by simp
@@ -81,6 +83,8 @@ def newConcreteREvent' [Preorder v] [WellFoundedLT v]
   {
     to_Event := ev.toEventSpec.to_Event
     po := {
+      lift_in := id
+      lift_out := id
       safety := ev.safety
       abstract := skip_NDEvent
       strengthening := fun m x => by simp
@@ -120,6 +124,8 @@ def newConcreteREvent'' [Preorder v] [WellFoundedLT v]
   {
     to_Event := ev.toEventSpec.to_Event
     po := {
+      lift_in := id
+      lift_out := id
       safety := fun m _ => ev.safety m
       abstract := skip_NDEvent
       strengthening := fun m x => by simp
