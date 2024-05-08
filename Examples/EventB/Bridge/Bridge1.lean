@@ -57,12 +57,13 @@ by
 namespace Bridge1
 
 def Init : InitREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
-  newInitREvent'' {
-    init := ⟨0, 0, 0⟩
+  newInitREvent'' Bridge0.Init {
+    /-
+    init := fun _ _ => ⟨0, 0, 0⟩
     safety := by simp [Machine.invariant]
-    abstract := Bridge0.Init
     strengthening := by simp [Bridge0.Init]
     simulation := by simp [Bridge0.Init, Refinement.refine]
+    -/
   }
 
 def EnterFromMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
