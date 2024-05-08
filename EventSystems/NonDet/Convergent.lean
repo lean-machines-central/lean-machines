@@ -20,6 +20,18 @@ structure AnticipatedNDEvent (v) [Preorder v] (M) [Machine CTX M] (α) (β)
           extends (_NDEvent M α β)  where
   po : _AnticipatedNDEventPO v to_NDEvent (EventKind.TransNonDet Convergence.Anticipated)
 
+@[simp]
+def AnticipatedNDEvent.toOrdinaryNDEvent [Preorder v] [Machine CTX M]
+  (ev : AnticipatedNDEvent v M α β) : OrdinaryNDEvent M α β :=
+  {
+    to_NDEvent := ev.to_NDEvent
+    po := {
+      safety := ev.po.safety
+      feasibility := ev.po.feasibility
+    }
+  }
+
+@[simp]
 def AnticipatedNDEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (ev : OrdinaryNDEvent M α β)
   (variant : M → v)
   (Hnincr: ∀ (m : M) (x : α),
@@ -113,6 +125,20 @@ structure _ConvergentNDEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M
 structure ConvergentNDEvent (v) [Preorder v]  [WellFoundedLT v] (M) [Machine CTX M] (α) (β)
           extends (_NDEvent M α β)  where
   po : _ConvergentNDEventPO v to_NDEvent (EventKind.TransNonDet Convergence.Convergent)
+
+@[simp]
+def ConvergentNDEvent.toAnticipatedNDEvent [Preorder v] [WellFoundedLT v] [Machine CTX M]
+  (ev : ConvergentNDEvent v M α β) : AnticipatedNDEvent v M α β :=
+  {
+    to_NDEvent := ev.to_NDEvent
+    po := {
+      safety := ev.po.safety
+      feasibility := ev.po.feasibility
+      variant := ev.po.variant
+      nonIncreasing := ev.po.nonIncreasing
+    }
+  }
+
 
 def ConvergentNDEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : OrdinaryNDEvent M α β)
   (variant : M → v)
