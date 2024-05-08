@@ -158,7 +158,7 @@ def InitREvent.init'  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : 
 def InitREvent.init''  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M Unit Unit Unit Unit) : M :=
   ev.init'.2
 
-structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   {α β α' β'} (abstract : InitEvent AM α' β')
   extends InitEventSpec M α β where
 
