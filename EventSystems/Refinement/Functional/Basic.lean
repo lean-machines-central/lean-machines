@@ -55,7 +55,7 @@ by
   intros _ Href₁ Href₂
   simp [*]
 
-structure _FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure _FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
   {α β α' β'} (abstract : _Event AM α' β')
   extends EventSpec M α β where
 
@@ -74,41 +74,57 @@ structure _FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement A
       let (z, am') := abstract.action (lift m) (lift_in x)
       lift_out y = z ∧ am' = (lift m')
 
+
+@[simp]
+def _FREventSpec.to_REventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+  {α β α' β'} (abs : _Event AM α' β')
+  (ev : _FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : _REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
+  {
+    toEventSpec := ev.toEventSpec
+
+    lift_in := ev.lift_in
+    lift_out := ev.lift_out
+
+    strengthening := fun m x => by
+      intros Hinv Hgrd am Href
+      have Hst := ev.strengthening m x Hinv Hgrd
+      have Href' := lift_ref (self:=instFR) m Hinv
+      have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
+      rw [Huniq]
+      exact Hst
+
+    simulation := fun m x => by
+      simp
+      intros Hinv Hgrd am Href
+      have Hsim := ev.simulation m x Hinv Hgrd
+      simp at Hsim
+      obtain ⟨Hsim₁, Hsim₂⟩ := Hsim
+      have Href' := lift_ref (self:=instFR) m Hinv
+      have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
+      rw [Huniq]
+      simp [Hsim₁]
+      rw [Hsim₂]
+      apply lift_ref
+      · apply ev.safety m x Hinv Hgrd
+  }
+
+
 structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
   {α β α' β'} (abstract : OrdinaryEvent AM α' β')
   extends _FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract.to_Event where
 
 @[simp]
+def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+  {α β α' β'} (abs : OrdinaryEvent AM α' β')
+  (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
+  {
+    to_REventSpec := ev.to_REventSpec
+  }
+
+@[simp]
 def newFREvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
-  {
-    to_Event := ev.toEventSpec.to_Event
-    po := {
-      safety := ev.safety
-      lift_in := ev.lift_in
-      lift_out := ev.lift_out
-      abstract := abs.to_Event
-      strengthening := fun m x => by
-        simp
-        intros Hinv Hgrd am Href
-        have Href' := lift_ref (self:=instFR) m Hinv
-        have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
-        rw [Huniq]
-        apply ev.strengthening m x Hinv Hgrd
-
-      simulation := fun m x => by
-        simp
-        intros Hinv Hgrd am Href
-        have Href' := lift_ref (self:=instFR) m Hinv
-        have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
-        rw [Huniq]
-        obtain ⟨Hsim₁, Hsim₂⟩ := ev.simulation m x Hinv Hgrd
-        simp [Hsim₁]
-        rw [Hsim₂]
-        apply lift_ref
-        apply ev.safety <;> assumption
-    }
-  }
+  newREvent abs ev.toREventSpec
 
 structure InitFREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FRefinement AM M]
   {α β α' β'} (abstract : InitEvent AM α' β')

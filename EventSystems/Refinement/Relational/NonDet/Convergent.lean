@@ -141,7 +141,7 @@ structure ConvergentRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machin
                  → variant m' < variant m
 
 @[simp]
-private def newConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : _NDEvent AM α' β') (ev : ConvergentRNDEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : ConvergentRNDEvent v AM M α β α' β' :=
   {
     to_NDEvent := ev.to_NDEvent

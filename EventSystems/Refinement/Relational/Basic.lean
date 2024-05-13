@@ -60,7 +60,7 @@ def OrdinaryREvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement
     po := ev.po.to_EventPO
   }
 
-structure _REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure _REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   {α β α' β'} (abstract : _Event AM α' β')
   extends EventSpec M α β where
 
