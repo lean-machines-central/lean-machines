@@ -28,145 +28,58 @@ def _AbstractFREventSpec.to_AbstractREventSpec [Machine ACTX AM] [Machine CTX M]
 
 structure AbstractFREventSpec (AM) [Machine ACTX AM]
                              (M) [Machine CTX M]
-                            [FRefinement AM M] (α) (β)
+                             [FRefinement AM M]
+  {α β} (abstract : _Event AM α β)
           extends _AbstractFREventSpec AM M α where
-
-  event : OrdinaryEvent AM α β
 
   step_ref (m : M) (x : α):
     Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
+    → abstract.guard (lift m) x
+    → let (_, am') := abstract.action (lift m) x
       refine am' (unlift (lift m) am' m x)
 
   step_safe (m : M) (x : α):
     Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
+    → abstract.guard (lift m) x
+    → let (_, am') := abstract.action (lift m) x
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift (lift m) am' m x)
 
 @[simp]
 def AbstractFREventSpec.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
-  (ev : AbstractFREventSpec AM M α β) : AbstractREventSpec AM M α β :=
+  (abs : _Event AM α β) (ev : AbstractFREventSpec AM M abs) : AbstractREventSpec AM M abs :=
   {
     to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
     step_ref := ev.step_ref
     step_safe := ev.step_safe
   }
 
 @[simp]
 def newAbstractFREvent [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (abs : AbstractFREventSpec AM M α β) : OrdinaryREvent AM M α β :=
-  newAbstractREvent abs.toAbstractREventSpec
-
-structure AbstractFREventSpec' (AM) [Machine ACTX AM]
-                               (M) [Machine CTX M]
-                               [FRefinement AM M] (α)
-          extends _AbstractFREventSpec AM M α where
-
-  event : OrdinaryEvent AM α Unit
-
-  step_ref (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let ((), am') := event.action (lift m) x
-      refine am' (unlift (lift m) am' m x)
-
-  step_safe (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let ((), am') := event.action (lift m) x
-      Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m x)
-
-@[simp]
-def AbstractFREventSpec'.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractFREventSpec' AM M α) : AbstractREventSpec AM M α Unit :=
-  {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
-    step_ref := ev.step_ref
-    step_safe := ev.step_safe
-  }
-
-@[simp]
-def newAbstractFREvent' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (abs : AbstractFREventSpec' AM M α) : OrdinaryREvent AM M α Unit :=
-  newAbstractREvent abs.toAbstractREventSpec
-
-structure AbstractFREventSpec'' (AM) [Machine ACTX AM]
-                               (M) [Machine CTX M]
-                               [FRefinement AM M]
-          extends _AbstractFREventSpec AM M Unit where
-
-  event : OrdinaryEvent AM Unit Unit
-
-  step_ref (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → let ((), am') := event.action (lift m) ()
-      refine am' (unlift (lift m) am' m ())
-
-  step_safe (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → let ((), am') := event.action (lift m) ()
-      Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m ())
-
-@[simp]
-def AbstractFREventSpec''.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractFREventSpec'' AM M) : AbstractREventSpec AM M Unit Unit :=
-  {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
-    step_ref := ev.step_ref
-    step_safe := ev.step_safe
-  }
-
-@[simp]
-def newAbstractFREvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (abs : AbstractFREventSpec'' AM M) : OrdinaryREvent AM M Unit Unit :=
-  newAbstractREvent abs.toAbstractREventSpec
+  (abs : OrdinaryEvent AM α β) (ev : AbstractFREventSpec AM M abs.to_Event) : OrdinaryREvent AM M α β :=
+  newAbstractREvent abs ev.toAbstractREventSpec
 
 structure AbstractAnticipatedFREventSpec
               (v) [Preorder v]
               (AM) [Machine ACTX AM]
               (M) [Machine CTX M]
-              [FRefinement AM M] (α) (β)
-          extends _AbstractFREventSpec AM M α where
-
-  event : AnticipatedEvent v AM α β
-
-  step_ref (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      refine am' (unlift (lift m) am' m x)
-
-  step_safe (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m x)
+              [FRefinement AM M]
+  {α β} (abstract : AnticipatedEvent v AM α β)
+          extends AbstractFREventSpec AM M abstract.to_Event where
 
   step_variant (m : M) (x : α):
     Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
+    → abstract.guard (lift m) x
+    → let (_, am') := abstract.action (lift m) x
       Machine.invariant am' -- redundant but useful
-      → event.po.variant (lift (unlift (lift m) am' m x))
-      = event.po.variant am'
+      → abstract.po.variant (lift (unlift (lift m) am' m x))
+      = abstract.po.variant am'
 
 @[simp]
 def AbstractAnticipatedFREventSpec.toAbstractAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
-  (ev : AbstractAnticipatedFREventSpec v AM M α β) : AbstractAnticipatedREventSpec v AM M α β :=
+  (abs : AnticipatedEvent v AM α β) (ev : AbstractAnticipatedFREventSpec v AM M abs) : AbstractAnticipatedREventSpec v AM M abs :=
   {
     to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
     step_ref := ev.step_ref
     step_safe := ev.step_safe
     step_variant := ev.step_variant
@@ -174,236 +87,25 @@ def AbstractAnticipatedFREventSpec.toAbstractAnticipatedREventSpec [Preorder v] 
 
 @[simp]
 def newAbstractAnticipatedFREvent  [Preorder v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
-  (ev : AbstractAnticipatedFREventSpec v AM M α β) : AnticipatedREvent v AM M α β :=
-  newAbstractAnticipatedREvent ev.toAbstractAnticipatedREventSpec
-
-structure AbstractAnticipatedFREventSpec'
-              (v) [Preorder v]
-              (AM) [Machine ACTX AM]
-              (M) [Machine CTX M]
-              [FRefinement AM M] (α)
-          extends _AbstractFREventSpec AM M α where
-
-  event : AnticipatedEvent v AM α Unit
-
-  step_ref (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      refine am' (unlift (lift m) am' m x)
-
-  step_safe (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m x)
-
-  step_variant (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      Machine.invariant am' -- redundant but useful
-      → event.po.variant (lift (unlift (lift m) am' m x))
-      = event.po.variant am'
-
-@[simp]
-def AbstractAnticipatedFREventSpec'.toAbstractAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractAnticipatedFREventSpec' v AM M α) : AbstractAnticipatedREventSpec v AM M α Unit :=
-  {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
-    step_ref := ev.step_ref
-    step_safe := ev.step_safe
-    step_variant := ev.step_variant
-  }
-
-@[simp]
-def newAbstractAnticipatedFREvent'  [Preorder v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
-  (ev : AbstractAnticipatedFREventSpec' v AM M α) : AnticipatedREvent v AM M α Unit :=
-  newAbstractAnticipatedREvent ev.toAbstractAnticipatedREventSpec
-
-structure AbstractAnticipatedFREventSpec''
-              (v) [Preorder v]
-              (AM) [Machine ACTX AM]
-              (M) [Machine CTX M]
-              [FRefinement AM M]
-          extends _AbstractFREventSpec AM M Unit where
-
-  event : AnticipatedEvent v AM Unit Unit
-
-  step_ref (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → let (_, am') := event.action (lift m) ()
-      refine am' (unlift (lift m) am' m ())
-
-  step_safe (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → let (_, am') := event.action (lift m) ()
-      Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m ())
-
-  step_variant (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → let (_, am') := event.action (lift m) ()
-      Machine.invariant am' -- redundant but useful
-      → event.po.variant (lift (unlift (lift m) am' m ()))
-      = event.po.variant am'
-
-@[simp]
-def AbstractAnticipatedFREventSpec''.toAbstractAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractAnticipatedFREventSpec'' v AM M) : AbstractAnticipatedREventSpec v AM M Unit Unit :=
-  {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
-    step_ref := fun m _ => ev.step_ref m
-    step_safe := fun m _ => ev.step_safe m
-    step_variant := fun m _ => ev.step_variant m
-  }
-
-@[simp]
-def newAbstractAnticipatedFREvent''  [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractAnticipatedFREventSpec'' v AM M) : AnticipatedREvent v AM M Unit Unit :=
-  newAbstractAnticipatedREvent ev.toAbstractAnticipatedREventSpec
-
+  (abs : AnticipatedEvent v AM α β) (ev : AbstractAnticipatedFREventSpec v AM M abs) : AnticipatedREvent v AM M α β :=
+  newAbstractAnticipatedREvent abs ev.toAbstractAnticipatedREventSpec
 
 structure AbstractConvergentFREventSpec
               (v) [Preorder v] [WellFoundedLT v]
               (AM) [Machine ACTX AM]
               (M) [Machine CTX M]
-              [FRefinement AM M] (α) (β)
-          extends _AbstractFREventSpec AM M α where
-
-  event : ConvergentEvent v AM α β
-
-  step_ref (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      refine am' (unlift (lift m) am' m x)
-
-  step_safe (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m x)
-
-  step_variant (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      Machine.invariant am' -- redundant but useful
-      → event.po.variant (lift (unlift (lift m) am' m x))
-      = event.po.variant am'
+              [FRefinement AM M]
+  {α β} (abstract : ConvergentEvent v AM α β)
+          extends AbstractAnticipatedFREventSpec v AM M abstract.toAnticipatedEvent where
 
 @[simp]
-def AbstractConvergentFREventSpec.toAbstractConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractConvergentFREventSpec v AM M α β) : AbstractConvergentREventSpec v AM M α β :=
+def AbstractConvergentFREventSpec.toAbstractConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+  (abs : ConvergentEvent v AM α β) (ev : AbstractConvergentFREventSpec v AM M abs) : AbstractConvergentREventSpec v AM M abs :=
   {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
-    step_ref := ev.step_ref
-    step_safe := ev.step_safe
-    step_variant := ev.step_variant
+    toAbstractAnticipatedREventSpec := ev.toAbstractAnticipatedREventSpec
   }
 
 @[simp]
 def newAbstractConvergentFREvent  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
-  (ev : AbstractConvergentFREventSpec v AM M α β) : ConvergentREvent v AM M α β :=
-  newAbstractConvergentREvent ev.toAbstractConvergentREventSpec
-
-structure AbstractConvergentFREventSpec'
-              (v) [Preorder v] [WellFoundedLT v]
-              (AM) [Machine ACTX AM]
-              (M) [Machine CTX M]
-              [FRefinement AM M] (α)
-          extends _AbstractFREventSpec AM M α where
-
-  event : ConvergentEvent v AM α Unit
-
-  step_ref (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      refine am' (unlift (lift m) am' m x)
-
-  step_safe (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m x)
-
-  step_variant (m : M) (x : α):
-    Machine.invariant m
-    → event.guard (lift m) x
-    → let (_, am') := event.action (lift m) x
-      Machine.invariant am' -- redundant but useful
-      → event.po.variant (lift (unlift (lift m) am' m x))
-      = event.po.variant am'
-
-@[simp]
-def AbstractConvergentFREventSpec'.toAbstractConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractConvergentFREventSpec' v AM M α) : AbstractConvergentREventSpec v AM M α Unit :=
-  {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
-    step_ref := ev.step_ref
-    step_safe := ev.step_safe
-    step_variant := ev.step_variant
-  }
-
-@[simp]
-def newAbstractConvergentFREvent'  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
-  (ev : AbstractConvergentFREventSpec' v AM M α) : ConvergentREvent v AM M α Unit :=
-  newAbstractConvergentREvent ev.toAbstractConvergentREventSpec
-
-structure AbstractConvergentFREventSpec''
-              (v) [Preorder v] [WellFoundedLT v]
-              (AM) [Machine ACTX AM]
-              (M) [Machine CTX M]
-              [FRefinement AM M]
-          extends _AbstractFREventSpec AM M Unit where
-
-  event : ConvergentEvent v AM Unit Unit
-
-  step_ref (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → let (_, am') := event.action (lift m) ()
-      refine am' (unlift (lift m) am' m ())
-
-  step_safe (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → let (_, am') := event.action (lift m) ()
-      Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m ())
-
-  step_variant (m : M):
-    Machine.invariant m
-    → event.guard (lift m) ()
-    → let (_, am') := event.action (lift m) ()
-      Machine.invariant am' -- redundant but useful
-      → event.po.variant (lift (unlift (lift m) am' m ()))
-      = event.po.variant am'
-
-@[simp]
-def AbstractConvergentFREventSpec''.toAbstractConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractConvergentFREventSpec'' v AM M) : AbstractConvergentREventSpec v AM M Unit Unit :=
-  {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
-    event := ev.event
-    step_ref := fun m _ => ev.step_ref m
-    step_safe := fun m _ => ev.step_safe m
-    step_variant := fun m _ => ev.step_variant m
-  }
-
-@[simp]
-def newAbstractConvergentFREvent''  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (ev : AbstractConvergentFREventSpec'' v AM M) : ConvergentREvent v AM M Unit Unit :=
-  newAbstractConvergentREvent ev.toAbstractConvergentREventSpec
+  (abs : ConvergentEvent v AM α β) (ev : AbstractConvergentFREventSpec v AM M abs) : ConvergentREvent v AM M α β :=
+  newAbstractConvergentREvent abs ev.toAbstractConvergentREventSpec
