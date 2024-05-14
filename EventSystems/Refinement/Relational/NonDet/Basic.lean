@@ -40,7 +40,7 @@ def OrdinaryRNDEvent.toOrdinaryNDEvent [Machine ACTX AM] [Machine CTX M] [Refine
     po := ev.po.to_NDEventPO
   }
 
-structure _RNDEventSpec (AM) [Machine ACTX AM]
+structure RNDEventSpec (AM) [Machine ACTX AM]
                         (M) [Machine CTX M]
                         [Refinement AM M]
   {α β α' β'} (abstract : _NDEvent AM α' β')
@@ -64,15 +64,9 @@ structure _RNDEventSpec (AM) [Machine ACTX AM]
         → ∃ am', abstract.effect am (lift_in x) (lift_out y, am')
                  ∧ refine am' m'
 
-structure RNDEventSpec (AM) [Machine ACTX AM]
-                        (M) [Machine CTX M]
-                        [Refinement AM M]
-  {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
-  extends _RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract.to_NDEvent where
-
 @[simp]
 def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM α' β') (ev : RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRNDEvent AM M α β α' β' :=
+  (abs : OrdinaryNDEvent AM α' β') (ev : RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_NDEvent) : OrdinaryRNDEvent AM M α β α' β' :=
   {
     to_NDEvent := ev.to_NDEvent
     po := {
@@ -83,16 +77,6 @@ def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
       simulation := ev.simulation
     }
   }
-
-@[simp]
-def newRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM α' Unit) (ev : RNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs) : OrdinaryRNDEvent AM M α Unit α' Unit :=
-  newRNDEvent abs ev
-
-@[simp]
-def newRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM Unit Unit) (ev : RNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs) : OrdinaryRNDEvent AM M Unit Unit :=
-  newRNDEvent abs ev
 
 /- Initialization events -/
 
@@ -191,15 +175,3 @@ def newInitRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
                                 assumption
     }
   }
-
-@[simp]
-def newInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  {α α'} (abs : InitNDEvent AM α' Unit)
-  (ev : InitRNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs) : InitRNDEvent AM M α Unit α' Unit :=
-  newInitRNDEvent abs ev
-
-@[simp]
-def newInitRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : InitNDEvent AM Unit Unit)
-  (ev : InitRNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs) : InitRNDEvent AM M Unit Unit :=
-  newInitRNDEvent abs ev
