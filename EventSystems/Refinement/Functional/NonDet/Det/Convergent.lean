@@ -20,6 +20,6 @@ def newAnticipatedFRDetEventfromAnticipated [Preorder v] [Machine ACTX AM] [Mach
   newAnticipatedRDetEventfromAnticipated abs ev
 
 @[simp]
-def newConvergentFRDetEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (abs : _NDEvent AM α' β') (ev : AnticipatedRDetEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_NDEvent) : AnticipatedRDetEvent v AM M α β α' β' :=
+def newConvergentFRDetEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (abs : _NDEvent AM α' β') (ev : ConvergentRDetEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : ConvergentRDetEvent v AM M α β α' β' :=
   newConvergentRDetEvent abs ev
