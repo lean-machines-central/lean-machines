@@ -55,7 +55,7 @@ by
   intros _ Href₁ Href₂
   simp [*]
 
-structure _FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
+structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
   {α β α' β'} (abstract : _Event AM α' β')
   extends EventSpec M α β where
 
@@ -76,9 +76,9 @@ structure _FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefi
 
 
 @[simp]
-def _FREventSpec.to_REventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
   {α β α' β'} (abs : _Event AM α' β')
-  (ev : _FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : _REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
+  (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
   {
     toEventSpec := ev.toEventSpec
 
@@ -108,23 +108,12 @@ def _FREventSpec.to_REventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefin
       · apply ev.safety m x Hinv Hgrd
   }
 
-
-structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
-  {α β α' β'} (abstract : OrdinaryEvent AM α' β')
-  extends _FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract.to_Event where
-
-@[simp]
-def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
-  {α β α' β'} (abs : OrdinaryEvent AM α' β')
-  (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
-  {
-    to_REventSpec := ev.to_REventSpec
-  }
-
 @[simp]
 def newFREvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
-  (abs : OrdinaryEvent AM α' β') (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
+  (abs : OrdinaryEvent AM α' β') (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_Event) : OrdinaryREvent AM M α β α' β' :=
   newREvent abs ev.toREventSpec
+
+/- Initialization events -/
 
 structure InitFREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FRefinement AM M]
   {α β α' β'} (abstract : InitEvent AM α' β')

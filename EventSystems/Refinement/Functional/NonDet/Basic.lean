@@ -7,7 +7,7 @@ import EventSystems.Refinement.Functional.Basic
 open Refinement
 open FRefinement
 
-structure _FRNDEventSpec (AM) [Machine ACTX AM]
+structure FRNDEventSpec (AM) [Machine ACTX AM]
                          (M) [Machine CTX M]
                          [FRefinement AM M]
   {α β α' β'} (abstract : _NDEvent AM α' β')
@@ -28,9 +28,9 @@ structure _FRNDEventSpec (AM) [Machine ACTX AM]
       → abstract.effect (lift m) (lift_in x) (lift_out y, (lift m'))
 
 @[simp]
-def _FRNDEventSpec.to_RNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def FRNDEventSpec.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
   {α β α' β'} (abs : _NDEvent AM α' β')
-  (ev : _FRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : _RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
+  (ev : FRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
   {
     toNDEventSpec := ev.toNDEventSpec
 
@@ -57,21 +57,9 @@ def _FRNDEventSpec.to_RNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FR
       apply lift_ref (self:=instFR) m' Hsafe
   }
 
-structure FRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
-  {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
-  extends _FRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract.to_NDEvent where
-
-@[simp]
-def FRNDEventSpec.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  {α β α' β'} (abs : OrdinaryNDEvent AM α' β')
-  (ev : FRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
-  {
-    to_RNDEventSpec := ev.to_RNDEventSpec
-  }
-
 @[simp]
 def newFRNDEvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
-  (abs : OrdinaryNDEvent AM α' β') (ev : FRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRNDEvent AM M α β α' β' :=
+  (abs : OrdinaryNDEvent AM α' β') (ev : FRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_NDEvent) : OrdinaryRNDEvent AM M α β α' β' :=
   newRNDEvent abs ev.toRNDEventSpec
 
 /- Initialization events -/
