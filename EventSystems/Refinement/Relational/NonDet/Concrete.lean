@@ -32,6 +32,8 @@ def newConcreteRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machin
     po := {
       safety := ev.safety
       feasibility := ev.feasibility
+      lift_in := id
+      lift_out := id
       abstract := skip_NDEvent
       strengthening := fun m x => by simp
       simulation := fun m x => by simp ; apply ev.simulation
