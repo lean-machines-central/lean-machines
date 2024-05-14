@@ -39,7 +39,7 @@ def OrdinaryRDetEvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinem
     po := ev.po.to_EventPO
   }
 
-structure _RDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure RDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : _NDEvent AM α' β')
   extends EventSpec M α β where
 
@@ -60,13 +60,9 @@ structure _RDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement 
         ∃ am', abstract.effect am (lift_in x) (lift_out y, am')
                ∧ refine am' m'
 
-structure RDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
-  {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
-  extends _RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract.to_NDEvent where
-
 @[simp]
 def newRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM α' β') (ev : RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRDetEvent AM M α β α' β' :=
+  (abs : OrdinaryNDEvent AM α' β') (ev : RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_NDEvent) : OrdinaryRDetEvent AM M α β α' β' :=
   {
     to_Event := ev.to_Event
     po := {
@@ -79,12 +75,12 @@ def newRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 
 @[simp]
 def newRDetEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM α' Unit) (ev : RDetEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs) : OrdinaryRDetEvent AM M α Unit α' Unit :=
+  (abs : OrdinaryNDEvent AM α' Unit) (ev : RDetEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs.to_NDEvent) : OrdinaryRDetEvent AM M α Unit α' Unit :=
   newRDetEvent abs ev
 
 @[simp]
 def newRDetEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM Unit Unit) (ev : RDetEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs) : OrdinaryRDetEvent AM M Unit Unit :=
+  (abs : OrdinaryNDEvent AM Unit Unit) (ev : RDetEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs.to_NDEvent) : OrdinaryRDetEvent AM M Unit Unit :=
   newRDetEvent abs ev
 
 /-  Initialization events -/
