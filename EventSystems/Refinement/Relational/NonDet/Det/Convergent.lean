@@ -22,7 +22,7 @@ structure AnticipatedRDetEvent (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Mach
 
 structure AnticipatedRDetEventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : _NDEvent AM α' β')
-  extends _Variant v, _RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract where
+  extends _Variant v, RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -107,7 +107,7 @@ def ConvergentRDetEvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machin
 
 structure ConvergentRDetEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : _NDEvent AM α' β')
-  extends _Variant v, _RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract where
+  extends _Variant v, RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract where
 
   convergence (m : M) (x : α):
     Machine.invariant m
