@@ -95,6 +95,76 @@ def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     }
   }
 
+structure REventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  {α α'} (abstract : _Event AM α' Unit)
+  extends EventSpec' M α where
+
+  lift_in : α → α'
+
+  strengthening (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → abstract.guard am (lift_in x)
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → let m' := action m x
+        let ((), am') := abstract.action am (lift_in x)
+        refine am' m'
+
+@[simp]
+def REventSpec'.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryEvent AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs.to_Event) : REventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs.to_Event :=
+  {
+    toEventSpec := ev.toEventSpec
+    lift_in := ev.lift_in
+    lift_out := id
+    strengthening := ev.strengthening
+    simulation := fun m x => by simp ; apply ev.simulation m x
+  }
+
+@[simp]
+def newREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryEvent AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs.to_Event) : OrdinaryREvent AM M α Unit α' Unit :=
+  newREvent abs ev.toREventSpec
+
+structure REventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  (abstract : _Event AM Unit Unit)
+  extends EventSpec'' M where
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → abstract.guard am ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → let m' := action m
+        let ((), am') := abstract.action am ()
+        refine am' m'
+
+@[simp]
+def REventSpec''.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryEvent AM Unit Unit) (ev : REventSpec'' AM M abs.to_Event) : REventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs.to_Event :=
+  {
+    toEventSpec := ev.toEventSpec
+    lift_in := id
+    lift_out := id
+    strengthening := fun m x => by simp ; apply ev.strengthening m
+    simulation := fun m x => by simp ; apply ev.simulation m
+  }
+
+@[simp]
+def newREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryEvent AM Unit Unit) (ev : REventSpec'' AM M abs.to_Event) : OrdinaryREvent AM M Unit Unit :=
+  newREvent abs ev.toREventSpec
+
 /--/ Initialization events -/
 
 structure _InitREventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
@@ -173,18 +243,84 @@ def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
                             intros Hgrd
                             apply ev.safety x Hgrd
       abstract := abs.to_Event
-      strengthening := fun x => by simp
-                                   intros Hgrd am Href
-                                   have Hst := ev.strengthening x Hgrd
-                                   have Hax := Refinement.refine_reset am Href
-                                   rw [Hax]
-                                   assumption
-      simulation := fun x => by simp
-                                intros Hgrd am Href
-                                have Hax := Refinement.refine_reset am Href
-                                rw [Hax]
-                                have Hsim := ev.simulation x Hgrd
-                                simp at Hsim
-                                assumption
+      strengthening := fun x => by
+        simp
+        intros Hgrd am Href
+        have Hst := ev.strengthening x Hgrd
+        have Hax := Refinement.refine_reset am Href
+        rw [Hax]
+        assumption
+      simulation := fun x => by
+        simp
+        intros Hgrd am Href
+        have Hax := Refinement.refine_reset am Href
+        rw [Hax]
+        have Hsim := ev.simulation x Hgrd
+        simp at Hsim
+        assumption
     }
   }
+
+structure InitREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  {α α'} (abstract : InitEvent AM α' Unit)
+  extends InitEventSpec' M α where
+
+  lift_in : α → α'
+
+  strengthening (x : α):
+    guard x
+    → abstract.guard Machine.reset (lift_in x)
+
+  simulation (x : α):
+    guard x
+    → let m' := init x
+      let ((), am') := abstract.action Machine.reset (lift_in x)
+      refine am' m'
+
+@[simp]
+def InitREventSpec'.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : InitEvent AM α' Unit) (ev : InitREventSpec' AM M (α:=α) (α':=α') abs) : InitREventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  {
+    toInitEventSpec := ev.toInitEventSpec
+    lift_in := ev.lift_in
+    lift_out := id
+    strengthening := fun x => by simp ; apply ev.strengthening
+    simulation := fun x => by simp ; apply ev.simulation
+  }
+
+@[simp]
+def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : InitEvent AM α' Unit)
+  (ev : InitREventSpec' AM M (α:=α) (α':=α') abs) : InitREvent AM M α Unit α' Unit :=
+  newInitREvent abs ev.toInitREventSpec
+
+structure InitREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  (abstract : InitEvent AM Unit Unit)
+  extends InitEventSpec'' M where
+
+  strengthening:
+    guard
+    → abstract.guard Machine.reset ()
+
+  simulation:
+    guard
+    → let m' := init
+      let ((), am') := abstract.action Machine.reset ()
+      refine am' m'
+
+@[simp]
+def InitREventSpec''.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : InitEvent AM Unit Unit) (ev : InitREventSpec'' AM M abs) : InitREventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  {
+    toInitEventSpec := ev.toInitEventSpec
+    lift_in := id
+    lift_out := id
+    strengthening := fun () => by simp ; apply ev.strengthening
+    simulation := fun () => by simp ; apply ev.simulation
+  }
+
+@[simp]
+def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : InitEvent AM Unit Unit)
+  (ev : InitREventSpec'' AM M abs) : InitREvent AM M Unit Unit :=
+  newInitREvent abs ev.toInitREventSpec
