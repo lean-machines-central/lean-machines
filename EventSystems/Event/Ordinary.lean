@@ -121,6 +121,14 @@ structure InitEventSpec (M) [Machine CTX M] (α) (β) where
     → Machine.invariant (init x).snd
 
 @[simp]
+def InitEventSpec.to_Event [Machine CTX M]
+  (ev : InitEventSpec M α β) : _Event M α β :=
+  {
+    guard := fun _ x => ev.guard x
+    action := fun _ x => ev.init x
+  }
+
+@[simp]
 def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : InitEvent M α β :=
   {
     guard := fun m x => m = Machine.reset ∧ ev.guard x
