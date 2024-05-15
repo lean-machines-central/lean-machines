@@ -162,6 +162,14 @@ structure InitNDEventSpec (M) [Machine CTX M] (α) (β) where
     → ∃ y, ∃ m, init x (y, m)
 
 @[simp]
+def InitNDEventSpec.to_NDEvent [Machine CTX M]
+  (ev : InitNDEventSpec M α β) : _NDEvent M α β :=
+  {
+    guard := fun m x => m = Machine.reset ∧ ev.guard x
+    effect := fun _ x (y, m') => ev.init x (y, m')
+  }
+
+@[simp]
 def newInitNDEvent {M} [Machine CTX M] (ev : InitNDEventSpec M α β) : InitNDEvent M α β :=
   {
     guard := fun m x => m = Machine.reset ∧ ev.guard x

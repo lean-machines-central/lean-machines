@@ -66,6 +66,74 @@ def newAnticipatedREventfromAnticipated [Preorder v] [Machine ACTX AM] [Machine 
   (abs : AnticipatedEvent v AM α' β') (ev : AnticipatedREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_Event) : AnticipatedREvent v AM M α β α' β' :=
   _newAnticipatedREvent abs.to_Event ev
 
+structure AnticipatedREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  {α α'} (abs : _Event AM α' Unit)
+  extends _Variant v, REventSpec' AM M (α:=α) (α':=α') abs where
+
+  nonIncreasing (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := action m x
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedREventSpec'.toAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM α' Unit) (ev : AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs) : AnticipatedREventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  {
+    toREventSpec := ev.toREventSpec abs
+    variant := ev.variant
+    nonIncreasing := ev.nonIncreasing
+  }
+
+@[simp]
+private def _newAnticipatedREvent' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM α' Unit) (ev : AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs) : AnticipatedREvent v AM M α Unit α' Unit :=
+  _newAnticipatedREvent abs ev.toAnticipatedREventSpec
+
+@[simp]
+def newAnticipatedREventfromOrdinary' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryEvent AM α' Unit) (ev : AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs.to_Event) : AnticipatedREvent v AM M α Unit α' Unit :=
+  _newAnticipatedREvent' abs.to_Event ev
+
+@[simp]
+def newAnticipatedREventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : AnticipatedEvent v AM α' Unit) (ev : AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs.to_Event) : AnticipatedREvent v AM M α Unit α' Unit :=
+  _newAnticipatedREvent' abs.to_Event ev
+
+structure AnticipatedREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM Unit Unit)
+  extends _Variant v, REventSpec'' AM M abs where
+
+  nonIncreasing (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := action m
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedREventSpec''.toAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM Unit Unit) (ev : AnticipatedREventSpec'' v AM M abs) : AnticipatedREventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  {
+    toREventSpec := ev.toREventSpec abs
+    variant := ev.variant
+    nonIncreasing := fun m => by simp ; apply ev.nonIncreasing
+  }
+
+@[simp]
+private def _newAnticipatedREvent'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM Unit Unit) (ev : AnticipatedREventSpec'' v AM M abs) : AnticipatedREvent v AM M Unit Unit :=
+  _newAnticipatedREvent abs ev.toAnticipatedREventSpec
+
+@[simp]
+def newAnticipatedREventfromOrdinary'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryEvent AM Unit Unit) (ev : AnticipatedREventSpec'' v AM M abs.to_Event) : AnticipatedREvent v AM M Unit Unit :=
+  _newAnticipatedREvent'' abs.to_Event ev
+
+@[simp]
+def newAnticipatedREventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : AnticipatedEvent v AM Unit Unit) (ev : AnticipatedREventSpec'' v AM M abs.to_Event) : AnticipatedREvent v AM M Unit Unit :=
+  _newAnticipatedREvent'' abs.to_Event ev
+
 structure _ConvergentREventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : _Event M α β) (kind : EventKind) (α') (β')
   extends _AnticipatedREventPO (instR:=instR) v ev kind α' β' where
@@ -125,3 +193,53 @@ def newConvergentREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machin
       convergence := ev.convergence
     }
   }
+
+structure ConvergentREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  {α α'} (abs : _Event AM α' Unit)
+  extends _Variant v, AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs where
+
+  convergence (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := action m x
+      variant m' < variant m
+
+@[simp]
+def ConvergentREventSpec'.toConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM α' Unit) (ev : ConvergentREventSpec' v AM M (α:=α) (α':=α') abs) : ConvergentREventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  {
+    toREventSpec := ev.toREventSpec abs
+    variant := ev.variant
+    nonIncreasing := ev.nonIncreasing
+    convergence := ev.convergence
+  }
+
+@[simp]
+def newConvergentREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM α' Unit) (ev : ConvergentREventSpec' v AM M (α:=α) (α':=α') abs) : ConvergentREvent v AM M α Unit α' Unit :=
+  newConvergentREvent abs ev.toConvergentREventSpec
+
+structure ConvergentREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM Unit Unit)
+  extends _Variant v, AnticipatedREventSpec'' v AM M abs where
+
+  convergence (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := action m
+      variant m' < variant m
+
+@[simp]
+def ConvergentREventSpec''.toConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM Unit Unit) (ev : ConvergentREventSpec'' v AM M abs) : ConvergentREventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  {
+    toREventSpec := ev.toREventSpec abs
+    variant := ev.variant
+    nonIncreasing := fun m () => ev.nonIncreasing m
+    convergence := fun m () => ev.convergence m
+  }
+
+@[simp]
+def newConvergentREvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _Event AM Unit Unit) (ev : ConvergentREventSpec'' v AM M abs) : ConvergentREvent v AM M Unit Unit :=
+  newConvergentREvent abs ev.toConvergentREventSpec

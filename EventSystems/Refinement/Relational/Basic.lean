@@ -117,7 +117,7 @@ structure REventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinem
 
 @[simp]
 def REventSpec'.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryEvent AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs.to_Event) : REventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs.to_Event :=
+  (abs : _Event AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs) : REventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
     toEventSpec := ev.toEventSpec
     lift_in := ev.lift_in
@@ -151,7 +151,7 @@ structure REventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refine
 
 @[simp]
 def REventSpec''.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryEvent AM Unit Unit) (ev : REventSpec'' AM M abs.to_Event) : REventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs.to_Event :=
+  (abs : _Event AM Unit Unit) (ev : REventSpec'' AM M abs) : REventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
     toEventSpec := ev.toEventSpec
     lift_in := id
