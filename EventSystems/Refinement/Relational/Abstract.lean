@@ -11,9 +11,9 @@ open Refinement
 /-
  Q : is there a better way to ease the definition of abstract events ? -/
 
-structure _AbstractREventSpec (AM) [Machine ACTX AM]
-                              (M) [Machine CTX M]
-                              [Refinement AM M] (α) where
+structure __AbstractREventSpec (AM) [Machine ACTX AM]
+                               (M) [Machine CTX M]
+                               [Refinement AM M] where
 
   lift (m: M) : AM
 
@@ -24,6 +24,13 @@ structure _AbstractREventSpec (AM) [Machine ACTX AM]
     Machine.invariant m
     → refine am m → refine am' m
     → am = am'
+
+
+structure _AbstractREventSpec (AM) [Machine ACTX AM]
+                              (M) [Machine CTX M]
+                              [Refinement AM M] (α)
+
+  extends __AbstractREventSpec AM M  where
 
   unlift (am am' : AM) (m : M) (x : α): M
 
@@ -92,30 +99,39 @@ def newAbstractREvent' [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
   (abs : OrdinaryEvent AM α Unit) (ev : AbstractREventSpec AM M abs.to_Event) : OrdinaryREvent AM M α Unit :=
   newAbstractREvent abs ev
 
+structure _AbstractREventSpec'' (AM) [Machine ACTX AM]
+                                (M) [Machine CTX M]
+                                [Refinement AM M]
+
+  extends __AbstractREventSpec AM M  where
+
+  unlift (am am' : AM) (m : M): M
+
 structure AbstractREventSpec'' (AM) [Machine ACTX AM]
                                (M) [Machine CTX M]
                                [Refinement AM M]
   (abstract : _Event AM Unit Unit)
-          extends _AbstractREventSpec AM M Unit where
+          extends _AbstractREventSpec'' AM M where
 
   step_ref (m : M):
     Machine.invariant m
     → abstract.guard (lift m) ()
     → let ((), am') := abstract.action (lift m) ()
-      refine am' (unlift (lift m) am' m ())
+      refine am' (unlift (lift m) am' m)
 
   step_safe (m : M):
     Machine.invariant m
     → abstract.guard (lift m) ()
     → let (_, am') := abstract.action (lift m) ()
       Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift (lift m) am' m ())
+      → Machine.invariant (unlift (lift m) am' m)
 
 @[simp]
 def AbstractREventSpec''.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     (abs : _Event AM Unit Unit) (ev : AbstractREventSpec'' AM M abs) : AbstractREventSpec AM M abs :=
   {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
+    to__AbstractREventSpec := ev.to__AbstractREventSpec
+    unlift := fun am am' m _ => ev.unlift am am' m
     step_ref := fun m () => ev.step_ref m
     step_safe := fun m () => ev.step_safe m
   }
@@ -187,24 +203,25 @@ structure AbstractInitREventSpec'' (AM) [Machine ACTX AM]
                                  (M) [Machine CTX M]
                                  [Refinement AM M]
   (abstract : _Event AM Unit Unit)
-       extends _AbstractREventSpec AM M Unit where
+       extends _AbstractREventSpec'' AM M where
 
   step_ref:
     abstract.guard Machine.reset ()
     → let ((), am') := abstract.action Machine.reset ()
-      refine am' (unlift Machine.reset am' Machine.reset ())
+      refine am' (unlift Machine.reset am' Machine.reset)
 
   step_safe :
     abstract.guard Machine.reset ()
     → let ((), am') := abstract.action Machine.reset ()
       Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift Machine.reset am' Machine.reset ())
+      → Machine.invariant (unlift Machine.reset am' Machine.reset)
 
 @[simp]
 def AbstractInitREventSpec''.toAbstractInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     (abs : _Event AM Unit Unit) (ev : AbstractInitREventSpec'' AM M abs) : AbstractInitREventSpec AM M abs :=
   {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
+    to__AbstractREventSpec := ev.to__AbstractREventSpec
+    unlift := fun am am' m _ => ev.unlift am am' m
     step_ref := fun () => ev.step_ref
     step_safe := fun () => ev.step_safe
   }
@@ -284,14 +301,15 @@ structure AbstractAnticipatedREventSpec''
     → abstract.guard (lift m) ()
     → let ((), am') := abstract.action (lift m) ()
       Machine.invariant am' -- redundant but useful
-      → abstract.po.variant (lift (unlift (lift m) am' m ()))
+      → abstract.po.variant (lift (unlift (lift m) am' m))
       = abstract.po.variant am'
 
 @[simp]
-def AbstractAnticipatedREventSpec''.toAbstractAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
+def AbstractAnticipatedREventSpec''.toAbstractAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : AnticipatedEvent v AM Unit Unit) (ev : AbstractAnticipatedREventSpec'' v AM M abs) : AbstractAnticipatedREventSpec v AM M abs :=
   {
-    to_AbstractREventSpec := ev.to_AbstractREventSpec
+    to__AbstractREventSpec := ev.to__AbstractREventSpec
+    unlift := fun am am' m _ => ev.unlift am am' m
     step_ref := fun m _ => ev.step_ref m
     step_safe := fun m _ => ev.step_safe m
     step_variant := fun m _ => ev.step_variant m
