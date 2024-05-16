@@ -70,6 +70,66 @@ def newAnticipatedRNDEventfromAnticipated [Preorder v] [Machine ACTX AM] [Machin
   (abs : AnticipatedNDEvent v AM α' β') (ev : AnticipatedRNDEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_NDEvent) : AnticipatedRNDEvent v AM M α β α' β' :=
   _newAnticipatedRNDEvent abs.to_NDEvent ev
 
+structure AnticipatedRNDEventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  {α α'} (abs : _NDEvent AM α' Unit)
+  extends _Variant v, RNDEventSpec' AM M (α:=α) (α':=α') abs where
+
+  nonIncreasing (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ m', effect m x m'
+            → variant m' ≤ variant m
+
+@[simp]
+def AnticipatedRNDEventSpec'.toAnticipatedRNDEventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _NDEvent AM α' Unit)
+  (ev : AnticipatedRNDEventSpec' v AM M (α:=α) (α':=α') abs): AnticipatedRNDEventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  {
+    toRNDEventSpec := ev.toRNDEventSpec
+    variant := ev.variant
+    nonIncreasing:= fun m x => by simp ; apply ev.nonIncreasing
+  }
+
+@[simp]
+def newAnticipatedRNDEventfromOrdinary' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryNDEvent AM α' Unit) (ev : AnticipatedRNDEventSpec' v AM M (α:=α) (α':=α') abs.to_NDEvent) : AnticipatedRNDEvent v AM M α Unit α' Unit :=
+  _newAnticipatedRNDEvent abs.to_NDEvent ev.toAnticipatedRNDEventSpec
+
+@[simp]
+def newAnticipatedRNDEventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : AnticipatedNDEvent v AM α' Unit) (ev : AnticipatedRNDEventSpec' v AM M (α:=α) (α':=α') abs.to_NDEvent) : AnticipatedRNDEvent v AM M α Unit α' Unit :=
+  _newAnticipatedRNDEvent abs.to_NDEvent ev.toAnticipatedRNDEventSpec
+
+structure AnticipatedRNDEventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  (abs : _NDEvent AM Unit Unit)
+  extends _Variant v, RNDEventSpec'' AM M abs where
+
+  nonIncreasing (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ m', effect m m'
+            → variant m' ≤ variant m
+
+@[simp]
+def AnticipatedRNDEventSpec''.toAnticipatedRNDEventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _NDEvent AM Unit Unit)
+  (ev : AnticipatedRNDEventSpec'' v AM M abs): AnticipatedRNDEventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  {
+    toRNDEventSpec := ev.toRNDEventSpec
+    variant := ev.variant
+    nonIncreasing:= fun m x => by simp ; apply ev.nonIncreasing
+  }
+
+@[simp]
+def newAnticipatedRNDEventfromOrdinary'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : OrdinaryNDEvent AM Unit Unit) (ev : AnticipatedRNDEventSpec'' v AM M abs.to_NDEvent) : AnticipatedRNDEvent v AM M Unit Unit :=
+  _newAnticipatedRNDEvent abs.to_NDEvent ev.toAnticipatedRNDEventSpec
+
+@[simp]
+def newAnticipatedRNDEventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : AnticipatedNDEvent v AM Unit Unit) (ev : AnticipatedRNDEventSpec'' v AM M abs.to_NDEvent) : AnticipatedRNDEvent v AM M Unit Unit :=
+  _newAnticipatedRNDEvent abs.to_NDEvent ev.toAnticipatedRNDEventSpec
+
 structure _ConvergentRNDEventPO (v) [Preorder v] [WellFoundedLT v]  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : _NDEvent M α β) (kind : EventKind) (α') (β')
           extends _Variant v, _AnticipatedRNDEventPO (instR:=instR) v ev kind α' β' where
@@ -131,3 +191,55 @@ def newConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mach
       convergence := ev.convergence
     }
   }
+
+structure ConvergentRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  {α α'} (abs : _NDEvent AM α' Unit)
+  extends AnticipatedRNDEventSpec' v AM M (α:=α) (α':=α') abs where
+
+  convergence (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ m', effect m x m'
+            → variant m' < variant m
+
+@[simp]
+def ConvergentRNDEventSpec'.toConvergentRNDEventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _NDEvent AM α' Unit)
+  (ev : ConvergentRNDEventSpec' v AM M (α:=α) (α':=α') abs): ConvergentRNDEventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  {
+    toRNDEventSpec := ev.toRNDEventSpec
+    variant := ev.variant
+    nonIncreasing:= fun m x => by simp ; apply ev.nonIncreasing
+    convergence:= fun m x => by simp ; apply ev.convergence
+  }
+
+@[simp]
+def newConvergentRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _NDEvent AM α' Unit) (ev : ConvergentRNDEventSpec' v AM M (α:=α) (α':=α') abs) : ConvergentRNDEvent v AM M α Unit α' Unit :=
+  newConvergentRNDEvent abs ev.toConvergentRNDEventSpec
+
+structure ConvergentRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  (abs : _NDEvent AM Unit Unit)
+  extends AnticipatedRNDEventSpec'' v AM M abs where
+
+  convergence (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ m', effect m m'
+            → variant m' < variant m
+
+@[simp]
+def ConvergentRNDEventSpec''.toConvergentRNDEventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _NDEvent AM Unit Unit)
+  (ev : ConvergentRNDEventSpec'' v AM M abs): ConvergentRNDEventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  {
+    toRNDEventSpec := ev.toRNDEventSpec
+    variant := ev.variant
+    nonIncreasing:= fun m x => by simp ; apply ev.nonIncreasing
+    convergence:= fun m x => by simp ; apply ev.convergence
+  }
+
+@[simp]
+def newConvergentRNDEvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : _NDEvent AM Unit Unit) (ev : ConvergentRNDEventSpec'' v AM M abs) : ConvergentRNDEvent v AM M Unit Unit :=
+  newConvergentRNDEvent abs ev.toConvergentRNDEventSpec

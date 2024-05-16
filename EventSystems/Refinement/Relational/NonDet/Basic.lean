@@ -321,8 +321,8 @@ def InitRNDEventSpec''.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Ref
     strengthening := fun x => by simp ; apply ev.strengthening
     simulation := fun x => by
       simp
-      intros Hgrd y m' Hini
-      apply ev.simulation x Hgrd m' Hini
+      intros Hgrd _ m' Hini
+      apply ev.simulation Hgrd m' Hini
   }
 
 @[simp]
