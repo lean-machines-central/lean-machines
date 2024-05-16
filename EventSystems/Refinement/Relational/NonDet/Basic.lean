@@ -258,3 +258,75 @@ def newInitRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
                                 assumption
     }
   }
+
+structure InitRNDEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  {α α'} (abstract : InitNDEvent AM α' Unit)
+  extends InitNDEventSpec' M α where
+
+  lift_in : α → α'
+
+  strengthening (x : α):
+    guard x
+    → abstract.guard Machine.reset (lift_in x)
+
+  simulation (x : α):
+    guard x
+    → ∀ m', init x m'
+      → ∃ am', abstract.effect Machine.reset (lift_in x) ((), am')
+               ∧ refine am' m'
+
+@[simp]
+def InitRNDEventSpec'.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abstract : InitNDEvent AM α' Unit)
+  (ev : InitRNDEventSpec' AM M (α:=α) (α':=α') abstract): InitRNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abstract :=
+  {
+    toInitNDEventSpec := ev.toInitNDEventSpec
+    lift_in := ev.lift_in
+    lift_out := id
+    strengthening := fun x => by simp ; apply ev.strengthening
+    simulation := fun x => by
+      simp
+      intros Hgrd y m' Hini
+      apply ev.simulation x Hgrd m' Hini
+  }
+
+@[simp]
+def newInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  {α α'} (abs : InitNDEvent AM α' Unit)
+  (ev : InitRNDEventSpec' AM M (α:=α) (α':=α') abs) : InitRNDEvent AM M α Unit α' Unit :=
+  newInitRNDEvent abs ev.toInitRNDEventSpec
+
+structure InitRNDEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+  (abstract : InitNDEvent AM Unit Unit)
+  extends InitNDEventSpec'' M where
+
+  strengthening:
+    guard
+    → abstract.guard Machine.reset ()
+
+  simulation:
+    guard
+    → ∀ m', init m'
+      → ∃ am', abstract.effect Machine.reset () ((), am')
+               ∧ refine am' m'
+
+@[simp]
+def InitRNDEventSpec''.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abstract : InitNDEvent AM Unit Unit)
+  (ev : InitRNDEventSpec'' AM M abstract): InitRNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abstract :=
+  {
+    toInitNDEventSpec := ev.toInitNDEventSpec
+    lift_in := id
+    lift_out := id
+    strengthening := fun x => by simp ; apply ev.strengthening
+    simulation := fun x => by
+      simp
+      intros Hgrd y m' Hini
+      apply ev.simulation x Hgrd m' Hini
+  }
+
+@[simp]
+def newInitRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+  (abs : InitNDEvent AM Unit Unit)
+  (ev : InitRNDEventSpec'' AM M abs) : InitRNDEvent AM M Unit Unit :=
+  newInitRNDEvent abs ev.toInitRNDEventSpec
