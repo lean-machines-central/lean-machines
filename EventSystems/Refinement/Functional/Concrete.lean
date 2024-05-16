@@ -90,7 +90,7 @@ structure ConcreteFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine
       variant m' < variant m
 
 @[simp]
-def ConcreteFREventSpec''.toConcreteFREventSpec  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def ConcreteFREventSpec''.toConcreteFREventSpec  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : ConcreteFREventSpec'' v AM M) : ConcreteFREventSpec v AM M Unit Unit :=
   {
     toEventSpec := ev.toEventSpec

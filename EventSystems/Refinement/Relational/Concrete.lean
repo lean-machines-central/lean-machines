@@ -140,7 +140,7 @@ def newConcreteREvent'' [Preorder v] [WellFoundedLT v]
     }
   }
 
-structure ConcreteRInitEventSpec (AM) [instAM: Machine ACTX AM]
+structure ConcreteInitREventSpec (AM) [instAM: Machine ACTX AM]
                                  (M) [instM: Machine CTX M]
                                  [instR: Refinement AM M] (α) (β) [Inhabited β]
      where
@@ -149,103 +149,14 @@ structure ConcreteRInitEventSpec (AM) [instAM: Machine ACTX AM]
   init (x : α) : β × M
 
   safety (x : α) :
-    Machine.invariant (init x).snd
+    guard x
+    → Machine.invariant (init x).snd
 
   simulation (x : α):
-    refine (self:=instR) Machine.reset (init x).2
+    guard x
+    → refine (self:=instR) Machine.reset (init x).2
 
-@[simp]
-def newConcreteRInitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] [Inhabited β]
-   (ev : ConcreteRInitEventSpec AM M α β) : InitRDetEvent AM M α β :=
-  {
-    guard := fun _ x => ev.guard x
-    action := fun _ x => ev.init x
-    po := {
-      lift_in := id
-      lift_out := id
-      safety := fun x => by simp
-                            intro _
-                            apply ev.safety x
-      abstract := {
-        to_NDEvent := skip_InitNDEvent
-        po := {
-          safety := fun x => by
-            intros _ _ m' Heff
-            simp at Heff
-            rw [Heff]
-            have Href := ev.simulation x
-            apply refine_safe Machine.reset (ev.init x).2
-            apply ev.safety
-            assumption
-
-          feasibility := fun _ => by simp
-        }
-      }
-      strengthening := fun m _ => by simp
-      simulation := fun x => by
-        simp
-        intros _ am Href
-        exists Machine.reset
-        have Hres := refine_reset (M:=M) am Href
-        simp [Hres]
-        apply ev.simulation
-    }
-  }
-
-structure ConcreteRInitEventSpec' (AM) [instAM: Machine ACTX AM]
-                                 (M) [instM: Machine CTX M]
-                                 [instR: Refinement AM M] (α)
-     where
-
-  guard (x : α) : Prop
-  init (x : α) : M
-
-  safety (x : α) :
-    Machine.invariant (init x)
-
-  simulation (x : α):
-    refine (self:=instR) Machine.reset (init x)
-
-@[simp]
-def ConcreteRInitEventSpec'.toConcreteRInitEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (ev : ConcreteRInitEventSpec' AM M α) : ConcreteRInitEventSpec AM M α Unit :=
-  {
-    init := fun x => ((), ev.init x)
-    guard := ev.guard
-    safety := ev.safety
-    simulation := ev.simulation
-  }
-
-@[simp]
-def newConcreteRInitEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-   (ev : ConcreteRInitEventSpec' AM M α) : InitRDetEvent AM M α Unit :=
-  newConcreteRInitEvent ev.toConcreteRInitEventSpec
-
-structure ConcreteRInitEventSpec'' (AM) [instAM: Machine ACTX AM]
-                                   (M) [instM: Machine CTX M]
-                                   [instR: Refinement AM M]
-     where
-
-  guard : Prop
-  init : M
-
-  safety :
-    Machine.invariant init
-
-  simulation (x : α):
-    refine (self:=instR) Machine.reset init
-
-@[simp]
-def ConcreteRInitEventSpec''.toConcreteRInitEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (ev : ConcreteRInitEventSpec'' AM M) : ConcreteRInitEventSpec AM M Unit Unit :=
-  {
-    guard := fun () => ev.guard
-    init := fun () => ((), ev.init)
-    safety := fun () => ev.safety
-    simulation := ev.simulation
-  }
-
-@[simp]
-def newConcreteRInitEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-   (ev : ConcreteRInitEventSpec'' AM M) : InitRDetEvent AM M Unit Unit :=
-  newConcreteRInitEvent ev.toConcreteRInitEventSpec
+-- Remark : ConcreteInit is not possible because
+-- the destination state of  Skip from Machine.reset
+-- is Machine.reset, which is not a proper destination
+-- state (in particular, there is no invariant enforced)
