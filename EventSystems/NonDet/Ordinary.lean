@@ -122,31 +122,18 @@ def newNDEvent'' {M} [Machine CTX M] (ev : NDEventSpec'' M) : OrdinaryNDEvent M 
 
 /- Initialiazation events -/
 
-structure _InitNDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) where
+structure _InitNDEventPO [Machine CTX M] (ev : _InitNDEvent M α β) (kind : EventKind) where
   safety (x : α):
-    ev.guard Machine.reset x
-    → ∀ y, ∀ m', ev.effect Machine.reset x (y, m')
+    ev.guard x
+    → ∀ y, ∀ m', ev.init x (y, m')
                  → Machine.invariant m'
 
   feasibility (x : α):
-    ev.guard Machine.reset x
-    → ∃ y, ∃ m', ev.effect Machine.reset x (y, m')
+    ev.guard x
+    → ∃ y, ∃ m', ev.init x (y, m')
 
-structure InitNDEvent (M) [Machine CTX M] (α) (β) extends _NDEvent M α β where
-  po : _InitNDEventPO to_NDEvent  EventKind.InitNonDet
-
-@[simp]
-def InitNDEvent.init [Machine CTX M]  (ev : InitNDEvent M α β) (x : α) (nxt : β × M) :=
-  ev.effect Machine.reset x nxt
-
-@[simp]
-def InitNDEvent.init' [Machine CTX M] (ev : InitNDEvent M Unit β) (nxt: β × M) :=
-  ev.init () nxt
-
-@[simp]
-def InitNDEvent.init'' [Machine CTX M] (ev : InitNDEvent M Unit Unit) (m : M) :=
-  ev.init' ((), m)
-
+structure InitNDEvent (M) [Machine CTX M] (α) (β) extends _InitNDEvent M α β where
+  po : _InitNDEventPO to_InitNDEvent  EventKind.InitNonDet
 
 structure InitNDEventSpec (M) [Machine CTX M] (α) (β) where
   guard (x : α) : Prop := True
@@ -162,18 +149,17 @@ structure InitNDEventSpec (M) [Machine CTX M] (α) (β) where
     → ∃ y, ∃ m, init x (y, m)
 
 @[simp]
-def InitNDEventSpec.to_NDEvent [Machine CTX M]
-  (ev : InitNDEventSpec M α β) : _NDEvent M α β :=
+def InitNDEventSpec.to_InitNDEvent [Machine CTX M]
+  (ev : InitNDEventSpec M α β) : _InitNDEvent M α β :=
   {
-    guard := fun m x => m = Machine.reset ∧ ev.guard x
-    effect := fun _ x (y, m') => ev.init x (y, m')
+    guard := ev.guard
+    init := ev.init
   }
 
 @[simp]
 def newInitNDEvent {M} [Machine CTX M] (ev : InitNDEventSpec M α β) : InitNDEvent M α β :=
   {
-    guard := fun m x => m = Machine.reset ∧ ev.guard x
-    effect := fun _ x (y, m') => ev.init x (y, m')
+    to_InitNDEvent := ev.to_InitNDEvent
     po := {
       safety := fun x => by simp ; intros ; apply ev.safety x <;> assumption
       feasibility := fun x => by simp ; intros ; apply ev.feasibility x ; assumption
