@@ -15,10 +15,12 @@ class Refinement {ACTX : outParam (Type u₁)} (AM)
     → refine am m
     → Machine.invariant am
 
+  /-
+  Note : this one was needed at some point
   refine_reset (am : AM):
     refine am Machine.reset
     → am = Machine.reset
-
+  -/
 open Refinement
 
 structure _REventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
