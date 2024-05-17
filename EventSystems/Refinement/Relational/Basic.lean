@@ -168,49 +168,35 @@ def newREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 /--/ Initialization events -/
 
 structure _InitREventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-   (ev : _Event M α β) (kind : EventKind) (α' β')
+   (ev : _InitEvent M α β) (kind : EventKind) (α' β')
    extends _InitEventPO ev kind where
 
-  abstract : _Event AM α' β'
+  abstract : _InitEvent AM α' β'
 
   lift_in : α → α'
   lift_out : β → β'
 
   strengthening (x : α):
-    ev.guard Machine.reset x
-    → ∀ am, refine (self:=instR) am Machine.reset
-      → abstract.guard am (lift_in x)
+    ev.guard x
+    → abstract.guard (lift_in x)
 
   simulation (x : α):
-     ev.guard Machine.reset x
-    → ∀ am, refine (self:=instR) am Machine.reset
-      → let (y, m') := ev.action Machine.reset x
-        let (z, am') := abstract.action am (lift_in x)
-        lift_out y = z ∧ refine am' m'
+     ev.guard x
+    → let (y, m') := ev.init x
+      let (z, am') := abstract.init (lift_in x)
+      lift_out y = z ∧ refine am' m'
 
 structure InitREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (α) (β) (α':=α) (β':=β)
-  extends _Event M α β where
-  po : _InitREventPO (instR:=instR) to_Event (EventKind.InitDet) α' β'
+  extends _InitEvent M α β where
+  po : _InitREventPO (instR:=instR) to_InitEvent (EventKind.InitDet) α' β'
 
 @[simp]
 def InitREvent.toInitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M α β α' β') : InitEvent M α β :=
 {
-  to_Event:= ev.to_Event
+  to_InitEvent:= ev.to_InitEvent
   po := ev.po.to_InitEventPO
 }
-
-@[simp]
-def InitREvent.init  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M α β α' β') (x : α) : β × M :=
-  ev.action Machine.reset x
-
-@[simp]
-def InitREvent.init'  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M Unit β Unit β') : β × M :=
-  ev.init ()
-
-@[simp]
-def InitREvent.init''  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitREvent AM M Unit Unit Unit Unit) : M :=
-  ev.init'.2
 
 structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   {α β α' β'} (abstract : InitEvent AM α' β')
@@ -221,12 +207,12 @@ structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refi
 
   strengthening (x : α):
     guard x
-    → abstract.guard Machine.reset (lift_in x)
+    → abstract.guard (lift_in x)
 
   simulation (x : α):
     guard x
     → let (y, m') := init x
-      let (z, am') := abstract.action Machine.reset (lift_in x)
+      let (z, am') := abstract.init (lift_in x)
       lift_out y = z ∧ refine am' m'
 
 @[simp]
@@ -234,27 +220,22 @@ def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM α' β')
   (ev : InitREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : InitREvent AM M α β α' β' :=
   {
-    guard := fun m x => m = Machine.reset ∧ ev.guard x
-    action := fun _ x => ev.init x
+    to_InitEvent := ev.to_InitEvent
     po := {
       lift_in := ev.lift_in
       lift_out := ev.lift_out
       safety := fun x => by simp
                             intros Hgrd
                             apply ev.safety x Hgrd
-      abstract := abs.to_Event
+      abstract := abs.to_InitEvent
       strengthening := fun x => by
         simp
-        intros Hgrd am Href
-        have Hst := ev.strengthening x Hgrd
-        have Hax := Refinement.refine_reset am Href
-        rw [Hax]
-        assumption
+        intros Hgrd
+        apply ev.strengthening x Hgrd
+
       simulation := fun x => by
         simp
-        intros Hgrd am Href
-        have Hax := Refinement.refine_reset am Href
-        rw [Hax]
+        intros Hgrd
         have Hsim := ev.simulation x Hgrd
         simp at Hsim
         assumption
@@ -269,12 +250,12 @@ structure InitREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Ref
 
   strengthening (x : α):
     guard x
-    → abstract.guard Machine.reset (lift_in x)
+    → abstract.guard (lift_in x)
 
   simulation (x : α):
     guard x
     → let m' := init x
-      let ((), am') := abstract.action Machine.reset (lift_in x)
+      let ((), am') := abstract.init (lift_in x)
       refine am' m'
 
 @[simp]
@@ -300,12 +281,12 @@ structure InitREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Re
 
   strengthening:
     guard
-    → abstract.guard Machine.reset ()
+    → abstract.guard ()
 
   simulation:
     guard
     → let m' := init
-      let ((), am') := abstract.action Machine.reset ()
+      let ((), am') := abstract.init ()
       refine am' m'
 
 @[simp]

@@ -40,7 +40,7 @@ def OrdinaryRDetEvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinem
   }
 
 structure RDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
-  {α β α' β'} (abstract : _NDEvent AM α' β')
+  {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
   extends EventSpec M α β where
 
   lift_in : α → α'
@@ -62,7 +62,7 @@ structure RDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement A
 
 @[simp]
 def newRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM α' β') (ev : RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_NDEvent) : OrdinaryRDetEvent AM M α β α' β' :=
+  (abs : OrdinaryNDEvent AM α' β') (ev : RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRDetEvent AM M α β α' β' :=
   {
     to_Event := ev.to_Event
     po := {
@@ -74,7 +74,7 @@ def newRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   }
 
 structure RDetEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
-  {α α'} (abstract : _NDEvent AM α' Unit)
+  {α α'} (abstract : OrdinaryNDEvent AM α' Unit)
   extends EventSpec' M α where
 
   lift_in : α → α'
@@ -95,7 +95,7 @@ structure RDetEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement 
 
 @[simp]
 def RDetEventSpec'.toRDetEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abstract : _NDEvent AM α' Unit)
+  (abstract : OrdinaryNDEvent AM α' Unit)
   (ev : RDetEventSpec' AM M (α:=α) (α':=α') abstract) : RDetEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abstract :=
   {
     toEventSpec := ev.toEventSpec
@@ -107,11 +107,11 @@ def RDetEventSpec'.toRDetEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement
 
 @[simp]
 def newRDetEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM α' Unit) (ev : RDetEventSpec' AM M (α:=α) (α':=α') abs.to_NDEvent) : OrdinaryRDetEvent AM M α Unit α' Unit :=
+  (abs : OrdinaryNDEvent AM α' Unit) (ev : RDetEventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryRDetEvent AM M α Unit α' Unit :=
   newRDetEvent abs ev.toRDetEventSpec
 
 structure RDetEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
-  (abstract : _NDEvent AM Unit Unit)
+  (abstract : OrdinaryNDEvent AM Unit Unit)
   extends EventSpec'' M where
 
   strengthening (m : M):
@@ -130,7 +130,7 @@ structure RDetEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement
 
 @[simp]
 def RDetEventSpec''.toRDetEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abstract : _NDEvent AM Unit Unit)
+  (abstract : OrdinaryNDEvent AM Unit Unit)
   (ev : RDetEventSpec'' AM M abstract) : RDetEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abstract :=
   {
     toEventSpec := ev.toEventSpec
@@ -143,13 +143,13 @@ def RDetEventSpec''.toRDetEventSpec [Machine ACTX AM] [Machine CTX M] [Refinemen
 
 @[simp]
 def newRDetEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM Unit Unit) (ev : RDetEventSpec'' AM M abs.to_NDEvent) : OrdinaryRDetEvent AM M Unit Unit :=
+  (abs : OrdinaryNDEvent AM Unit Unit) (ev : RDetEventSpec'' AM M abs) : OrdinaryRDetEvent AM M Unit Unit :=
   newRDetEvent abs ev.toRDetEventSpec
 
 /-  Initialization events -/
 
 structure _InitRDetEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-   (ev : _Event M α β) (kind : EventKind) (α' β')
+   (ev : _InitEvent M α β) (kind : EventKind) (α' β')
    extends _InitEventPO ev kind where
 
   abstract : InitNDEvent AM α' β'
@@ -158,40 +158,26 @@ structure _InitRDetEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement
   lift_out : β → β'
 
   strengthening (x : α):
-    ev.guard Machine.reset x
-    → ∀ am, refine (self:=instR) am Machine.reset
-      → abstract.guard am (lift_in x)
+    ev.guard x
+    → abstract.guard (lift_in x)
 
   simulation (x : α):
-    ev.guard Machine.reset x
-    → ∀ am, refine (self:=instR) am Machine.reset
-      → let (y, m') := ev.action Machine.reset x
-        ∃ am', abstract.effect am (lift_in x) (lift_out y, am')
-               ∧ refine am' m'
+    ev.guard x
+    → let (y, m') := ev.init x
+      ∃ am', abstract.init (lift_in x) (lift_out y, am')
+             ∧ refine am' m'
 
 structure InitRDetEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  (α) (β) (α':=α) (β':=β) extends _Event M α β where
-  po : _InitRDetEventPO (instR:=instR) to_Event EventKind.InitDet α' β'
+  (α) (β) (α':=α) (β':=β) extends _InitEvent M α β where
+  po : _InitRDetEventPO (instR:=instR) to_InitEvent EventKind.InitDet α' β'
 
 @[simp]
 def InitRDetEvent.toInitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : InitRDetEvent AM M α β) : InitEvent M α β :=
   {
-    to_Event := ev.to_Event
+    to_InitEvent := ev.to_InitEvent
     po := ev.po.to_InitEventPO
   }
-
-@[simp]
-def InitRDetEvent.init  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRDetEvent AM M α β) (x : α) : β × M :=
-  ev.action Machine.reset x
-
-@[simp]
-def InitRDetEvent.init'  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRDetEvent AM M Unit β) : β × M :=
-  ev.init ()
-
-@[simp]
-def InitRDetEvent.init''  [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRDetEvent AM M Unit Unit) : M :=
-  ev.init'.2
 
 structure InitRDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : InitNDEvent AM α' β')
@@ -202,20 +188,19 @@ structure InitRDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refineme
 
   strengthening (x : α):
     guard x
-    → abstract.guard Machine.reset (lift_in x)
+    → abstract.guard (lift_in x)
 
   simulation (x : α):
     guard x
     → let (y, m') := init x
-      ∃ am', abstract.effect Machine.reset (lift_in x) (lift_out y, am')
+      ∃ am', abstract.init (lift_in x) (lift_out y, am')
               ∧ refine am' m'
 
 @[simp]
 def newInitRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitNDEvent AM α' β') (ev : InitRDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : InitRDetEvent AM M α β α' β' :=
   {
-    guard := fun m x => m = Machine.reset ∧ ev.guard x
-    action := fun _ x => ev.init x
+    to_InitEvent := ev.to_InitEvent
     po := {
       lift_in := ev.lift_in
       lift_out := ev.lift_out
@@ -223,23 +208,16 @@ def newInitRDetEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
       abstract := abs
       strengthening := fun x => by
         simp
-        intros Hgrd am Href
-        have Hst := ev.strengthening x Hgrd
-        have Hax := Refinement.refine_reset am Href
-        rw [Hax]
-        exact Hst
+        intros Hgrd
+        apply ev.strengthening x Hgrd
 
       simulation := fun x => by
         simp
-        intros Hgrd am Href
+        intros Hgrd
         have Hsim := ev.simulation x Hgrd
         simp at Hsim
         obtain ⟨am', Hsim₁, Hsim₂⟩ := Hsim
         exists am'
-        simp [Hsim₂]
-        have Hax := Refinement.refine_reset am Href
-        rw [Hax]
-        exact Hsim₁
     }
   }
 
@@ -251,12 +229,12 @@ structure InitRDetEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinem
 
   strengthening (x : α):
     guard x
-    → abstract.guard Machine.reset (lift_in x)
+    → abstract.guard (lift_in x)
 
   simulation (x : α):
     guard x
     → let m' := init x
-      ∃ am', abstract.effect Machine.reset (lift_in x) ((), am')
+      ∃ am', abstract.init (lift_in x) ((), am')
               ∧ refine am' m'
 
 @[simp]
@@ -282,12 +260,12 @@ structure InitRDetEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refine
 
   strengthening:
     guard
-    → abstract.guard Machine.reset ()
+    → abstract.guard ()
 
   simulation:
     guard
     → let m' := init
-      ∃ am', abstract.effect Machine.reset () ((), am')
+      ∃ am', abstract.init () ((), am')
               ∧ refine am' m'
 
 @[simp]

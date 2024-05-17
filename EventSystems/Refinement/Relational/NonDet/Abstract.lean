@@ -184,7 +184,7 @@ def newAbstractRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 structure AbstractInitRNDEventSpec (AM) [Machine ACTX AM]
                                    (M) [Machine CTX M]
                                   [Refinement AM M]
-  {α β} (abstract : _NDEvent AM α β)
+  {α β} (abstract : _InitNDEvent AM α β)
           extends _AbstractREventSpec AM M α where
 
   lift_unlift (am' : AM) (x : α):
@@ -192,33 +192,46 @@ structure AbstractInitRNDEventSpec (AM) [Machine ACTX AM]
     → lift (unlift Machine.reset am' Machine.reset x) = am'
 
   step_ref (x : α):
-    abstract.guard Machine.reset x
-    → ∀ y, ∀ am', abstract.effect Machine.reset x (y, am')
+    abstract.guard x
+    → ∀ y, ∀ am', abstract.init x (y, am')
                   → refine am' (unlift Machine.reset am' Machine.reset x)
 
   step_safe (x : α):
-    abstract.guard Machine.reset x
-    → ∀ y, ∀ am', abstract.effect Machine.reset x (y, am')
+    abstract.guard x
+    → ∀ y, ∀ am', abstract.init x (y, am')
                   → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
+@[simp]
+def AbstractInitRNDEventSpec.to_InitNDEvent  [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
+  (abs : InitNDEvent AM α β) (ev : AbstractInitRNDEventSpec AM M abs.to_InitNDEvent) : _InitNDEvent M α β  :=
+  {
+    guard := abs.guard
+    init := fun x (y, m') => ∃ am', abs.init x (y, am')
+                             ∧ m' =  ev.unlift Machine.reset am' Machine.reset x
+  }
 
 @[simp]
 def newAbstractInitRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
-  (abs : InitNDEvent AM α β) (ev : AbstractInitRNDEventSpec AM M abs.to_NDEvent) : InitRNDEvent AM M α β :=
+  (abs : InitNDEvent AM α β) (ev : AbstractInitRNDEventSpec AM M abs.to_InitNDEvent) : InitRNDEvent AM M α β :=
   {
-    guard := fun m x => m = Machine.reset ∧ abs.guard Machine.reset x
-    effect := fun _ x (y, m') => abs.effect Machine.reset x (y, ev.lift m')
-                                 ∧ m' = ev.unlift Machine.reset (ev.lift m') Machine.reset x
+    to_InitNDEvent := ev.to_InitNDEvent
     po := {
       lift_in := id
       lift_out := id
       safety := fun x => by
         simp
-        intros Hagrd y m' Heff Hm'
+        intros Hagrd y m' am' Hini Hm'
         -- no use for abstract safety (except in proving step_safe in practice)
-        -- have Hsafe := abs.po.safety x Hagrd y (ev.lift m') Heff
+        -- have Hsafe := abs.po.safety x Hagrd y (ev.lift m')
+        have Hss := ev.step_safe x Hagrd y (ev.lift m')
+        rw [Hm'] at Hss
         rw [Hm']
-        apply ev.step_safe x Hagrd y (ev.lift m') Heff
+        have Hainv := abs.po.safety x Hagrd y am' Hini
+        have Hlu := ev.lift_unlift am' x Hainv
+        rw [←Hlu] at Hini
+        have Hss' := Hss Hini ; clear Hss
+        rw [Hlu] at Hss'
+        assumption
 
       feasibility := fun x => by
         simp
@@ -226,43 +239,35 @@ def newAbstractInitRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement 
         obtain ⟨y, am', Hafeas⟩ := abs.po.feasibility x Hagrd
         exists y
         exists (ev.unlift Machine.reset am' Machine.reset x)
-        have Hsref := ev.step_ref x Hagrd y am' Hafeas
-        have Hssafe := ev.step_safe x Hagrd y am' Hafeas
-        have Hasafe' := refine_safe am' (ev.unlift Machine.reset am' Machine.reset x) Hssafe Hsref
-        have Hlu := ev.lift_unlift am' x Hasafe'
-        rw [Hlu]
-        simp [Hafeas]
+        exists am'
 
-      abstract := abs.to_NDEvent
+      abstract := abs.to_InitNDEvent
 
-      strengthening := fun x => by
-        simp
-        intros Hgrd am Href
-        have Hres := refine_reset (self:=instR) am Href
-        rw [Hres]
-        assumption
+      strengthening := fun x => by simp
 
       simulation := fun x => by
         simp
-        intros Hagrd y m' Heff Hm' am Href
+        intros Hagrd y m' am' Hini Hm'
+        have Hainv := abs.po.safety x Hagrd y am' Hini
         exists (ev.lift m')
         constructor
-        · have Hres := refine_reset (self:=instR) am Href
-          rw [Hres]
+        · rw [Hm']
+          have Hlu := ev.lift_unlift am' x Hainv
+          rw [Hlu]
           assumption
         -- and
         rw [Hm']
         rw [ev.lift_unlift]
-        · apply ev.step_ref x Hagrd y (ev.lift m') Heff
+        · apply ev.step_ref x Hagrd y am' Hini
         -- finally
-        apply abs.po.safety x Hagrd y (ev.lift m') Heff
+        assumption
     }
   }
 
 structure AbstractInitRNDEventSpec' (AM) [Machine ACTX AM]
                                    (M) [Machine CTX M]
                                   [Refinement AM M]
-  {α} (abstract : _NDEvent AM α Unit)
+  {α} (abstract : _InitNDEvent AM α Unit)
           extends _AbstractREventSpec AM M α where
 
   lift_unlift (am' : AM) (x : α):
@@ -270,18 +275,18 @@ structure AbstractInitRNDEventSpec' (AM) [Machine ACTX AM]
     → lift (unlift Machine.reset am' Machine.reset x) = am'
 
   step_ref (x : α):
-    abstract.guard Machine.reset x
-    → ∀ am', abstract.effect Machine.reset x ((), am')
+    abstract.guard x
+    → ∀ am', abstract.init x ((), am')
              → refine am' (unlift Machine.reset am' Machine.reset x)
 
   step_safe (x : α):
-    abstract.guard Machine.reset x
-    → ∀ am', abstract.effect Machine.reset x ((), am')
+    abstract.guard x
+    → ∀ am', abstract.init x ((), am')
              → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
 @[simp]
 def AbstractInitRNDEventSpec'.toAbstractInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abstract : _NDEvent AM α Unit)
+  (abstract : _InitNDEvent AM α Unit)
   (ev : AbstractInitRNDEventSpec' AM M abstract) : AbstractInitRNDEventSpec AM M abstract :=
   {
     to_AbstractREventSpec := ev.to_AbstractREventSpec
@@ -296,13 +301,13 @@ def AbstractInitRNDEventSpec'.toAbstractInitRNDEventSpec [Machine ACTX AM] [Mach
 
 @[simp]
 def newAbstractInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
-  (abs : InitNDEvent AM α Unit) (ev : AbstractInitRNDEventSpec' AM M abs.to_NDEvent) : InitRNDEvent AM M α Unit :=
+  (abs : InitNDEvent AM α Unit) (ev : AbstractInitRNDEventSpec' AM M abs.to_InitNDEvent) : InitRNDEvent AM M α Unit :=
   newAbstractInitRNDEvent abs ev.toAbstractInitRNDEventSpec
 
 structure AbstractInitRNDEventSpec'' (AM) [Machine ACTX AM]
                                      (M) [Machine CTX M]
                                      [Refinement AM M]
-  (abstract : _NDEvent AM Unit Unit)
+  (abstract : _InitNDEvent AM Unit Unit)
           extends _AbstractREventSpec'' AM M where
 
   lift_unlift (am' : AM):
@@ -310,18 +315,18 @@ structure AbstractInitRNDEventSpec'' (AM) [Machine ACTX AM]
     → lift (unlift Machine.reset am' Machine.reset) = am'
 
   step_ref:
-    abstract.guard Machine.reset ()
-    → ∀ am', abstract.effect Machine.reset () ((), am')
+    abstract.guard ()
+    → ∀ am', abstract.init () ((), am')
              → refine am' (unlift Machine.reset am' Machine.reset)
 
   step_safe:
-    abstract.guard Machine.reset ()
-    → ∀ am', abstract.effect Machine.reset () ((), am')
+    abstract.guard ()
+    → ∀ am', abstract.init () ((), am')
              → Machine.invariant (unlift Machine.reset am' Machine.reset)
 
 @[simp]
 def AbstractInitRNDEventSpec''.toAbstractInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abstract : _NDEvent AM Unit Unit)
+  (abstract : _InitNDEvent AM Unit Unit)
   (ev : AbstractInitRNDEventSpec'' AM M abstract) : AbstractInitRNDEventSpec AM M abstract :=
   {
     to__AbstractREventSpec := ev.to__AbstractREventSpec
@@ -337,7 +342,7 @@ def AbstractInitRNDEventSpec''.toAbstractInitRNDEventSpec [Machine ACTX AM] [Mac
 
 @[simp]
 def newAbstractInitRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : InitNDEvent AM Unit Unit) (ev : AbstractInitRNDEventSpec'' AM M abs.to_NDEvent) : InitRNDEvent AM M Unit Unit :=
+  (abs : InitNDEvent AM Unit Unit) (ev : AbstractInitRNDEventSpec'' AM M abs.to_InitNDEvent) : InitRNDEvent AM M Unit Unit :=
   newAbstractInitRNDEvent abs ev.toAbstractInitRNDEventSpec
 
 @[simp]
