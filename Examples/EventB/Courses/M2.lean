@@ -207,55 +207,64 @@ theorem PO_simulation (m2 : M2 ctx) (cs : Finset Course):
     Refinement.refine m1 m2 →
       ∃ (m1' : M1 ctx.toContext_1),
         M1.OpenCourses.to_NDEvent.effect m1 () ((), m1')
-        → Refinement.refine m1' (OpenCourses.action m2 cs) :=
+        ∧ Refinement.refine m1' (OpenCourses.action m2 cs) :=
 by
   intros Hinv Hgrd m1 Href
-  simp [Refinement.refine] at *
-  obtain ⟨_, _, Hgrd₃, _⟩ := Hgrd
-  obtain ⟨Href₁, Href₂, Href₃⟩ := Href
+  simp [M1.OpenCourses, M0.OpenCourses, FRefinement.lift, SRefinement.unlift]
   simp [Machine.invariant] at Hinv
-  obtain ⟨_, _, Hinv₃, _, _⟩ := Hinv
-  exists {openedCourses := m1.openedCourses ∪ cs, inscriptions := m1.inscriptions}
-  simp [M1.OpenCourses, FRefinement.lift, SRefinement.unlift, M0.OpenCourses]
-  intros _ _ _ _ _
+  simp at Hgrd
+  obtain ⟨Hgrd₁, Hgrd₂, Hgrd₃, Hgrd₄⟩ := Hgrd
+  obtain ⟨Hinv₁ ,Hinv₂, Hinv₃, Hinv₄, Hinv₅⟩ := Hinv
+  simp [invariant₁] at Hinv₁
+  simp [invariant₂] at Hinv₂
+  simp [invariant₃] at Hinv₃
+  simp [invariant₄] at Hinv₄
+  simp [invariant₅] at Hinv₅
+  simp [Refinement.refine, refine₁, refine₂, refine₃] at Href
+  obtain ⟨Href₁, Href₂, Href₃⟩ := Href
+  exists ⟨⟨m1.openedCourses ∪ cs⟩, m1.inscriptions⟩
+  simp
   constructor
-  · simp [refine₁] at *
-    rw [Href₁]
-  constructor
-  · simp [refine₂] at *
-    intros c Hc p Hp
-    cases Hc
-    case inl Hc =>
-      apply Href₂ <;> assumption
-    case inr Hc =>
-      have H₁: c ∉ m2.domain := by
-        apply Finset.disjoint_left (s:=cs) (t:=m2.domain).mp Hgrd₃ Hc
-      have H₂: c ∈ m2.domain := by
-        simp [invariant₃] at Hinv₃
-        apply Hinv₃
-        exact Finset.Nonempty.ne_empty (Exists.intro p Hp)
-      contradiction
-  simp [refine₃] at *
-  intros c p Hcp
-  have ⟨H₁,H₂⟩ := Href₃ c p Hcp
-  simp [H₁, H₂]
-
+  case left =>
+    exists cs
+    simp [*]
+    rw [←Href₁]
+    have Hcard := Finset.card_union_le m2.domain cs
+    apply le_trans (b:=m2.domain.card + cs.card) Hcard Hgrd₄
+  case right =>
+    simp [Refinement.refine, refine₁, refine₂, refine₃, *]
+    constructor
+    · intros c Hc p Hp
+      rw [←Href₁] at Hc
+      cases Hc
+      case _ Hc =>
+        exact Href₂ c Hc p Hp
+      case _ Hc =>
+        have Hinv₃' := Hinv₃ c
+        have Hcontra : c ∈ m2.domain := by
+          apply Hinv₃'
+          intro Hcontra
+          rw [Hcontra] at Hp
+          contradiction
+        have Hcontra': c ∉ m2.domain := by
+          apply Finset.disjoint_left (s:=cs) (t:=m2.domain).mp Hgrd₃ Hc
+        contradiction
+    -- next cases
+    intros c p Hcp
+    have Href₃' := Href₃ c p Hcp
+    constructor
+    · rw [←Href₁]
+      simp [Href₃']
+    -- final case
+    simp [Href₃']
 
 end OpenCourses
 
-/-
-
- XXX : Blocked here because the abstract event has not the same input type (Unit vs Finset Course)
-
- ... probably needs to allow to change types along refinement
-
- ... lift_in : <cinput_type> -> <ainput_type>
- ... unlift_out : <coutput_type> -> <aoutput_type>
-
-def OpenCourses : ConvergentRDetEvent Nat (M1 ctx.toContext_1) (M2 ctx) (Finset Course) Unit :=
-  newConvergentRDetEvent' {
+def OpenCourses : ConvergentRDetEvent Nat (M1 ctx.toContext_1) (M2 ctx) (Finset Course) Unit Unit Unit :=
+  newConvergentRDetEvent' M1.OpenCourses.toOrdinaryNDEvent {
     guard := OpenCourses.guard
     action := OpenCourses.action
+    lift_in := fun _ => ()
     safety := fun m2 cs => by simp [Machine.invariant]
                               intros Hinv₁ Hinv₂ Hinv₃ Hinv₄ Hinv₅ Hgrd
                               constructor
@@ -270,17 +279,19 @@ def OpenCourses : ConvergentRDetEvent Nat (M1 ctx.toContext_1) (M2 ctx) (Finset 
 
 
     variant := OpenCourses.variant
-    convergence := fun m2 cs => by simp [Machine.invariant]
-                                   intros _ _ _ _ _ Hgrd
-                                   apply OpenCourses.PO_convergence ; assumption
-    abstract := M1.OpenCourses.to_NDEvent
+    convergence := fun m2 cs => by
+      simp [Machine.invariant]
+      intros _ _ _ _ _ Hgrd
+      apply OpenCourses.PO_convergence ; assumption
+
 
     strengthening := fun m cs => by simp ; apply OpenCourses.PO_strengthening
 
-    simulation := fun m2 cs => by simp ; apply OpenCourses.PO_simulation m2 cs
-
+    simulation := fun m2 cs => by
+      simp --; apply OpenCourses.PO_simulation m2 cs
+      intros Hinv Hgrd am Href
+      apply OpenCourses.PO_simulation m2 cs Hinv Hgrd am Href
   }
--/
 
 /-
 
