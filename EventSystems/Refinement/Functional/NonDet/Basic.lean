@@ -62,6 +62,82 @@ def newFRNDEvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : FRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_NDEvent) : OrdinaryRNDEvent AM M α β α' β' :=
   newRNDEvent abs ev.toRNDEventSpec
 
+structure FRNDEventSpec' (AM) [Machine ACTX AM]
+                         (M) [Machine CTX M]
+                         [FRefinement AM M]
+  {α α'} (abstract : _NDEvent AM α' Unit)
+  extends NDEventSpec' M α where
+
+  lift_in : α → α'
+
+  strengthening (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → abstract.guard (lift m) (lift_in x)
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → ∀ m', effect m x m'
+      → abstract.effect (lift m) (lift_in x) ((), (lift m'))
+
+@[simp]
+def FRNDEventSpec'.toFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+  {α α'} (abs : _NDEvent AM α' Unit)
+  (ev : FRNDEventSpec' AM M (α:=α) (α':=α') abs) : FRNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  {
+    toNDEventSpec := ev.toNDEventSpec
+    lift_in := ev.lift_in
+    lift_out := id
+    strengthening := ev.strengthening
+    simulation := fun m x => by
+      simp
+      intros Hinv Hgrd _ m' Heff
+      apply ev.simulation m x <;> assumption
+  }
+
+@[simp]
+def newFRNDEvent' [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
+  (abs : OrdinaryNDEvent AM α' Unit) (ev : FRNDEventSpec' AM M (α:=α) (α':=α') abs.to_NDEvent) : OrdinaryRNDEvent AM M α Unit α' Unit :=
+  newFRNDEvent abs ev.toFRNDEventSpec
+
+structure FRNDEventSpec'' (AM) [Machine ACTX AM]
+                         (M) [Machine CTX M]
+                         [FRefinement AM M]
+  (abstract : _NDEvent AM Unit Unit)
+  extends NDEventSpec'' M where
+
+  strengthening (m : M):
+    Machine.invariant m
+    → guard m
+    → abstract.guard (lift m) ()
+
+  simulation (m : M):
+    Machine.invariant m
+    → guard m
+    → ∀ m', effect m m'
+      → abstract.effect (lift m) () ((), (lift m'))
+
+@[simp]
+def FRNDEventSpec''.toFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+  (abs : _NDEvent AM Unit Unit)
+  (ev : FRNDEventSpec'' AM M abs) : FRNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  {
+    toNDEventSpec := ev.toNDEventSpec
+    lift_in := id
+    lift_out := id
+    strengthening := fun m () => ev.strengthening m
+    simulation := fun m () => by
+      simp
+      intros Hinv Hgrd _ m' Heff
+      apply ev.simulation m <;> assumption
+  }
+
+@[simp]
+def newFRNDEvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (abs : OrdinaryNDEvent AM Unit Unit) (ev : FRNDEventSpec'' AM M abs.to_NDEvent) : OrdinaryRNDEvent AM M Unit Unit :=
+  newFRNDEvent abs ev.toFRNDEventSpec
+
 /- Initialization events -/
 
 structure InitFRNDEventSpec (AM) [Machine ACTX AM]
@@ -106,3 +182,77 @@ def newInitFRNDEvent [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : InitNDEvent AM α' β')
   (ev : InitFRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : InitRNDEvent AM M α β α' β' :=
   newInitRNDEvent abs ev.toInitRNDEventSpec
+
+structure InitFRNDEventSpec' (AM) [Machine ACTX AM]
+                        (M) [Machine CTX M]
+                        [FRefinement AM M]
+  {α α'} (abstract : InitNDEvent AM α' Unit)
+  extends InitNDEventSpec' M α where
+
+  lift_in : α → α'
+
+  strengthening (x : α):
+    guard x
+    → abstract.guard Machine.reset (lift_in x)
+
+  simulation (x : α):
+    guard x
+    → ∀ m', init x m'
+      → abstract.effect Machine.reset (lift_in x) ((), (lift m'))
+
+@[simp]
+def InitFRNDEventSpec'.toInitFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+  {α α'} (abs : InitNDEvent AM α' Unit)
+  (ev : InitFRNDEventSpec' AM M (α:=α) (α':=α') abs) : InitFRNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  {
+    toInitNDEventSpec := ev.toInitNDEventSpec
+    lift_in := ev.lift_in
+    lift_out := id
+    strengthening := ev.strengthening
+    simulation := fun x => by
+      simp
+      intros Hgrd _ m' Hini
+      apply ev.simulation x <;> assumption
+  }
+
+@[simp]
+def newInitFRNDEvent' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (abs : InitNDEvent AM α' Unit)
+  (ev : InitFRNDEventSpec' AM M (α:=α) (α':=α') abs) : InitRNDEvent AM M α Unit α' Unit :=
+  newInitFRNDEvent abs ev.toInitFRNDEventSpec
+
+structure InitFRNDEventSpec'' (AM) [Machine ACTX AM]
+                        (M) [Machine CTX M]
+                        [FRefinement AM M]
+  (abstract : InitNDEvent AM Unit Unit)
+  extends InitNDEventSpec'' M where
+
+  strengthening:
+    guard
+    → abstract.guard Machine.reset ()
+
+  simulation:
+    guard
+    → ∀ m', init m'
+      → abstract.effect Machine.reset () ((), (lift m'))
+
+@[simp]
+def InitFRNDEventSpec''.toInitFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+  (abs : InitNDEvent AM Unit Unit)
+  (ev : InitFRNDEventSpec'' AM M abs) : InitFRNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  {
+    toInitNDEventSpec := ev.toInitNDEventSpec
+    lift_in := id
+    lift_out := id
+    strengthening := fun _ => ev.strengthening
+    simulation := fun _ => by
+      simp
+      intros Hgrd _ m' Hini
+      apply ev.simulation <;> assumption
+  }
+
+@[simp]
+def newInitFRNDEvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+  (abs : InitNDEvent AM Unit Unit)
+  (ev : InitFRNDEventSpec'' AM M abs) : InitRNDEvent AM M Unit Unit :=
+  newInitFRNDEvent abs ev.toInitFRNDEventSpec

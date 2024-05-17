@@ -43,6 +43,17 @@ structure _Event (M) [Machine CTX M] (α) (β : Type)
 
   action: M → α → (β × M)
 
+structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
+  guard : α → Prop
+  init: α → (β × M)
+
+@[simp]
+def _InitEvent.to_Event [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
+  {
+    guard := fun m x => m = Machine.reset ∧ ev.guard x
+    action := fun _ x => ev.init x
+  }
+
 theorem ext_Event [Machine CTX M] (ev1 ev2 : _Event M α β):
   ev1.guard = ev2.guard → ev1.action = ev2.action
   → ev1 = ev2 :=

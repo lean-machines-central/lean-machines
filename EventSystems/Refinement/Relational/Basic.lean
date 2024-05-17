@@ -61,7 +61,7 @@ def OrdinaryREvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement
   }
 
 structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  {α β α' β'} (abstract : _Event AM α' β')
+  {α β α' β'} (abstract : OrdinaryEvent AM α' β')
   extends EventSpec M α β where
 
   lift_in : α → α'
@@ -84,7 +84,7 @@ structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refineme
 
 @[simp]
 def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryEvent AM α' β') (ev : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_Event) : OrdinaryREvent AM M α β α' β' :=
+  (abs : OrdinaryEvent AM α' β') (ev : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
   {
     to_Event := ev.to_Event
     po := {
@@ -96,7 +96,7 @@ def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   }
 
 structure REventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  {α α'} (abstract : _Event AM α' Unit)
+  {α α'} (abstract : OrdinaryEvent AM α' Unit)
   extends EventSpec' M α where
 
   lift_in : α → α'
@@ -117,7 +117,7 @@ structure REventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinem
 
 @[simp]
 def REventSpec'.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : _Event AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs) : REventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  (abs : OrdinaryEvent AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs) : REventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
     toEventSpec := ev.toEventSpec
     lift_in := ev.lift_in
@@ -128,11 +128,11 @@ def REventSpec'.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 
 @[simp]
 def newREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryEvent AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs.to_Event) : OrdinaryREvent AM M α Unit α' Unit :=
+  (abs : OrdinaryEvent AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryREvent AM M α Unit α' Unit :=
   newREvent abs ev.toREventSpec
 
 structure REventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  (abstract : _Event AM Unit Unit)
+  (abstract : OrdinaryEvent AM Unit Unit)
   extends EventSpec'' M where
 
   strengthening (m : M):
@@ -151,7 +151,7 @@ structure REventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refine
 
 @[simp]
 def REventSpec''.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : _Event AM Unit Unit) (ev : REventSpec'' AM M abs) : REventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  (abs : OrdinaryEvent AM Unit Unit) (ev : REventSpec'' AM M abs) : REventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
     toEventSpec := ev.toEventSpec
     lift_in := id
@@ -162,7 +162,7 @@ def REventSpec''.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M
 
 @[simp]
 def newREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryEvent AM Unit Unit) (ev : REventSpec'' AM M abs.to_Event) : OrdinaryREvent AM M Unit Unit :=
+  (abs : OrdinaryEvent AM Unit Unit) (ev : REventSpec'' AM M abs) : OrdinaryREvent AM M Unit Unit :=
   newREvent abs ev.toREventSpec
 
 /--/ Initialization events -/

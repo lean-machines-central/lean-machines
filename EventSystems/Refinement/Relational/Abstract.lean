@@ -37,7 +37,7 @@ structure _AbstractREventSpec (AM) [Machine ACTX AM]
 structure AbstractREventSpec (AM) [Machine ACTX AM]
                              (M) [Machine CTX M]
                             [Refinement AM M]
-  {α β} (abstract : _Event AM α β)
+  {α β} (abstract : OrdinaryEvent AM α β)
           extends _AbstractREventSpec AM M α where
 
   step_ref (m : M) (x : α):
@@ -55,7 +55,7 @@ structure AbstractREventSpec (AM) [Machine ACTX AM]
 
 @[simp]
 def newAbstractREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
-  (abs : OrdinaryEvent AM α β) (ev : AbstractREventSpec AM M abs.to_Event) : OrdinaryREvent AM M α β :=
+  (abs : OrdinaryEvent AM α β) (ev : AbstractREventSpec AM M abs) : OrdinaryREvent AM M α β :=
   { guard := fun (m : M) (x : α) => abs.guard (ev.lift m) x
     action := fun (m : M) (x : α) => let am := ev.lift m
                                      let (y, am') := abs.action am x
@@ -96,7 +96,7 @@ def newAbstractREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
 
 @[simp]
 def newAbstractREvent' [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
-  (abs : OrdinaryEvent AM α Unit) (ev : AbstractREventSpec AM M abs.to_Event) : OrdinaryREvent AM M α Unit :=
+  (abs : OrdinaryEvent AM α Unit) (ev : AbstractREventSpec AM M abs) : OrdinaryREvent AM M α Unit :=
   newAbstractREvent abs ev
 
 structure _AbstractREventSpec'' (AM) [Machine ACTX AM]
@@ -110,7 +110,7 @@ structure _AbstractREventSpec'' (AM) [Machine ACTX AM]
 structure AbstractREventSpec'' (AM) [Machine ACTX AM]
                                (M) [Machine CTX M]
                                [Refinement AM M]
-  (abstract : _Event AM Unit Unit)
+  (abstract : OrdinaryEvent AM Unit Unit)
           extends _AbstractREventSpec'' AM M where
 
   step_ref (m : M):
@@ -128,7 +128,7 @@ structure AbstractREventSpec'' (AM) [Machine ACTX AM]
 
 @[simp]
 def AbstractREventSpec''.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-    (abs : _Event AM Unit Unit) (ev : AbstractREventSpec'' AM M abs) : AbstractREventSpec AM M abs :=
+    (abs : OrdinaryEvent AM Unit Unit) (ev : AbstractREventSpec'' AM M abs) : AbstractREventSpec AM M abs :=
   {
     to__AbstractREventSpec := ev.to__AbstractREventSpec
     unlift := fun am am' m _ => ev.unlift am am' m
@@ -139,17 +139,17 @@ def AbstractREventSpec''.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] 
 
 @[simp]
 def newAbstractREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryEvent AM Unit Unit) (ev : AbstractREventSpec'' AM M abs.to_Event) : OrdinaryREvent AM M Unit Unit :=
+  (abs : OrdinaryEvent AM Unit Unit) (ev : AbstractREventSpec'' AM M abs) : OrdinaryREvent AM M Unit Unit :=
   newAbstractREvent abs ev.toAbstractREventSpec
 
 structure AbstractInitREventSpec (AM) [Machine ACTX AM]
                                  (M) [Machine CTX M]
                                  [Refinement AM M]
-  {α β} (abstract : _Event AM α β)
+  {α β} (abstract : InitEvent AM α β)
           extends _AbstractREventSpec AM M α where
 
   step_ref (x : α):
-    abstract.guard Machine.reset x
+    abstract.guard x
     → let (_, am') := abstract.action Machine.reset x
       refine am' (unlift Machine.reset am' Machine.reset x)
 

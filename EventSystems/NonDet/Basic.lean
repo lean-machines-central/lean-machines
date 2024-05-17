@@ -29,16 +29,29 @@ def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :
                                   m'' = m' ∧ x'' = x'
 }
 
+structure _InitNDEvent (M) [Machine CTX M] (α) (β : Type) where
+  guard: α → Prop
+  init: α → (β × M) → Prop
+
+@[simp]
+def _InitEvent.to_InitNDEvent [Machine CTX M] (ev : _InitEvent M α β) : _InitNDEvent M α β :=
+{
+  guard := ev.guard
+  init := fun x (x'', m'') => let (x', m') := ev.init x
+                              m'' = m' ∧ x'' = x'
+}
+
+@[simp]
+def _InitNDEvent.to_NDEvent [Machine CTX M] (ev : _InitNDEvent M α β) : _NDEvent M α β :=
+{
+  guard := fun m x => m = Machine.reset ∧ ev.guard x
+  effect := fun _ x (y, m') => ev.init x (y, m')
+}
+
 @[simp]
 def skip_NDEvent [Machine CTX M] : _NDEvent M α β :=
   {
     effect := fun m _ (_, m') => m' = m
-  }
-
-@[simp]
-def skip_InitNDEvent [Machine CTX M] : _NDEvent M α β :=
-  {
-    effect := fun m _ (_, m') => m = Machine.reset ∧ m' = m
   }
 
 -- The functor instance is existential, not suprising given the relational context
