@@ -121,8 +121,7 @@ instance: SRefinement (M0 ctx.toContext) (M1 ctx) where
   unlift := M1.unlift
   lift_unlift m am' := by simp
 
-  refine_reset := fun ctx => by
-    simp [Machine.reset]
+  lu_reset am' := by simp
 
 namespace M1
 namespace Init
@@ -147,20 +146,19 @@ by
 
 end Init
 
-def Init : InitREvent (M0 ctx.toContext) (M1 ctx) Unit Unit := newInitSREvent'' {
+def Init : InitREvent (M0 ctx.toContext) (M1 ctx) Unit Unit :=
+  newInitSREvent'' M0.Init {
   init := Init.init
   safety := by simp [Machine.invariant, M1.Init.PO_safety₁, M1.Init.PO_safety₂]
                constructor
                · apply M0.Init.PO_safety₁
                · apply M0.Init.PO_safety₂
-  abstract := M0.Init
   strengthening := by simp [M0.Init, newInitEvent']
   simulation := by simp [M0.Init, FRefinement.lift, Init.init]
 }
 
 def OpenCourses : OrdinaryRNDEvent (M0 ctx.toContext) (M1 ctx) Unit Unit :=
-  newAbstractSRNDEvent'' {
-    event := M0.OpenCourses
+  newAbstractSRNDEvent'' M0.OpenCourses {
     step_inv := fun m1 => by
       simp [Machine.invariant, M0.OpenCourses, FRefinement.lift, SRefinement.unlift]
       intros Hinv₁ _ Hinv₃ Hinv₄ _ m0 cs Heff₁ _ Heff₃ Heff₄
@@ -275,9 +273,11 @@ by
 
 end CloseCourses
 
-def CloseCourses : ConvergentREvent Nat (M0 ctx.toContext) (M1 ctx) (Finset Course) Unit := newConvergentSREvent' {
+def CloseCourses : ConvergentREvent Nat (M0 ctx.toContext) (M1 ctx) (Finset Course) Unit :=
+  newConvergentSREvent' M0.CloseCourses.toAnticipatedEvent.toOrdinaryEvent {
   guard := CloseCourses.guard
   action := CloseCourses.action
+  lift_in := id
   safety := fun m cs => by intros Hinv _
                            simp [Machine.invariant] at *
                            simp [Hinv, CloseCourses.PO_safety₁,
@@ -285,7 +285,6 @@ def CloseCourses : ConvergentREvent Nat (M0 ctx.toContext) (M1 ctx) (Finset Cour
                            constructor
                            · apply M0.CloseCourses.PO_safety₁ ; simp [Hinv]
                            · apply M0.CloseCourses.PO_safety₂ ; simp [Hinv]
-  abstract := M0.CloseCourses.to_Event
   variant := CloseCourses.variant
   convergence := CloseCourses.PO_convergence
   strengthening := CloseCourses.PO_strengthening
