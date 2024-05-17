@@ -68,8 +68,6 @@ instance: Refinement (Bridge1 ctx) (Bridge2 ctx) where
                                  intros Hinv Href
                                  simp [Machine.invariant] at *
                                  simp [←Href, Hinv]
-  refine_reset am := by simp [Machine.reset, Bridge2.refine]
-                        intro H ; simp [H]
 
 namespace Bridge2
 
@@ -83,20 +81,19 @@ by
   rw [←Href, ←Href']
 
 def Init : InitREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newInitREvent'' {
-    init := let b1 : Bridge1 ctx := Bridge1.Init.init''
+  newInitREvent'' Bridge1.Init.toInitEvent {
+    init := let b1 : Bridge1 ctx := (Bridge1.Init.init ()).2
             { b1  with mainlandTL := Color.Green , islandTL := Color.Red,
                        mainlandPass := false, islandPass := true }
     safety := by simp [Machine.invariant, invariant₁, invariant₂, invariant₃, invariant₄, invariant₅]
                  simp [Bridge1.Init]
                  simp [ctx.maxCars_pos]
-    abstract := Bridge1.Init.toInitEvent
     strengthening := by simp [Bridge1.Init, newInitEvent']
     simulation := by simp [Bridge1.Init, newInitEvent', Refinement.refine, Bridge2.refine, Machine.invariant]
   }
 
 def EnterFromMainland₁ : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newREvent'' {
+  newREvent'' Bridge1.EnterFromMainland.toOrdinaryEvent {
     guard := fun b2 => b2.mainlandTL = Color.Green ∧ b2.nbOnIsland + b2.nbToIsland + 1 ≠ ctx.maxCars
 
     action := fun b2 => { b2 with nbToIsland := b2.nbToIsland + 1
@@ -122,8 +119,6 @@ def EnterFromMainland₁ : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
                              simp [Hleft]
                              exact Nat.le_of_lt Hleft
 
-    abstract := Bridge1.EnterFromMainland.toOrdinaryEvent
-
     strengthening := fun b2 => by simp [Bridge1.EnterFromMainland, Refinement.refine, Bridge2.refine, Machine.invariant, invariant₁, invariant₂, invariant₃, invariant₄, invariant₅]
                                   intros Hinv₁ _ Hinv₃ _ _ _ _ Hgrd₁ _
                                   simp [Hgrd₁, Hinv₃, Hinv₁]
@@ -133,7 +128,7 @@ def EnterFromMainland₁ : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
   }
 
 def EnterFromMainland₂ : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newREvent'' {
+  newREvent'' Bridge1.EnterFromMainland.toOrdinaryEvent {
     guard := fun b2 => b2.mainlandTL = Color.Green ∧ b2.nbOnIsland + b2.nbToIsland + 1 = ctx.maxCars
     action := fun b2 => { b2 with nbToIsland := b2.nbToIsland + 1
                                   mainlandTL := Color.Red
@@ -145,8 +140,6 @@ def EnterFromMainland₂ : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
                            simp [Hinv₃, Hinv₅, Hinv₁] at *
                            rw [←Hgrd₂]
                            simp_arith
-
-    abstract := Bridge1.EnterFromMainland.toOrdinaryEvent
 
     strengthening := fun b2 => by simp [Bridge1.EnterFromMainland, Refinement.refine, Bridge2.refine, Machine.invariant, invariant₁, invariant₂, invariant₃, invariant₄, invariant₅]
                                   intros Hinv₁ _ Hinv₃ _ _ _ _ Hgrd₁ _
@@ -170,8 +163,7 @@ def unlift (b1 : Bridge1 ctx) (b2 : Bridge2 ctx) : Bridge2 ctx :=
   { b2 with toBridge1 := b1}
 
 def LeaveToMainland : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newAbstractREvent {
-    event := Bridge1.LeaveToMainland.toOrdinaryEvent
+  newAbstractREvent Bridge1.LeaveToMainland.toOrdinaryEvent {
     lift := lift
     lift_ref := lift_ref
     refine_uniq := refine_uniq
@@ -200,8 +192,7 @@ def LeaveToMainland : OrdinaryREvent (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
   }
 
 def EnterIsland : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newAbstractConvergentREvent {
-    event := Bridge1.EnterIsland.toConvergentEvent
+  newAbstractConvergentREvent Bridge1.EnterIsland.toConvergentEvent {
     lift := lift
     lift_ref := lift_ref
     refine_uniq := refine_uniq
@@ -244,7 +235,7 @@ def EnterIsland : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
 
 
 def LeaveIsland₁ : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newConvergentREvent'' {
+  newConvergentREvent'' Bridge1.LeaveIsland.toConvergentEvent.toAnticipatedEvent.toOrdinaryEvent {
     guard := fun b2 => b2.islandTL = Color.Green ∧ b2.nbOnIsland ≠ 1
 
     action := fun b2 => { b2 with nbFromIsland := b2.nbFromIsland + 1
@@ -278,8 +269,6 @@ def LeaveIsland₁ : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
                                 simp [*] at *
                                 simp [@tsub_lt_self_iff, Hinv]
 
-    abstract := Bridge1.LeaveIsland.to_Event
-
     strengthening := fun b2 => by simp
                                   intro Hinv Hgrd₁ _
                                   simp [Refinement.refine, refine, Bridge1.LeaveIsland]
@@ -295,7 +284,7 @@ def LeaveIsland₁ : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
 
 
 def LeaveIsland₂ : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit :=
-  newConvergentREvent'' {
+  newConvergentREvent'' Bridge1.LeaveIsland.toConvergentEvent.toAnticipatedEvent.toOrdinaryEvent {
     guard := fun b2 => b2.islandTL = Color.Green ∧ b2.nbOnIsland = 1
 
     action := fun b2 => { b2 with nbFromIsland := b2.nbFromIsland + 1
@@ -323,8 +312,6 @@ def LeaveIsland₂ : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
                                 simp [Bridge1.LeaveIsland]
                                 simp [Machine.invariant, invariant₂] at Hinv
                                 simp [*] at *
-
-    abstract := Bridge1.LeaveIsland.to_Event
 
     strengthening := fun b2 => by simp
                                   intro Hinv Hgrd₁ _

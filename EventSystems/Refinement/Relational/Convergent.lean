@@ -163,7 +163,7 @@ def ConvergentREvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine A
 
 structure ConvergentREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
-  extends _Variant v, AnticipatedREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
+  extends _Variant v, REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -196,7 +196,7 @@ def newConvergentREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machin
 
 structure ConvergentREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α α'} (abs : OrdinaryEvent AM α' Unit)
-  extends _Variant v, AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs where
+  extends _Variant v, REventSpec' AM M (α:=α) (α':=α') abs where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -210,7 +210,6 @@ def ConvergentREventSpec'.toConvergentREventSpec [Preorder v] [WellFoundedLT v] 
   {
     toREventSpec := ev.toREventSpec abs
     variant := ev.variant
-    nonIncreasing := ev.nonIncreasing
     convergence := ev.convergence
   }
 
@@ -221,7 +220,7 @@ def newConvergentREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machi
 
 structure ConvergentREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM Unit Unit)
-  extends _Variant v, AnticipatedREventSpec'' v AM M abs where
+  extends _Variant v, REventSpec'' AM M abs where
 
   convergence (m : M):
     Machine.invariant m
@@ -235,7 +234,6 @@ def ConvergentREventSpec''.toConvergentREventSpec [Preorder v] [WellFoundedLT v]
   {
     toREventSpec := ev.toREventSpec abs
     variant := ev.variant
-    nonIncreasing := fun m () => ev.nonIncreasing m
     convergence := fun m () => ev.convergence m
   }
 

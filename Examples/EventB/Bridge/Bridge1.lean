@@ -34,8 +34,6 @@ instance: Refinement (Bridge0 ctx) (Bridge1 ctx) where
   refine_safe := fun b0 b1 => by simp [Machine.invariant]
                                  intros Hinv₁ _ Href
                                  simp [Hinv₁, ←Href]
-  refine_reset := fun b0 => by simp [Machine.reset]
-                               intro H ; simp [H]
 
 /- We de not exploit this but this is an interesting property -/
 theorem Bridge1.refine_uniq (b1 : Bridge1 ctx) (b0a b0b : Bridge0 ctx):
@@ -58,16 +56,14 @@ namespace Bridge1
 
 def Init : InitREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   newInitREvent'' Bridge0.Init {
-    /-
-    init := fun _ _ => ⟨0, 0, 0⟩
+    init := ⟨0, 0, 0⟩
     safety := by simp [Machine.invariant]
     strengthening := by simp [Bridge0.Init]
     simulation := by simp [Bridge0.Init, Refinement.refine]
-    -/
   }
 
 def EnterFromMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
-  newREvent'' {
+  newREvent'' Bridge0.EnterFromMainland {
     guard := fun b1 => b1.totalCars < ctx.maxCars ∧ b1.nbFromIsland = 0
     action := fun b1 => { b1 with nbToIsland := b1.nbToIsland + 1 }
     safety := fun b1 => by simp [Machine.invariant]
@@ -76,7 +72,6 @@ def EnterFromMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                            · simp_arith
                              exact Hgrd₁
                            · assumption
-    abstract := Bridge0.EnterFromMainland
     strengthening := fun b1 => by simp [Machine.invariant, Refinement.refine, Bridge0.EnterFromMainland, newEvent']
                                   intros _ _ Hgd₁ _ b0 Href
                                   exact Eq.trans_lt (id Href.symm) Hgd₁
@@ -87,7 +82,7 @@ def EnterFromMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
   }
 
 def LeaveToMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
-  newREvent'' {
+  newREvent'' Bridge0.LeaveToMainland {
     guard := fun b1 => b1.nbFromIsland > 0
     action := fun b1 => { b1 with nbFromIsland := b1.nbFromIsland - 1 }
     safety := fun b1 => by simp [Machine.invariant]
@@ -102,7 +97,6 @@ def LeaveToMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
                              · simp_arith [Hinv₁]
                                exact Nat.le_step Hinv₁
                              · exact Hgrd
-    abstract := Bridge0.LeaveToMainland
     strengthening := fun b1 => by simp [Machine.invariant, Refinement.refine, Bridge0.LeaveToMainland, newEvent']
                                   intros _ _ Hgrd b0 Href
                                   linarith
