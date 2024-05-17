@@ -85,13 +85,6 @@ instance: Refinement (M1 ctx.toContext_1) (M2 ctx) where
   refine := fun m1 m2 => M2.refine₁ m1 m2 ∧ M2.refine₂ m1 m2 ∧ M2.refine₃ m1 m2
   refine_safe := fun m1 m2 => by intros Hinv Href
                                  apply M2.refine_inv m1 m2 <;> simp [Hinv, Href]
-  refine_reset := fun m => by simp [Machine.reset, M2.refine₁, M2.refine₂, M2.refine₃]
-                              intros H Hcp
-                              cases m
-                              case mk m0 ins =>
-                                simp [*] at *
-                                exact Finset.eq_empty_of_forall_not_mem fun x => Hcp x.1 x.2
-
 
 namespace M2
 
@@ -104,11 +97,11 @@ def init : M2 ctx :=
 
 end Init
 
-def Init : InitREvent (M1 ctx.toContext_1) (M2 ctx) Unit Unit := newInitREvent'' {
+def Init : InitREvent (M1 ctx.toContext_1) (M2 ctx) Unit Unit :=
+newInitREvent'' M1.Init.toInitEvent {
   init :=   { domain := ∅, attendants := fun _ => ∅ }
   safety := by simp [Machine.invariant, invariant₁, invariant₂, invariant₃, invariant₄, invariant₅,
                      Init.init, invariant₄, invariant₅]
-  abstract := M1.Init.toInitEvent
   strengthening := by simp [M1.Init]
   simulation := by simp [Refinement.refine, Init.init, refine₁, refine₂, refine₃]
                    simp [M1.Init, M1.Init.init]
