@@ -13,7 +13,7 @@ open SRefinement
 structure AbstractSREventSpec (AM) [Machine ACTX AM]
                              (M) [Machine CTX M]
                             [SRefinement AM M]
-  {α β} (abstract : _Event AM α β)
+  {α β} (abstract : OrdinaryEvent AM α β)
           where
 
   step_inv (m : M) (x : α):
@@ -24,7 +24,7 @@ structure AbstractSREventSpec (AM) [Machine ACTX AM]
 @[simp]
 def AbstractSREventSpec.toAbstractFREventSpec [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
   (abstract : OrdinaryEvent AM α β)
-  (ev : AbstractSREventSpec AM M abstract.to_Event) : AbstractFREventSpec AM M abstract.to_Event :=
+  (ev : AbstractSREventSpec AM M abstract) : AbstractFREventSpec AM M abstract :=
   {
     unlift := fun _ am' m _ => SRefinement.unlift m am'
 
@@ -47,14 +47,114 @@ def AbstractSREventSpec.toAbstractFREventSpec [Machine ACTX AM] [Machine CTX M] 
 @[simp]
 def newAbstractSREvent [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (abs : OrdinaryEvent AM α β)
-  (ev : AbstractSREventSpec AM M abs.to_Event) : OrdinaryREvent AM M α β :=
+  (ev : AbstractSREventSpec AM M abs) : OrdinaryREvent AM M α β :=
   newAbstractFREvent abs ev.toAbstractFREventSpec
 
+@[simp]
+def newAbstractSREvent' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : OrdinaryEvent AM α Unit)
+  (ev : AbstractSREventSpec AM M abs) : OrdinaryREvent AM M α Unit :=
+  newAbstractFREvent abs ev.toAbstractFREventSpec
+
+structure AbstractSREventSpec'' (AM) [Machine ACTX AM]
+                             (M) [Machine CTX M]
+                            [SRefinement AM M]
+  (abstract : OrdinaryEvent AM Unit Unit)
+          where
+
+  step_inv (m : M):
+    Machine.invariant m
+    → abstract.guard (lift m) ()
+    → Machine.invariant (unlift m (abstract.action (lift m) x).2)
+
+@[simp]
+def AbstractSREventSpec''.toAbstractSREventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abstract : OrdinaryEvent AM Unit Unit)
+  (ev : AbstractSREventSpec'' AM M abstract) : AbstractSREventSpec AM M abstract :=
+  {
+    step_inv := fun m _ => ev.step_inv m
+  }
+
+@[simp]
+def newAbstractSREvent'' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : OrdinaryEvent AM Unit Unit)
+  (ev : AbstractSREventSpec'' AM M abs) : OrdinaryREvent AM M Unit Unit :=
+  newAbstractSREvent abs ev.toAbstractSREventSpec
+
+structure AbstractInitSREventSpec (AM) [Machine ACTX AM]
+                             (M) [Machine CTX M]
+                            [instSR: SRefinement AM M]
+  {α β} (abstract : InitEvent AM α β)
+          where
+
+  step_inv (x : α):
+    abstract.guard x
+    → Machine.invariant (unlift (self:=instSR) Machine.reset (abstract.init x).2)
+
+@[simp]
+def AbstractInitSREventSpec.toAbstractInitFREventSpec [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+  (abstract : InitEvent AM α β)
+  (ev : AbstractInitSREventSpec AM M abstract) : AbstractInitFREventSpec AM M abstract :=
+  {
+    unlift := fun _ am' m _ => SRefinement.unlift m am'
+
+    step_ref := fun x => by
+      simp
+      intros Hgrd
+      have Hainv := abstract.po.safety x Hgrd
+      have Hsi := ev.step_inv x Hgrd
+      have Href := lift_ref (self:=instSR.toFRefinement)  (unlift Machine.reset (abstract.init x).2) Hsi
+      have Hlu := lu_reset (self:=instSR) (abstract.init x).2 Hainv
+      rw [Hlu] at Href
+      assumption
+
+    step_safe := fun x => by
+      simp
+      intros Hgrd _
+      apply ev.step_inv x Hgrd
+
+  }
+
+@[simp]
+def newAbstractInitSREvent [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : InitEvent AM α β)
+  (ev : AbstractInitSREventSpec AM M abs) : InitREvent AM M α β :=
+  newAbstractInitFREvent abs ev.toAbstractInitFREventSpec
+
+@[simp]
+def newAbstractInitSREvent' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : InitEvent AM α Unit)
+  (ev : AbstractInitSREventSpec AM M abs) : InitREvent AM M α Unit :=
+  newAbstractInitFREvent abs ev.toAbstractInitFREventSpec
+
+structure AbstractInitSREventSpec'' (AM) [Machine ACTX AM]
+                             (M) [Machine CTX M]
+                            [instSR: SRefinement AM M]
+  (abstract : InitEvent AM Unit Unit)
+          where
+
+  step_inv:
+    abstract.guard ()
+    → Machine.invariant (unlift (self:=instSR) Machine.reset (abstract.init ()).2)
+
+@[simp]
+def AbstractInitSREventSpec''.toAbstractInitSREventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abstract : InitEvent AM Unit Unit)
+  (ev : AbstractInitSREventSpec'' AM M abstract) : AbstractInitSREventSpec AM M abstract :=
+  {
+     step_inv := fun _ => ev.step_inv
+  }
+
+@[simp]
+def newAbstractInitSREvent'' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : InitEvent AM Unit Unit)
+  (ev : AbstractInitSREventSpec'' AM M abs) : InitREvent AM M Unit Unit :=
+  newAbstractInitSREvent abs ev.toAbstractInitSREventSpec
 
 @[simp]
 def AbstractSREventSpec.toAbstractAnticipatedFREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
   (abstract : AnticipatedEvent v AM α β)
-  (ev : AbstractSREventSpec AM M abstract.to_Event) : AbstractAnticipatedFREventSpec v AM M abstract :=
+  (ev : AbstractSREventSpec AM M abstract.toOrdinaryEvent) : AbstractAnticipatedFREventSpec v AM M abstract :=
   {
     toAbstractFREventSpec := ev.toAbstractFREventSpec abstract.toOrdinaryEvent
 
@@ -71,20 +171,35 @@ def AbstractSREventSpec.toAbstractAnticipatedFREventSpec [Preorder v] [Machine A
 @[simp]
 def newAbstractAnticipatedSREvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (abs : AnticipatedEvent v AM α β)
-  (ev : AbstractSREventSpec AM M abs.to_Event) : AnticipatedREvent v AM M α β :=
+  (ev : AbstractSREventSpec AM M abs.toOrdinaryEvent) : AnticipatedREvent v AM M α β :=
   newAbstractAnticipatedFREvent abs ev.toAbstractAnticipatedFREventSpec
 
+@[simp]
+def newAbstractAnticipatedSREvent' [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : AnticipatedEvent v AM α Unit)
+  (ev : AbstractSREventSpec AM M abs.toOrdinaryEvent) : AnticipatedREvent v AM M α Unit :=
+  newAbstractAnticipatedFREvent abs ev.toAbstractAnticipatedFREventSpec
 
 @[simp]
-def AbstractSREventSpec.toAbstractConvergentFREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
-  (abstract : ConvergentEvent v AM α β)
-  (ev : AbstractSREventSpec AM M abstract.to_Event) : AbstractConvergentFREventSpec v AM M abstract :=
-  {
-    toAbstractAnticipatedFREventSpec := ev.toAbstractAnticipatedFREventSpec abstract.toAnticipatedEvent
-  }
+def newAbstractAnticipatedSREvent'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : AnticipatedEvent v AM Unit Unit)
+  (ev : AbstractSREventSpec'' AM M abs.toOrdinaryEvent) : AnticipatedREvent v AM M Unit Unit :=
+  newAbstractAnticipatedSREvent abs ev.toAbstractSREventSpec
 
 @[simp]
 def newAbstractConvergentSREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (abs : ConvergentEvent v AM α β)
-  (ev : AbstractSREventSpec AM M abs.to_Event) : ConvergentREvent v AM M α β :=
-  newAbstractConvergentFREvent abs ev.toAbstractConvergentFREventSpec
+  (ev : AbstractSREventSpec AM M abs.toOrdinaryEvent) : ConvergentREvent v AM M α β :=
+  newAbstractConvergentFREvent abs (ev.toAbstractAnticipatedFREventSpec abs.toAnticipatedEvent)
+
+@[simp]
+def newAbstractConvergentSREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : ConvergentEvent v AM α Unit)
+  (ev : AbstractSREventSpec AM M abs.toOrdinaryEvent) : ConvergentREvent v AM M α Unit :=
+  newAbstractConvergentFREvent abs (ev.toAbstractAnticipatedFREventSpec abs.toAnticipatedEvent)
+
+@[simp]
+def newAbstractConvergentSREvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+  (abs : ConvergentEvent v AM Unit Unit)
+  (ev : AbstractSREventSpec'' AM M abs.toOrdinaryEvent) : ConvergentREvent v AM M Unit Unit :=
+  newAbstractConvergentSREvent abs ev.toAbstractSREventSpec

@@ -43,7 +43,7 @@ def OrdinaryRNDEvent.toOrdinaryNDEvent [Machine ACTX AM] [Machine CTX M] [Refine
 structure RNDEventSpec (AM) [Machine ACTX AM]
                         (M) [Machine CTX M]
                         [Refinement AM M]
-  {α β α' β'} (abstract : _NDEvent AM α' β')
+  {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
   extends NDEventSpec M α β where
 
   lift_in : α → α'
@@ -66,7 +66,7 @@ structure RNDEventSpec (AM) [Machine ACTX AM]
 
 @[simp]
 def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM α' β') (ev : RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_NDEvent) : OrdinaryRNDEvent AM M α β α' β' :=
+  (abs : OrdinaryNDEvent AM α' β') (ev : RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRNDEvent AM M α β α' β' :=
   {
     to_NDEvent := ev.to_NDEvent
     po := {
@@ -81,7 +81,7 @@ def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 structure RNDEventSpec' (AM) [Machine ACTX AM]
                         (M) [Machine CTX M]
                         [Refinement AM M]
-  {α α'} (abstract : _NDEvent AM α' Unit)
+  {α α'} (abstract : OrdinaryNDEvent AM α' Unit)
   extends NDEventSpec' M α where
 
   lift_in : α → α'
@@ -103,7 +103,7 @@ structure RNDEventSpec' (AM) [Machine ACTX AM]
 
 @[simp]
 def RNDEventSpec'.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  {α α'} (abs : _NDEvent AM α' Unit) (ev : RNDEventSpec' AM M (α:=α) (α':=α') abs) : RNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
+  {α α'} (abs : OrdinaryNDEvent AM α' Unit) (ev : RNDEventSpec' AM M (α:=α) (α':=α') abs) : RNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
     toNDEventSpec := ev.toNDEventSpec
     lift_in := ev.lift_in
@@ -118,13 +118,13 @@ def RNDEventSpec'.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement A
 
 @[simp]
 def newRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM α' Unit) (ev : RNDEventSpec' AM M (α:=α) (α':=α') abs.to_NDEvent) : OrdinaryRNDEvent AM M α Unit α' Unit :=
+  (abs : OrdinaryNDEvent AM α' Unit) (ev : RNDEventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryRNDEvent AM M α Unit α' Unit :=
   newRNDEvent abs ev.toRNDEventSpec
 
 structure RNDEventSpec'' (AM) [Machine ACTX AM]
                         (M) [Machine CTX M]
                         [Refinement AM M]
-  (abstract : _NDEvent AM Unit Unit)
+  (abstract : OrdinaryNDEvent AM Unit Unit)
   extends NDEventSpec'' M where
 
   strengthening (m : M):
@@ -143,7 +143,7 @@ structure RNDEventSpec'' (AM) [Machine ACTX AM]
 
 @[simp]
 def RNDEventSpec''.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : _NDEvent AM Unit Unit) (ev : RNDEventSpec'' AM M abs) : RNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
+  (abs : OrdinaryNDEvent AM Unit Unit) (ev : RNDEventSpec'' AM M abs) : RNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
     toNDEventSpec := ev.toNDEventSpec
     lift_in := id
@@ -158,7 +158,7 @@ def RNDEventSpec''.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement 
 
 @[simp]
 def newRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryNDEvent AM Unit Unit) (ev : RNDEventSpec'' AM M abs.to_NDEvent) : OrdinaryRNDEvent AM M Unit Unit :=
+  (abs : OrdinaryNDEvent AM Unit Unit) (ev : RNDEventSpec'' AM M abs) : OrdinaryRNDEvent AM M Unit Unit :=
   newRNDEvent abs ev.toRNDEventSpec
 
 /- Initialization events -/

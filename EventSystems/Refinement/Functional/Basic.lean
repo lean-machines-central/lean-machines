@@ -56,7 +56,7 @@ by
   simp [*]
 
 structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
-  {α β α' β'} (abstract : _Event AM α' β')
+  {α β α' β'} (abstract : OrdinaryEvent AM α' β')
   extends EventSpec M α β where
 
   lift_in : α → α'
@@ -77,7 +77,7 @@ structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefin
 
 @[simp]
 def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
-  {α β α' β'} (abs : _Event AM α' β')
+  {α β α' β'} (abs : OrdinaryEvent AM α' β')
   (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
   {
     toEventSpec := ev.toEventSpec
@@ -110,11 +110,11 @@ def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinem
 
 @[simp]
 def newFREvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
-  (abs : OrdinaryEvent AM α' β') (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.to_Event) : OrdinaryREvent AM M α β α' β' :=
+  (abs : OrdinaryEvent AM α' β') (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
   newREvent abs ev.toREventSpec
 
 structure FREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
-  {α α'} (abstract : _Event AM α' Unit)
+  {α α'} (abstract : OrdinaryEvent AM α' Unit)
   extends EventSpec' M α where
 
   lift_in : α → α'
@@ -133,7 +133,7 @@ structure FREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefi
 
 @[simp]
 def FREventSpec'.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  {α α'} (abs : _Event AM α' Unit)
+  {α α'} (abs : OrdinaryEvent AM α' Unit)
   (ev : FREventSpec' AM M (α:=α) (α':=α') abs) : FREventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
     toEventSpec := ev.toEventSpec
@@ -145,11 +145,11 @@ def FREventSpec'.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM
 
 @[simp]
 def newFREvent' [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
-  (abs : OrdinaryEvent AM α' Unit) (ev : FREventSpec' AM M (α:=α) (α':=α') abs.to_Event) : OrdinaryREvent AM M α Unit α' Unit :=
+  (abs : OrdinaryEvent AM α' Unit) (ev : FREventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryREvent AM M α Unit α' Unit :=
   newFREvent abs ev.toFREventSpec
 
 structure FREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
-  (abstract : _Event AM Unit Unit)
+  (abstract : OrdinaryEvent AM Unit Unit)
   extends EventSpec'' M where
 
   strengthening (m : M):
@@ -166,7 +166,7 @@ structure FREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRef
 
 @[simp]
 def FREventSpec''.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (abs : _Event AM Unit Unit)
+  (abs : OrdinaryEvent AM Unit Unit)
   (ev : FREventSpec'' AM M abs) : FREventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
     toEventSpec := ev.toEventSpec
@@ -181,7 +181,7 @@ def FREventSpec''.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement A
 
 @[simp]
 def newFREvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
-  (abs : OrdinaryEvent AM Unit Unit) (ev : FREventSpec'' AM M abs.to_Event) : OrdinaryREvent AM M Unit Unit :=
+  (abs : OrdinaryEvent AM Unit Unit) (ev : FREventSpec'' AM M abs) : OrdinaryREvent AM M Unit Unit :=
   newFREvent abs ev.toFREventSpec
 
 
@@ -196,12 +196,12 @@ structure InitFREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FR
 
   strengthening (x : α):
     guard x
-    → abstract.guard Machine.reset (lift_in x)
+    → abstract.guard (lift_in x)
 
   simulation (x : α):
     guard x
     → let (y, m') := init x
-      let (z, am') := abstract.action Machine.reset (lift_in x)
+      let (z, am') := abstract.init (lift_in x)
       lift_out y = z ∧ am' = lift m'
 
 @[simp]
@@ -237,12 +237,12 @@ structure InitFREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: F
 
   strengthening (x : α):
     guard x
-    → abstract.guard Machine.reset (lift_in x)
+    → abstract.guard (lift_in x)
 
   simulation (x : α):
     guard x
     → let m' := init x
-      let ((), am') := abstract.action Machine.reset (lift_in x)
+      let ((), am') := abstract.init (lift_in x)
       am' = lift m'
 
 @[simp]
@@ -271,12 +271,12 @@ structure InitFREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: 
 
   strengthening:
     guard
-    → abstract.guard Machine.reset ()
+    → abstract.guard ()
 
   simulation:
     guard
     → let m' := init
-      let ((), am') := abstract.action Machine.reset ()
+      let ((), am') := abstract.init ()
       am' = lift m'
 
 @[simp]

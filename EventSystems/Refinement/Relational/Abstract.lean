@@ -145,7 +145,7 @@ def newAbstractREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 structure AbstractInitREventSpec (AM) [Machine ACTX AM]
                                  (M) [Machine CTX M]
                                  [Refinement AM M]
-  {α β} (abstract : _InitEvent AM α β)
+  {α β} (abstract : InitEvent AM α β)
           extends _AbstractREventSpec AM M α where
 
   step_ref (x : α):
@@ -161,7 +161,7 @@ structure AbstractInitREventSpec (AM) [Machine ACTX AM]
 
 @[simp]
 def AbstractInitREventSpec.to_InitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : _InitEvent AM α β) (ev : AbstractInitREventSpec AM M abs) : _InitEvent M α β :=
+  (abs : InitEvent AM α β) (ev : AbstractInitREventSpec AM M abs) : _InitEvent M α β :=
   {
     guard := fun x => abs.guard x
     init := fun x => let (y, am') := abs.init x
@@ -170,7 +170,7 @@ def AbstractInitREventSpec.to_InitEvent [Machine ACTX AM] [Machine CTX M] [Refin
 
 @[simp]
 def newAbstractInitREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
-  (abs : InitEvent AM α β) (ev : AbstractInitREventSpec AM M abs.to_InitEvent) : InitREvent AM M α β :=
+  (abs : InitEvent AM α β) (ev : AbstractInitREventSpec AM M abs) : InitREvent AM M α β :=
   {
     to_InitEvent := ev.to_InitEvent
     po := {
@@ -193,13 +193,13 @@ def newAbstractInitREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM
 
 @[simp]
 def newAbstractInitREvent' [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
-  (abs : InitEvent AM α Unit) (ev : AbstractInitREventSpec AM M abs.to_InitEvent) : InitREvent AM M α Unit :=
+  (abs : InitEvent AM α Unit) (ev : AbstractInitREventSpec AM M abs) : InitREvent AM M α Unit :=
   newAbstractInitREvent abs ev
 
 structure AbstractInitREventSpec'' (AM) [Machine ACTX AM]
                                  (M) [Machine CTX M]
                                  [Refinement AM M]
-  (abstract : _InitEvent AM Unit Unit)
+  (abstract : InitEvent AM Unit Unit)
        extends _AbstractREventSpec'' AM M where
 
   step_ref:
@@ -215,7 +215,7 @@ structure AbstractInitREventSpec'' (AM) [Machine ACTX AM]
 
 @[simp]
 def AbstractInitREventSpec''.toAbstractInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-    (abs : _InitEvent AM Unit Unit) (ev : AbstractInitREventSpec'' AM M abs) : AbstractInitREventSpec AM M abs :=
+    (abs : InitEvent AM Unit Unit) (ev : AbstractInitREventSpec'' AM M abs) : AbstractInitREventSpec AM M abs :=
   {
     to__AbstractREventSpec := ev.to__AbstractREventSpec
     unlift := fun am am' m _ => ev.unlift am am' m
@@ -225,7 +225,7 @@ def AbstractInitREventSpec''.toAbstractInitREventSpec [Machine ACTX AM] [Machine
 
 @[simp]
 def newAbstractRInitEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : InitEvent AM Unit Unit) (ev : AbstractInitREventSpec'' AM M abs.to_InitEvent) : InitREvent AM M Unit Unit :=
+  (abs : InitEvent AM Unit Unit) (ev : AbstractInitREventSpec'' AM M abs) : InitREvent AM M Unit Unit :=
   newAbstractInitREvent abs ev.toAbstractInitREventSpec
 
 structure AbstractAnticipatedREventSpec
