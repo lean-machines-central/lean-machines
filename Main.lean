@@ -12,6 +12,7 @@ import «Examples».EventB.Bridge.Bridge2
 
 import «Examples».EventB.Courses.M0
 import «Examples».EventB.Courses.M1
+import «Examples».EventB.Courses.M2
 
 
 def main : IO Unit :=

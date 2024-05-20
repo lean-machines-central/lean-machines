@@ -293,9 +293,6 @@ def OpenCourses : ConvergentRDetEvent Nat (M1 ctx.toContext_1) (M2 ctx) (Finset 
       apply OpenCourses.PO_simulation m2 cs Hinv Hgrd am Href
   }
 
-/-
-
-TODO
 
 namespace CloseCourses
 
@@ -418,7 +415,7 @@ theorem PO_strengthening (m2: M2 ctx) (cs: Finset Course):
   Machine.invariant m2 →
   CloseCourses.guard m2 cs →
     ∀ (m1 : M1 ctx.toContext_1),
-      Refinement.refine m2 m1
+      Refinement.refine m1 m2
       → M1.CloseCourses.guard m1 cs :=
 by
   intros _ Hgrd m1 Href
@@ -434,9 +431,9 @@ theorem PO_simulation (m2: M2 ctx) (cs: Finset Course):
   Machine.invariant m2 →
   CloseCourses.guard m2 cs →
     ∀ (m1 : M1 ctx.toContext_1),
-      Refinement.refine m2 m1 →
-        Refinement.refine (CloseCourses.action m2 cs)
-          (M1.CloseCourses.action m1 cs) :=
+      Refinement.refine m1 m2 →
+        Refinement.refine (M1.CloseCourses.action m1 cs)
+          (CloseCourses.action m2 cs) :=
 by
   intros _ _ m1 Href
   obtain ⟨Href₁, Href₂, Href₃⟩ := Href
@@ -462,10 +459,11 @@ by
 
 end CloseCourses
 
-def CloseCourses : RConvergentEvent Nat (M1 ctx.toContext_1) (M2 ctx) (Finset Course) (Finset Course) :=
-  newRConvergentEvent {
+def CloseCourses : ConvergentREvent Nat (M1 ctx.toContext_1) (M2 ctx) (Finset Course) Unit :=
+  newConvergentREvent' M1.CloseCourses.toConvergentEvent.toOrdinaryEvent {
     guard := CloseCourses.guard
     action := CloseCourses.action
+    lift_in := id
     safety := fun m cs => by simp [Machine.invariant]
                              intros
                              constructor
@@ -479,8 +477,6 @@ def CloseCourses : RConvergentEvent Nat (M1 ctx.toContext_1) (M2 ctx) (Finset Co
                              apply CloseCourses.PO_safety₅ <;> assumption
     variant := CloseCourses.variant
     convergence := fun m cs => by intros ; apply CloseCourses.PO_convergence ; assumption
-    absParam := id
-    abstract := M1.CloseCourses.toEvent
     strengthening := fun m2 cs => by simp ; apply CloseCourses.PO_strengthening m2 cs
     simulation := fun m2 cs => by simp ; apply CloseCourses.PO_simulation m2 cs
   }
@@ -962,7 +958,7 @@ theorem PO_strengthening (m2 : M2 ctx):
   Machine.invariant m2 →
   Register.guard m2 p c →
     ∀ (m1 : M1 ctx.toContext_1),
-      Refinement.refine m2 m1
+      Refinement.refine m1 m2
       → M1.Register.guard m1 p c :=
 by
   intros Hinv Hgrd m1 Href
@@ -990,8 +986,8 @@ theorem PO_simulation (m2: M2 ctx):
   Machine.invariant m2 →
   Register.guard m2 p c →
     ∀ (m1 : M1 ctx.toContext_1),
-      Refinement.refine m2 m1 →
-        Refinement.refine (Register.action m2 p c) (M1.Register.action m1 p c) :=
+      Refinement.refine m1 m2 →
+        Refinement.refine (M1.Register.action m1 p c) (Register.action m2 p c) :=
 by
   simp [Refinement.refine]
   intros _ Hgrd₁ _ _ _ m1 Href₁ Href₂ Href₃
@@ -1037,10 +1033,11 @@ by
 
 end Register
 
-def Register : RConvergentEvent Nat (M1 ctx.toContext_1) (M2 ctx) (Member × Course) (Member × Course) :=
-  newRConvergentEvent {
+def Register : ConvergentREvent Nat (M1 ctx.toContext_1) (M2 ctx) (Member × Course) Unit :=
+  newConvergentREvent' M1.Register.toConvergentEvent.toOrdinaryEvent {
     guard := fun m (p,c) => Register.guard m p c
     action := fun m (p,c) => Register.action m p c
+    lift_in := id
     safety := fun m (p,c) => by simp [Machine.invariant, Register.guard]
                                 intros
                                 constructor
@@ -1055,15 +1052,11 @@ def Register : RConvergentEvent Nat (M1 ctx.toContext_1) (M2 ctx) (Member × Cou
 
     variant := Register.variant
     convergence := fun m (p,c) => Register.PO_convergence m p c
-    absParam := id
-    abstract := M1.Register.toEvent
     strengthening := fun m (p,c) => by simp
                                        apply Register.PO_strengthening
     simulation := fun m (p,c) => by simp
                                     apply Register.PO_simulation
   }
-
--/
 
 end M2
 
