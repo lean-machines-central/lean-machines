@@ -41,7 +41,9 @@ by
 structure _Event (M) [Machine CTX M] (α) (β : Type)
   extends _EventRoot M α where
 
-  action: M → α → (β × M)
+  -- TODO : ensure in action that the guard is true ?
+  -- action (m : M) (x : α) {grd: guard m x}: (β × M)
+  action (m : M) (x : α): (β × M)
 
 structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard : α → Prop
@@ -87,7 +89,7 @@ def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : _Event M α β :=
 
 def map_Event [Machine CTX M] (f : α → β) (ev : _Event M γ α)  : _Event M γ β :=
   { guard := ev.guard
-    action := fun m x => let (y, m') := ev.action m x
+    action := fun m x => let (y, m') := (ev.action m x)
                          (f y, m')
    }
 
