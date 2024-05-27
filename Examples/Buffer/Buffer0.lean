@@ -49,7 +49,7 @@ def B0.Fetch : ConvergentEvent Nat (B0 ctx) Unit Unit :=
       omega
   }
 
-def B0.getSize : OrdinaryEvent (B0 ctx) Unit Nat :=
+def B0.GetSize : OrdinaryEvent (B0 ctx) Unit Nat :=
   newEvent {
     action := fun b0 () => (b0.size, b0)
     safety := fun b0 () => by simp

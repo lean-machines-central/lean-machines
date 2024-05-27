@@ -60,12 +60,43 @@ def Put : ConvergentREvent Nat (B0 ctx) (Buffer1 ctx α) α Unit Unit Unit :=
 
   }
 
-def Fetch : ConvergentREvent Nat (B0 ctx) (Buffer1 ctx α) Unit α Unit Unit :=
+def Fetch : ConvergentREvent Nat (B0 ctx) (Buffer1 ctx α) Unit (Option α) Unit Unit :=
   newConvergentFREvent B0.Fetch.toOrdinaryEvent {
     guard := fun b1 _ => b1.data.length > 0
     action := fun b1 _ => match b1.data with
-                          | x::xs => (x, { data := xs })
-                          | [] => -- TODO
+                          | x::xs => (some x, { data := xs })
+                          | [] => (none, b1)
+    safety := fun b1 _ => by
+      simp [Machine.invariant]
+      split
+      case h_1 _ x xs =>
+        simp [xs]
+        intro Hinv
+        exact Nat.le_of_succ_le Hinv
+      case h_2 => intros; simp [*]
+    lift_in := id
+    lift_out := fun _ => ()
+    strengthening := fun b1 _ => by
+      simp [Machine.invariant, B0.Fetch, FRefinement.lift]
+    simulation := fun b1 _ => by
+      simp [Machine.invariant, B0.Fetch, FRefinement.lift]
+      cases b1.data <;> simp
+    variant := fun b1 => b1.data.length
+    convergence := fun b1 _ => by
+      simp [Machine.invariant]
+      cases b1.data <;> simp
+  }
+
+def GetSize : OrdinaryREvent (B0 ctx) (Buffer1 ctx α) Unit Nat :=
+  newREvent B0.GetSize {
+    action := fun b1 _ => (b1.data.length, b1)
+    lift_in := fun x => x
+    lift_out := fun n => n
+    safety := fun b1 _ => by simp
+    strengthening := fun b1 _ => by
+      simp [Machine.invariant, Refinement.refine, B0.GetSize]
+    simulation := fun b1 _ => by
+      simp [Machine.invariant, Refinement.refine, B0.GetSize]
   }
 
 end Buffer
