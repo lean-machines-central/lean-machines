@@ -4,6 +4,8 @@ import EventSystems.Event.Basic
 import EventSystems.Event.Ordinary
 import EventSystems.Event.Convergent
 
+import EventSystems.NonDet.Ordinary
+
 namespace Buffer
 
 structure B0.Context where
@@ -53,6 +55,20 @@ def B0.GetSize : OrdinaryEvent (B0 ctx) Unit Nat :=
   newEvent {
     action := fun b0 () => (b0.size, b0)
     safety := fun b0 () => by simp
+  }
+
+def B0.Batch : OrdinaryNDEvent (B0 ctx) Unit Unit :=
+  newNDEvent'' {
+    guard := fun b0 => b0.size < ctx.maxSize
+    effect := fun b0 b0' => ∃ n, n > 0 ∧ b0'.size = b0.size + n ∧ b0'.size ≤ ctx.maxSize
+
+    feasibility := fun b0 => by
+      simp [Machine.invariant]
+      intros _ Hgrd
+      exists { size := b0.size + 1 }
+      exists 1
+
+    safety := fun b0 => by simp [Machine.invariant]
   }
 
 end Buffer

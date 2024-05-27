@@ -2,6 +2,8 @@ import Mathlib.Tactic
 
 import EventSystems.Refinement.Functional.Basic
 import EventSystems.Refinement.Functional.Convergent
+import EventSystems.Refinement.Relational.NonDet.Det.Convergent
+-- import EventSystems.Refinement.Functional.NonDet.Det.Convergent
 
 import Examples.Buffer.Buffer0
 
@@ -85,6 +87,27 @@ def Fetch : ConvergentREvent Nat (B0 ctx) (Buffer1 ctx α) Unit (Option α) Unit
     convergence := fun b1 _ => by
       simp [Machine.invariant]
       cases b1.data <;> simp
+  }
+
+def Batch : ConvergentRDetEvent Nat (B0 ctx) (Buffer1 ctx α) (List α) Unit Unit Unit :=
+  newConvergentRDetEvent' B0.Batch {
+    guard := fun b1 xs => xs.length > 0 ∧ b1.data.length + xs.length ≤ ctx.maxSize
+    action := fun b1 xs => { data := b1.data ++ xs }
+    lift_in := fun _ => ()
+    safety := fun b1 xs => by simp [Machine.invariant]
+    strengthening := fun b1 xs => by
+      simp [Machine.invariant, Refinement.refine, B0.Batch]
+      intros Hinv Hgrd
+      omega
+    simulation := fun b1 xs => by
+      simp [Machine.invariant, Refinement.refine, B0.Batch]
+      intros _ Hgrd₁ Hgrd₂
+      exists xs.length
+    variant := fun b1 => ctx.maxSize - b1.data.length
+    convergence := fun b1 xs => by
+      simp [Machine.invariant]
+      intros Hinv Hgrd₁ Hgrd₂
+      omega
   }
 
 def GetSize : OrdinaryREvent (B0 ctx) (Buffer1 ctx α) Unit Nat :=
