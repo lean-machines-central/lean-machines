@@ -18,7 +18,7 @@ structure _AbstractFREventSpec (AM) [Machine ACTX AM]
   unlift (am am' : AM) (m : M) (x : α): M
 
 @[simp]
-def _AbstractFREventSpec.to_AbstractREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def _AbstractFREventSpec.to_AbstractREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : _AbstractFREventSpec AM M α) : _AbstractREventSpec AM M α :=
   {
     lift := lift
@@ -47,7 +47,7 @@ structure AbstractFREventSpec (AM) [Machine ACTX AM]
       → Machine.invariant (unlift (lift m) am' m x)
 
 @[simp]
-def AbstractFREventSpec.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def AbstractFREventSpec.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α β) (ev : AbstractFREventSpec AM M abs) : AbstractREventSpec AM M abs :=
   {
     to_AbstractREventSpec := ev.to_AbstractREventSpec
@@ -129,7 +129,7 @@ structure AbstractInitFREventSpec (AM) [Machine ACTX AM]
       → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
 @[simp]
-def AbstractInitFREventSpec.toAbstractInitREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def AbstractInitFREventSpec.toAbstractInitREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : InitEvent AM α β) (ev : AbstractInitFREventSpec AM M abs) : AbstractInitREventSpec AM M abs :=
   {
     to_AbstractREventSpec := ev.to_AbstractREventSpec
@@ -195,7 +195,7 @@ structure AbstractAnticipatedFREventSpec
       = abstract.po.variant am'
 
 @[simp]
-def AbstractAnticipatedFREventSpec.toAbstractAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def AbstractAnticipatedFREventSpec.toAbstractAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : AnticipatedEvent v AM α β) (ev : AbstractAnticipatedFREventSpec v AM M abs) : AbstractAnticipatedREventSpec v AM M abs :=
   {
     to_AbstractREventSpec := ev.to_AbstractREventSpec
@@ -205,12 +205,12 @@ def AbstractAnticipatedFREventSpec.toAbstractAnticipatedREventSpec [Preorder v] 
   }
 
 @[simp]
-def newAbstractAnticipatedFREvent  [Preorder v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def newAbstractAnticipatedFREvent  [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : AnticipatedEvent v AM α β) (ev : AbstractAnticipatedFREventSpec v AM M abs) : AnticipatedREvent v AM M α β :=
   newAbstractAnticipatedREvent abs ev.toAbstractAnticipatedREventSpec
 
 @[simp]
-def newAbstractAnticipatedFREvent'  [Preorder v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def newAbstractAnticipatedFREvent'  [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : AnticipatedEvent v AM α Unit) (ev : AbstractAnticipatedFREventSpec v AM M abs) : AnticipatedREvent v AM M α Unit :=
   newAbstractAnticipatedREvent abs ev.toAbstractAnticipatedREventSpec
 
@@ -244,12 +244,12 @@ def newAbstractAnticipatedFREvent''  [Preorder v] [Machine ACTX AM] [Machine CTX
   newAbstractAnticipatedREvent abs ev.toAbstractAnticipatedREventSpec
 
 @[simp]
-def newAbstractConvergentFREvent  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def newAbstractConvergentFREvent  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : ConvergentEvent v AM α β) (ev : AbstractAnticipatedFREventSpec v AM M abs.toAnticipatedEvent) : ConvergentREvent v AM M α β :=
   newAbstractConvergentREvent abs ev.toAbstractAnticipatedREventSpec
 
 @[simp]
-def newAbstractConvergentFREvent'  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def newAbstractConvergentFREvent'  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : ConvergentEvent v AM α Unit) (ev : AbstractAnticipatedFREventSpec v AM M abs.toAnticipatedEvent) : ConvergentREvent v AM M α Unit :=
   newAbstractConvergentREvent abs ev.toAbstractAnticipatedREventSpec
 

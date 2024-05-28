@@ -134,7 +134,7 @@ structure ConvergentRDetEvent (v) [Preorder v] [WellFoundedLT v] (AM) [Machine A
 
 
 @[simp]
-def ConvergentRDetEvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+def ConvergentRDetEvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConvergentRDetEvent v AM M α β α' β') : ConvergentEvent v M α β :=
   {
     to_Event := ev.to_Event

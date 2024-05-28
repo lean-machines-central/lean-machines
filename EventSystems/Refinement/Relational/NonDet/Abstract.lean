@@ -202,7 +202,7 @@ structure AbstractInitRNDEventSpec (AM) [Machine ACTX AM]
                   → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
 @[simp]
-def AbstractInitRNDEventSpec.to_InitNDEvent  [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
+def AbstractInitRNDEventSpec.to_InitNDEvent  [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitNDEvent AM α β) (ev : AbstractInitRNDEventSpec AM M abs) : _InitNDEvent M α β  :=
   {
     guard := abs.guard
@@ -300,7 +300,7 @@ def AbstractInitRNDEventSpec'.toAbstractInitRNDEventSpec [Machine ACTX AM] [Mach
   }
 
 @[simp]
-def newAbstractInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
+def newAbstractInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitNDEvent AM α Unit) (ev : AbstractInitRNDEventSpec' AM M abs) : InitRNDEvent AM M α Unit :=
   newAbstractInitRNDEvent abs ev.toAbstractInitRNDEventSpec
 

@@ -45,11 +45,11 @@ def ConcreteFRNDEventSpec.toConcreteRNDEventSpec [Preorder v] [WellFoundedLT v] 
   }
 
 @[simp]
-def newConcreteFRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def newConcreteFRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : ConcreteFRNDEventSpec v AM M α β) : ConvergentRNDEvent v AM M α β :=
   newConcreteRNDEvent ev.toConcreteRNDEventSpec
 
-structure ConcreteFRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: FRefinement AM M] (α)
+structure ConcreteFRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M] (α)
   extends _Variant v (M:=M), NDEventSpec' M α where
 
   simulation (m : M) (x : α):
@@ -75,7 +75,7 @@ def ConcreteFRNDEventSpec'.toConcreteFRNDEventSpec [Preorder v] [WellFoundedLT v
   }
 
 @[simp]
-def newConcreteFRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def newConcreteFRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : ConcreteFRNDEventSpec' v AM M α) : ConvergentRNDEvent v AM M α Unit :=
   newConcreteFRNDEvent ev.toConcreteFRNDEventSpec
 

@@ -21,7 +21,7 @@ structure AnticipatedRNDEvent (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machi
   po : _AnticipatedRNDEventPO v (instR:=instR) to_NDEvent (EventKind.TransDet Convergence.Anticipated) α' β'
 
 @[simp]
-def AnticipatedRNDEvent.toAnticipatedNDEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+def AnticipatedRNDEvent.toAnticipatedNDEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : AnticipatedRNDEvent v AM M α β α' β') : AnticipatedNDEvent v M α β :=
   { to_NDEvent := ev.to_NDEvent
     po := {

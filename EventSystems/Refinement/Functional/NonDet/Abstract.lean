@@ -33,7 +33,7 @@ structure AbstractFRNDEventSpec (AM) [Machine ACTX AM]
     → lift (unlift am am' m x) = am'
 
 @[simp]
-def AbstractFRNDEventSpec.toAbstractRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def AbstractFRNDEventSpec.toAbstractRNDEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM α β) (ev : AbstractFRNDEventSpec AM M abs) : AbstractRNDEventSpec AM M abs :=
   {
     to_AbstractREventSpec := ev.to_AbstractREventSpec
@@ -154,7 +154,7 @@ structure AbstractInitFRNDEventSpec (AM) [Machine ACTX AM]
     → lift (unlift Machine.reset am' Machine.reset x) = am'
 
 @[simp]
-def AbstractInitFRNDEventSpec.toAbstractInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def AbstractInitFRNDEventSpec.toAbstractInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : InitNDEvent AM α β) (ev : AbstractInitFRNDEventSpec AM M abs) : AbstractInitRNDEventSpec AM M abs :=
   {
     to_AbstractREventSpec := ev.to_AbstractREventSpec

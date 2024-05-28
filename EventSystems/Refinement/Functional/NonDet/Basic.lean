@@ -58,7 +58,7 @@ def FRNDEventSpec.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRef
   }
 
 @[simp]
-def newFRNDEvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
+def newFRNDEvent [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : FRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRNDEvent AM M α β α' β' :=
   newRNDEvent abs ev.toRNDEventSpec
 
@@ -97,7 +97,7 @@ def FRNDEventSpec'.toFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FR
   }
 
 @[simp]
-def newFRNDEvent' [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
+def newFRNDEvent' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM α' Unit) (ev : FRNDEventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryRNDEvent AM M α Unit α' Unit :=
   newFRNDEvent abs ev.toFRNDEventSpec
 

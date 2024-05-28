@@ -548,12 +548,7 @@ by
   split
   case inl Heq =>
     simp [Heq]
-    intro Hcut
-    cases Hcut
-    case inl Hc =>
-      apply Hinv₅ c ; assumption
-    case inr Hc =>
-      contradiction
+    exact Decidable.not_imp_iff_and_not.mp fun a => Hgrd₄ (a (Hinv₅ c))
 
   case inr Hneq =>
     apply Hinv₅
@@ -601,16 +596,7 @@ by
     rw [@Finset.insert_eq]
     simp
     simp at Hp
-    intro Hfalse
-    cases Hfalse
-    case inl Hfalse =>
-      simp [Hfalse] at Hp
-    case inr Hfalse =>
-      have Hind' : (c, p) ∉ course_pairs c ps := by
-        apply Hind
-        intro Hfalse'
-        simp [Hfalse'] at Hp
-      contradiction
+    exact And.imp_right Hind Hp
 
 theorem course_pairs_disjoint (ps qs : Finset Member):
   ∀ c d, c ≠ d → Disjoint (course_pairs c ps) (course_pairs d qs) :=
@@ -708,9 +694,10 @@ by
     case neg Hneq =>
       simp [Hneq] at Hc
       simp [all_pairs]
+      intro Hc'
       constructor
       · exact course_pairs_disjoint (attns c) (attns d) c d Hneq
-      exact Hind c Hc
+      exact Hind c Hc'
 
 theorem all_pairs_notmem_disjoint' (cs : Finset Course) (attns : Course → Finset Member):
   ∀ c, ∀ d ∉ cs, Disjoint (course_pairs d (attns d)) (all_pairs cs (fun c' => if c' = c then attns c' ∪ {p} else attns c')) :=
@@ -727,9 +714,10 @@ by
     case neg Hneq =>
       simp [Hneq] at Hc
       simp [all_pairs]
+      intro Hc'
       constructor
       · exact course_pairs_disjoint (attns c) (if d = e then attns d ∪ {p} else attns d) c d Hneq
-      exact Hind c Hc
+      exact Hind c Hc'
 
 theorem all_pairs_notmem_disjoint'' (cs : Finset Course) (attns : Course → Finset Member):
   ∀ c ∉ cs, Disjoint (course_pairs c (attns c ∪ {p})) (all_pairs cs attns) :=
@@ -745,9 +733,10 @@ by
     case neg Hneq =>
       simp [Hneq] at Hc
       simp [all_pairs]
+      intro Hc'
       constructor
       · exact course_pairs_disjoint (attns c ∪ {p}) (attns d) c d Hneq
-      exact Hind c Hc
+      exact Hind c Hc'
 
 theorem all_pairs_insert_mem (cs : Finset Course) (attns : Course → Finset Member):
   ∀ c ∈ cs, all_pairs (insert c cs) attns = all_pairs cs attns :=

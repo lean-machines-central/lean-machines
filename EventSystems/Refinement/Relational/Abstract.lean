@@ -95,7 +95,7 @@ def newAbstractREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
   }
 
 @[simp]
-def newAbstractREvent' [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
+def newAbstractREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM α Unit) (ev : AbstractREventSpec AM M abs) : OrdinaryREvent AM M α Unit :=
   newAbstractREvent abs ev
 
@@ -192,7 +192,7 @@ def newAbstractInitREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM
   }
 
 @[simp]
-def newAbstractInitREvent' [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
+def newAbstractInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM α Unit) (ev : AbstractInitREventSpec AM M abs) : InitREvent AM M α Unit :=
   newAbstractInitREvent abs ev
 
@@ -281,7 +281,7 @@ def newAbstractAnticipatedREvent [Preorder v]
 def newAbstractAnticipatedREvent' [Preorder v]
                                   [Machine ACTX AM]
                                   [Machine CTX M]
-                                  [instR:Refinement AM M]
+                                  [Refinement AM M]
   (abs : AnticipatedEvent v AM α Unit) (ev : AbstractAnticipatedREventSpec v AM M abs) : AnticipatedREvent v AM M α Unit :=
   newAbstractAnticipatedREvent abs ev
 
@@ -357,7 +357,7 @@ def newAbstractConvergentREvent  [Preorder v] [WellFoundedLT v]
 def newAbstractConvergentREvent'  [Preorder v] [WellFoundedLT v]
                                   [Machine ACTX AM]
                                   [Machine CTX M]
-                                  [instR:Refinement AM M]
+                                  [Refinement AM M]
   (abs : ConvergentEvent v AM α Unit) (ev : AbstractAnticipatedREventSpec v AM M abs.toAnticipatedEvent) : ConvergentREvent v AM M α Unit :=
   newAbstractConvergentREvent abs ev
 

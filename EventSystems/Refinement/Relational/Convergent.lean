@@ -20,7 +20,7 @@ structure AnticipatedREvent (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine
   po : _AnticipatedREventPO v (instR:=instR) to_Event (EventKind.TransDet Convergence.Anticipated) α' β'
 
 @[simp]
-def AnticipatedREvent.toAnticipatedEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+def AnticipatedREvent.toAnticipatedEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : AnticipatedREvent v AM M α β α' β') : AnticipatedEvent v M α β :=
   { to_Event := ev.to_Event
     po := {
@@ -150,7 +150,7 @@ structure ConvergentREvent (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX
   po : _ConvergentREventPO v (instR:=instR) to_Event (EventKind.TransDet Convergence.Convergent) α' β'
 
 @[simp]
-def ConvergentREvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+def ConvergentREvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConvergentREvent v AM M α β α' β') : ConvergentEvent v M α β :=
   { to_Event := ev.to_Event
     po := {

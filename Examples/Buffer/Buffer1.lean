@@ -98,16 +98,27 @@ def Batch : ConvergentRDetEvent Nat (B0 ctx) (Buffer1 ctx α) (List α) Unit Uni
     strengthening := fun b1 xs => by
       simp [Machine.invariant, Refinement.refine, B0.Batch]
       intros Hinv Hgrd
-      omega
+      intro Hlen
+      cases xs
+      case nil => contradiction
+      case cons x xs =>
+        simp at Hlen
+        simp_arith [Hlen]
+        omega
     simulation := fun b1 xs => by
       simp [Machine.invariant, Refinement.refine, B0.Batch]
       intros _ Hgrd₁ Hgrd₂
       exists xs.length
+      simp [*]
     variant := fun b1 => ctx.maxSize - b1.data.length
     convergence := fun b1 xs => by
       simp [Machine.invariant]
       intros Hinv Hgrd₁ Hgrd₂
-      omega
+      cases xs
+      case nil => contradiction
+      case cons x xs =>
+        simp at *
+        omega
   }
 
 def GetSize : OrdinaryREvent (B0 ctx) (Buffer1 ctx α) Unit Nat :=

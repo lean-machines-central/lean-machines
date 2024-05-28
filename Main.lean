@@ -6,6 +6,9 @@ import «EventSystems».NonDet.Convergent
 import «EventSystems».Refinement.Relational.Basic
 import «EventSystems».Refinement.Relational.Convergent
 
+import «Examples».Buffer.Buffer0
+import «Examples».Buffer.Buffer1
+
 import «Examples».EventB.Bridge.Bridge0
 import «Examples».EventB.Bridge.Bridge1
 import «Examples».EventB.Bridge.Bridge2

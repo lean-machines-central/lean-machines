@@ -73,7 +73,7 @@ def ConcreteRNDEventSpec'.toConcreteRNDEventSpec [Preorder v] [WellFoundedLT v] 
   }
 
 @[simp]
-def newConcreteRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+def newConcreteRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConcreteRNDEventSpec' v AM M α) : ConvergentRNDEvent v AM M α Unit :=
   newConcreteRNDEvent ev.toConcreteRNDEventSpec
 

@@ -441,5 +441,3 @@ There are no Category or Arrow instances
 ==> probably needs more specific type classes to fix the precise constraints
 
 -/
-
-#check Category.id

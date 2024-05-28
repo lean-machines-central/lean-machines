@@ -109,7 +109,7 @@ def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinem
   }
 
 @[simp]
-def newFREvent [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
+def newFREvent [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
   newREvent abs ev.toREventSpec
 
@@ -144,7 +144,7 @@ def FREventSpec'.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM
   }
 
 @[simp]
-def newFREvent' [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
+def newFREvent' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev : FREventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryREvent AM M α Unit α' Unit :=
   newFREvent abs ev.toFREventSpec
 
