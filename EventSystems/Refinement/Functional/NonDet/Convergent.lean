@@ -39,16 +39,16 @@ def newAnticipatedFRNDEventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Mac
   newAnticipatedRNDEventfromAnticipated abs ev.toAnticipatedRNDEventSpec
 
 @[simp]
-def newConvergentFREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newConvergentFRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : ConvergentRNDEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : ConvergentRNDEvent v AM M α β α' β' :=
   newConvergentRNDEvent abs ev
 
 @[simp]
-def newConvergentFREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newConvergentFRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM α' Unit) (ev : ConvergentRNDEventSpec' v AM M (α:=α) (α':=α') abs) : ConvergentRNDEvent v AM M α Unit α' Unit :=
   newConvergentRNDEvent abs ev.toConvergentRNDEventSpec
 
 @[simp]
-def newConvergentFREvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newConvergentFRNDEvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit) (ev : ConvergentRNDEventSpec'' v AM M abs) : ConvergentRNDEvent v AM M Unit Unit :=
   newConvergentRNDEvent abs ev.toConvergentRNDEventSpec

@@ -2,8 +2,9 @@ import Mathlib.Tactic
 
 import EventSystems.Refinement.Functional.Basic
 import EventSystems.Refinement.Functional.Convergent
+import EventSystems.Refinement.Functional.NonDet.Convergent
 import EventSystems.Refinement.Relational.NonDet.Det.Convergent
--- import EventSystems.Refinement.Functional.NonDet.Det.Convergent
+import EventSystems.Refinement.Functional.NonDet.Det.Convergent
 
 import Examples.Buffer.Buffer0
 
@@ -62,34 +63,30 @@ def B1.Put : ConvergentREvent Nat (B0 ctx) (B1 ctx α) α Unit Unit Unit :=
 
   }
 
--- TODO : this should be non-deterministic so that refinements
--- may remove any element(s)
-def B1.Fetch : ConvergentREvent Nat (B0 ctx) (B1 ctx α) Unit (Option α) Unit Unit :=
-  newConvergentFREvent B0.Fetch.toOrdinaryEvent {
+-- Removing an arbitrary element
+def B1.Fetch : ConvergentRNDEvent Nat (B0 ctx) (B1 ctx α) Unit α Unit Unit :=
+  newConvergentFRNDEvent B0.Fetch.toOrdinaryNDEvent {
     guard := fun b1 _ => b1.data.length > 0
-    action := fun b1 _ => match b1.data with
-                          | x::xs => (some x, { data := xs })
-                          | [] => (none, b1)
-    safety := fun b1 _ => by
+    effect := fun b1 _ (y, b1') =>
+      y ∈ b1.data ∧ b1'.data.length = b1.data.length - 1
+    safety := fun b1 _ => by simp [Machine.invariant] ; omega
+    feasibility := fun b1 _ => by
       simp [Machine.invariant]
-      split
-      case h_1 _ x xs =>
-        simp [xs]
-        intro Hinv
-        exact Nat.le_of_succ_le Hinv
-      case h_2 => intros; simp [*]
+      cases b1.data <;> simp
     lift_in := id
     lift_out := fun _ => ()
     strengthening := fun b1 _ => by
       simp [Machine.invariant, B0.Fetch, FRefinement.lift]
     simulation := fun b1 _ => by
-      simp [Machine.invariant, B0.Fetch, FRefinement.lift]
-      cases b1.data <;> simp
+      simp [Machine.invariant, B0.Fetch, FRefinement.lift, Refinement.refine] ; omega
     variant := fun b1 => b1.data.length
     convergence := fun b1 _ => by
       simp [Machine.invariant]
-      cases b1.data <;> simp
-  }
+      intros Hinv Hgrd y b1' Heff₁ Heff₂
+      have Hlen: b1.data.length > 0 := by
+        exact List.length_pos.mpr Hgrd
+      omega
+   }
 
 def B1.Batch : ConvergentRDetEvent Nat (B0 ctx) (B1 ctx α) (List α) Unit Unit Unit :=
   newConvergentRDetEvent' B0.Batch {
