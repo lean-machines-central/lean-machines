@@ -5,6 +5,7 @@ import EventSystems.Event.Ordinary
 import EventSystems.Event.Convergent
 
 import EventSystems.NonDet.Ordinary
+import EventSystems.NonDet.Convergent
 
 namespace Buffer
 
@@ -33,20 +34,28 @@ def B0.Put : OrdinaryEvent (B0 ctx) Unit Unit :=
     safety := fun b0 => by exact fun _ Hgrd => Hgrd
   }
 
--- TODO : make a non-deterministic event that is only anticipated
--- the retrieval can fail
-def B0.Fetch : ConvergentEvent Nat (B0 ctx) Unit Unit :=
-  newConvergentEvent'' {
-    guard := fun b0 => b0.size > 0
-    action := fun b0 => { size := b0.size - 1}
+-- non-deterministic event to retrieve an element, if possible
+def B0.Fetch : AnticipatedNDEvent Nat (B0 ctx) Unit Unit :=
+  newAnticipatedNDEvent'' {
+    guard := fun _ => True
+    effect := fun b0 b0' => b0'.size = b0.size ∨ b0'.size = b0.size - 1
     safety := fun b0 => by
       simp [Machine.invariant]
-      intros Hinv _
-      linarith
-    variant := fun b0 => b0.size
-    convergence := fun b0 => by
+      intros Hinv b0' Heff
+      cases Heff
+      case inl Heff =>
+        exact le_of_eq_of_le Heff Hinv
+      case inr Heff =>
+        omega
+    feasibility := fun b0 => by
       simp [Machine.invariant]
-      intros _ Hgrd
+      intros _
+      exists { size := b0.size }
+      simp
+    variant := fun b0 => b0.size
+    nonIncreasing := fun b0 => by
+      simp [Machine.invariant]
+      intros _ Hgrd Heff
       omega
   }
 
