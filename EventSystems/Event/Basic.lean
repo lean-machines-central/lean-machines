@@ -218,6 +218,7 @@ def _Event_Arrow_first [Machine CTX M] (ev : _Event M α β) : _Event M (α × �
                               ((x',y), m')
   }
 
+/- one possible definition
 instance [Machine CTX M]: Arrow (_Event M) where
   arrow {α β} (f : α → β) := fun_Event M f
 
@@ -225,6 +226,25 @@ instance [Machine CTX M]: Arrow (_Event M) where
     Arrow.split_from_first (fun_Event M (fun (x, y) => (y, x)))
                            _Event_Arrow_first
                            ev₁ ev₂
+-/
+
+-- more explicit alternative
+
+instance [Machine CTX M]: Arrow (_Event M) where
+  arrow {α β} (f : α → β) := {
+    guard := fun _ _ => True
+    action := fun m x => (f x, m)
+  }
+
+  split {α α' β β'} (ev₁ : _Event M α β)  (ev₂ : _Event M α' β') : _Event M (α × α') (β × β') := {
+    guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
+    action := fun m (x, y) => let (x',m') := ev₁.action m x
+                              let (y', _) := ev₂.action m y
+                              -- note : we forget the second state change
+                              ((x', y'), m')
+  }
+
+
 
 instance [Machine CTX M]: LawfulArrow (_Event M) where
   arrow_id := by simp [Arrow.arrow]
@@ -278,3 +298,22 @@ instance [Machine CTX M] : StrongProfunctor (_Event M) where
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (_Event M) where
+
+
+/-  Other combinators -/
+
+
+open Either
+
+def altEvent [Machine CTX M] (evl : _Event M α α') (evr : _Event M β β')
+  : _Event M (Either α β) (Either α' β') :=
+  {
+    guard := fun m x => match x with
+                        | left l => evl.guard m l
+                        | right r => evr.guard m r
+    action := fun m x => match x with
+                        | left l => let (y, m') := evl.action m l
+                                    (left y, m')
+                        | right r => let (y, m') := evr.action m r
+                                    (right y, m')
+  }

@@ -26,3 +26,8 @@ theorem Eq_fun (e₁ : α → β) (e₂ : α → β):
 by
   intro Heq
   exact Heq
+
+inductive Either (α β : Type) where
+| left : α → Either α β
+| right : β → Either α β
+deriving Repr

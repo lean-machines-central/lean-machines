@@ -9,19 +9,19 @@ import Examples.Buffer.Buffer0
 
 namespace Buffer
 
-structure Buffer1 (ctx : B0.Context) (α : Type) where
+structure B1 (ctx : B0.Context) (α : Type) where
   data : List α
 
-instance: Machine B0.Context (Buffer1 ctx α) where
+instance: Machine B0.Context (B1 ctx α) where
   context := ctx
   invariant b1 := b1.data.length ≤ ctx.maxSize
   reset := { data := [] }
 
 @[simp]
-def Buffer1.lift (b1 : Buffer1 ctx α) : B0 ctx :=
+def Buffer1.lift (b1 : B1 ctx α) : B0 ctx :=
   { size := b1.data.length }
 
-instance: FRefinement (B0 ctx) (Buffer1 ctx α) where
+instance: FRefinement (B0 ctx) (B1 ctx α) where
   refine := defaultRefine Buffer1.lift
 
   refine_safe b0 b1 := by simp [Machine.invariant] ; intros ; simp [*]
@@ -31,7 +31,7 @@ instance: FRefinement (B0 ctx) (Buffer1 ctx α) where
   lift := Buffer1.lift
   lift_ref := fun b1 => by simp
 
-def Init : InitREvent (B0 ctx) (Buffer1 ctx α) Unit Unit :=
+def Init : InitREvent (B0 ctx) (B1 ctx α) Unit Unit :=
   newInitFREvent'' B0.Init {
     init := { data := [] }
     safety := fun _ => by simp [Machine.invariant]
@@ -39,7 +39,7 @@ def Init : InitREvent (B0 ctx) (Buffer1 ctx α) Unit Unit :=
     simulation := by simp [FRefinement.lift, B0.Init]
   }
 
-def Put : ConvergentREvent Nat (B0 ctx) (Buffer1 ctx α) α Unit Unit Unit :=
+def Put : ConvergentREvent Nat (B0 ctx) (B1 ctx α) α Unit Unit Unit :=
   newConvergentFREvent' B0.Put {
     guard := fun b1 _ => b1.data.length < ctx.maxSize
     action := fun b1 x => { data := x :: b1.data }
@@ -62,7 +62,7 @@ def Put : ConvergentREvent Nat (B0 ctx) (Buffer1 ctx α) α Unit Unit Unit :=
 
   }
 
-def Fetch : ConvergentREvent Nat (B0 ctx) (Buffer1 ctx α) Unit (Option α) Unit Unit :=
+def Fetch : ConvergentREvent Nat (B0 ctx) (B1 ctx α) Unit (Option α) Unit Unit :=
   newConvergentFREvent B0.Fetch.toOrdinaryEvent {
     guard := fun b1 _ => b1.data.length > 0
     action := fun b1 _ => match b1.data with
@@ -89,7 +89,7 @@ def Fetch : ConvergentREvent Nat (B0 ctx) (Buffer1 ctx α) Unit (Option α) Unit
       cases b1.data <;> simp
   }
 
-def Batch : ConvergentRDetEvent Nat (B0 ctx) (Buffer1 ctx α) (List α) Unit Unit Unit :=
+def Batch : ConvergentRDetEvent Nat (B0 ctx) (B1 ctx α) (List α) Unit Unit Unit :=
   newConvergentRDetEvent' B0.Batch {
     guard := fun b1 xs => xs.length > 0 ∧ b1.data.length + xs.length ≤ ctx.maxSize
     action := fun b1 xs => { data := b1.data ++ xs }
@@ -121,7 +121,7 @@ def Batch : ConvergentRDetEvent Nat (B0 ctx) (Buffer1 ctx α) (List α) Unit Uni
         omega
   }
 
-def GetSize : OrdinaryREvent (B0 ctx) (Buffer1 ctx α) Unit Nat :=
+def GetSize : OrdinaryREvent (B0 ctx) (B1 ctx α) Unit Nat :=
   newREvent B0.GetSize {
     action := fun b1 _ => (b1.data.length, b1)
     lift_in := fun x => x

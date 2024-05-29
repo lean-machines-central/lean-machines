@@ -347,9 +347,25 @@ def split_NDEvent_fromFirst [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : 
   Arrow.split_from_first (arrow_NDEvent M (fun (x, y) => (y, x)))
                          first_NDEvent ev₁ ev₂
 
+/-
 instance [Machine CTX M]: Arrow (_NDEvent M) where
   arrow := arrow_NDEvent M
   split := split_NDEvent
+  first := first_NDEvent
+-/
+
+-- a more direct definition
+instance [Machine CTX M]: Arrow (_NDEvent M) where
+  arrow {α β} (f : α → β) : _NDEvent M α β := {
+    guard := fun _ _ => True
+    effect := fun m x (y, m') => y = f x ∧ m' = m
+  }
+
+  split {α α' β β'} (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α' β') : _NDEvent M (α × α') (β × β') := {
+    guard := fun m (x,y) => ev₁.guard m x ∧ ev₂.guard m y
+    effect := fun m (x, y) ((x', y'), m') =>
+                ev₁.effect m x (x', m') ∧ ev₂.effect m y (y', m')
+  }
   first := first_NDEvent
 
 instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
@@ -383,21 +399,20 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                          simp [H₁] at H₃
                          simp [H₁, H₃]
                        · intro Hex
-                         obtain ⟨⟨y₃, y₄⟩, ⟨⟨H₁,H₂⟩,H₃,H₄⟩⟩ := Hex
-                         exists (x, g y₁)
+                         obtain ⟨⟨y₃, y₄⟩, ⟨⟨H₁,H₂,H₂'⟩,H₃,H₄⟩⟩ := Hex
+                         exists (x, g y₄)
                          exists m
                          simp [*] at *
-                         simp [H₂]
 
   arrow_unit ev := by simp [Arrow.arrow, Arrow.first]
                       funext m (x, y₁) (y₂, m')
                       simp
                       constructor
                       · intro Hex
-                        obtain ⟨⟨y₃, y₄⟩, ⟨⟨H₁,H₂⟩,H₃⟩⟩ := Hex
+                        obtain ⟨⟨y₃, y₄⟩, ⟨⟨H₁,_⟩,H₃⟩⟩ := Hex
                         exists x
                         exists m
-                        simp [H₁, H₂, H₃]
+                        simp [*] at *
                       · intro Hex
                         obtain ⟨x', Hex⟩  := Hex
                         obtain ⟨m'', ⟨H₁ , H₂⟩⟩ := Hex
@@ -426,3 +441,14 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                           exists ((y, z), t)
                           simp [H₃]
                           simp [H₁, H₄]
+
+/-  Other misc. combinators -/
+
+def dlfNDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β)
+  : _NDEvent M α β :=
+  {
+    guard := fun m x => ev₁.guard m x ∨ ev₂.guard m x
+    effect := fun m x (y, m') =>
+      (ev₁.guard m x → ev₁.effect m x (y, m'))
+      ∧ (ev₂.guard m x → ev₂.effect m x (y, m'))
+  }

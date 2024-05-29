@@ -30,10 +30,7 @@ def B0.Put : OrdinaryEvent (B0 ctx) Unit Unit :=
   newEvent'' {
     guard := fun b0 => b0.size < ctx.maxSize
     action := fun b0 => { size := b0.size + 1 }
-    safety := fun b0 => by
-      simp [Machine.invariant]
-      intros _ Hgrd
-      exact Hgrd
+    safety := fun b0 => by exact fun _ Hgrd => Hgrd
   }
 
 def B0.Fetch : ConvergentEvent Nat (B0 ctx) Unit Unit :=
@@ -60,7 +57,7 @@ def B0.GetSize : OrdinaryEvent (B0 ctx) Unit Nat :=
 def B0.Batch : OrdinaryNDEvent (B0 ctx) Unit Unit :=
   newNDEvent'' {
     guard := fun b0 => b0.size < ctx.maxSize
-    effect := fun b0 b0' => ∃ n, n > 0 ∧ b0'.size = b0.size + n ∧ b0'.size ≤ ctx.maxSize
+    effect := fun b0 b0' => ∃ n > 0, b0'.size = b0.size + n ∧ b0'.size ≤ ctx.maxSize
 
     feasibility := fun b0 => by
       simp [Machine.invariant]
@@ -70,5 +67,9 @@ def B0.Batch : OrdinaryNDEvent (B0 ctx) Unit Unit :=
 
     safety := fun b0 => by simp [Machine.invariant]
   }
+
+
+
+
 
 end Buffer

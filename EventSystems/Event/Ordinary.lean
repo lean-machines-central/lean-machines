@@ -22,7 +22,7 @@ structure EventSpec (M) [Machine CTX M] (α) (β) where
   safety (m : M) (x : α) :
     Machine.invariant m
     → guard m x
-    → Machine.invariant (action m x).snd
+    → Machine.invariant (action m x).2
 
 @[simp]
 def _Event.toEventSpec [Machine CTX M]
@@ -109,7 +109,7 @@ structure InitEventSpec (M) [Machine CTX M] (α) (β) where
   init (x : α) : β × M
   safety (x : α) :
     guard x
-    → Machine.invariant (init x).snd
+    → Machine.invariant (init x).2
 
 @[simp]
 def InitEventSpec.to_InitEvent [Machine CTX M] (ev : InitEventSpec M α β) : _InitEvent M α β :=
