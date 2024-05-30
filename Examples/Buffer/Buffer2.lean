@@ -7,6 +7,8 @@ import EventSystems.Refinement.Strong.Convergent
 import EventSystems.Refinement.Strong.Abstract
 import EventSystems.Refinement.Strong.Concrete
 
+import EventSystems.Refinement.Strong.NonDet.Det.Convergent
+
 import Examples.Buffer.Buffer1
 
 namespace Buffer
@@ -123,18 +125,40 @@ def B2.PutPrio [DecidableEq α] : ConvergentREvent Nat (B1 ctx α) (B2 ctx α) (
       omega
   }
 
--- TODO : should remove a prioritary element
-def B2.Fetch [DecidableEq α] : ConvergentREvent Nat (B1 ctx α) (B2 ctx α) Unit (Option α) :=
-  newAbstractConvergentSREvent B1.Fetch.toConvergentEvent {
-    step_inv := fun b2 _ => by
-      simp [Machine.invariant, FRefinement.lift, SRefinement.unlift, B1.Fetch]
-      cases b2.data
-      case nil => simp
-      case cons x xs =>
-        simp
-        intro Hinv
-        simp [injectLow_length_prop]
-        linarith
+def B2.Fetch [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ctx α) (B2 ctx α) Unit α :=
+  newConvergentSRDetEvent B1.Fetch.toConvergentNDEvent.toAnticipatedNDEvent.toOrdinaryNDEvent
+  {
+    guard := fun b2 _ => b2.data.length > 0
+    action := fun b2 _ =>
+      match b2.data with
+      | [] => (default, b2)
+      | (_, x)::xs => (x, { data := xs })
+
+    safety := fun b2 x => by
+      simp [Machine.invariant]
+      split
+      case _ _ Heq =>
+        simp [Heq]
+      case _ x xs Heq =>
+        simp [Heq]
+        intro H ; exact Nat.le_of_succ_le H
+
+    lift_in := id
+    lift_out := id
+
+    strengthening := fun b2 _ => by
+      simp [Machine.invariant, B1.Fetch, Refinement.refine]
+
+    simulation := fun b2 _ => by
+      simp [Machine.invariant, B1.Fetch, Refinement.refine]
+      split <;> simp [*]
+
+    variant := fun b2 => b2.data.length
+
+    convergence := fun b2 _ => by
+      simp [Machine.invariant]
+      split <;> simp [*]
+
   }
 
 /-
