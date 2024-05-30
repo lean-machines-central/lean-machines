@@ -15,6 +15,7 @@ namespace Buffer
 
 inductive Priority where
   | Low | Mid | Hi
+  deriving DecidableEq
 
 structure B2 (ctx : B0.Context) (α : Type) where
   data : List (Priority × α)
@@ -161,10 +162,243 @@ def B2.Fetch [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ctx α
 
   }
 
-/-
-def B2.FetchPrio [DecidableEq α] : ConvergentREvent Nat (B1 ctx α) (B2 ctx α) Priority (Option α) :=
-  newConcreteSREvent {
-    guard := fun _ _ => True
+def removePrio (p : Priority) (xs : List (Priority × α)) : (Option α) × List (Priority × α) :=
+  match xs with
+  | [] => (none, [])
+  | (q,x)::xs => if p = q then (some x, xs)
+                 else let (r, xs') := removePrio p xs
+                      (r, (q,x)::xs')
+
+theorem removePrio_some (p : Priority) (xs xs' : List (Priority × α)) (val : α):
+  removePrio p xs = (some val, xs')
+  → xs ≠ [] :=
+by
+  cases xs <;> simp [removePrio]
+
+theorem removePrio_length (p : Priority) (xs : List (Priority × α)):
+  match removePrio p xs with
+  | (some _, xs') => xs'.length = xs.length - 1
+  | (none, xs') => xs'.length = xs.length :=
+by
+  induction xs
+  case nil =>
+    simp [removePrio]
+  case cons px xs Hind =>
+    revert Hind
+    split
+    case _ _ val xs' Hrm =>
+      simp [removePrio]
+      rw [Hrm]
+      intro Hind
+      by_cases p = px.1
+      case pos Heq =>
+        simp [Heq]
+      case neg Hneq =>
+        simp [Hneq]
+        have Haux : xs ≠ [] := by
+          exact removePrio_some p xs xs' val Hrm
+        rw [Hind]
+        refine Nat.sub_add_cancel ?h
+        cases xs
+        · contradiction
+        exact tsub_add_cancel_iff_le.mp rfl
+    case _ xs' Hrm =>
+      simp [removePrio]
+      rw [Hrm]
+      by_cases p = px.1 <;> simp [*]
+
+theorem removePrio_length_some (p : Priority) (xs : List (Priority × α)):
+  removePrio p xs = (some x, xs') → xs'.length = xs.length - 1 :=
+by
+  intro Hrw
+  have Hrm := removePrio_length p xs
+  simp [Hrw] at Hrm
+  assumption
+
+theorem removePrio_length_none (p : Priority) (xs : List (Priority × α)):
+  removePrio p xs = (none, xs') → xs'.length = xs.length :=
+by
+  intro Hrw
+  have Hrm := removePrio_length p xs
+  simp [Hrw] at Hrm
+  assumption
+
+theorem removePrio_mem (p : Priority) (xs : List (Priority × α)) (val : α):
+  ∀ xs', removePrio p xs = (some val, xs')
+  → (p, val) ∈ xs :=
+by
+  induction xs
+  case nil => simp [removePrio]
+  case cons x xs Hind =>
+    intro xs'
+    simp [removePrio]
+    split
+    case inl Heq =>
+      intro Hsome
+      cases Hsome
+      simp [Heq]
+    case inr Hneq =>
+      simp
+      intros Hrm₁ Hrm₂
+      right
+      cases xs'
+      case nil => contradiction
+      case cons x' xs' =>
+        have Hrm₂' : x = x' := by
+          cases Hrm₂
+          rfl
+        rw [←Hrm₂'] at Hrm₂
+        simp at Hrm₂
+        apply Hind xs'
+        exact Prod.ext Hrm₁ Hrm₂
+
+def removeByPrio (xs : List (Priority × α)) : (Option α) × List (Priority × α) :=
+  match removePrio Priority.Hi xs with
+  | (some x, xs') => (some x, xs')
+  | _ => match removePrio Priority.Mid xs with
+         | (some x, xs') => (some x, xs')
+         | _ => match removePrio Priority.Low xs with
+                | (some x, xs') => (some x, xs')
+                | _ => (none, xs)
+
+theorem removeByPrio_some (xs : List (Priority × α)):
+  removeByPrio xs = (some x, xs')
+  -> xs'.length = xs.length - 1 :=
+by
+  simp [removeByPrio]
+  split
+  case _  y ys Heq =>
+    intro Heq'
+    have Hys : ys = xs' := by
+      cases Heq'
+      rfl
+    rw [Hys] at Heq
+    exact removePrio_length_some Priority.Hi xs Heq
+  case _ Hrm =>
+    clear Hrm
+    split
+    case _ y ys Hrm =>
+      intro Heq
+      have Hys : ys = xs' := by
+        cases Heq
+        rfl
+      rw [Hys] at Hrm
+      exact removePrio_length_some Priority.Mid xs Hrm
+    case _ _ _ Hrm =>
+      clear Hrm
+      split
+      case _ y ys Hrm =>
+        intro Heq
+        have Hys : ys = xs' := by
+          cases Heq
+          rfl
+        rw [Hys] at Hrm
+        exact removePrio_length_some Priority.Low xs Hrm
+      case _ _ _ Hrm =>
+        clear Hrm
+        intro Hcontra
+        cases Hcontra
+
+theorem removeByPrio_none (xs : List (Priority × α)):
+  removeByPrio xs = (none, xs')
+  -> xs'.length = xs.length :=
+by
+  simp [removeByPrio]
+  split
+  · intro Hcontra ; cases Hcontra
+  · split
+    · intro Hcontra ; cases Hcontra
+    split
+    · intro Hcontra ; cases Hcontra
+    · intro Heq
+      cases Heq
+      rfl
+
+theorem removeByPrio_mem (xs : List (Priority × α)) (val : α):
+  ∀ xs', removeByPrio xs = (some val, xs')
+  → ∃ p, (p, val) ∈ xs :=
+by
+  intro xs'
+  simp [removeByPrio]
+  split
+  case _ y ys Hrm =>
+    intro Hsome
+    exists Priority.Hi
+    apply removePrio_mem Priority.Hi xs val xs'
+    simp [*]
+  case _ r Hrm =>
+    clear Hrm
+    split
+    case _ y ys Hrm' =>
+      intro Hsome
+      exists Priority.Mid
+      apply removePrio_mem Priority.Mid xs val xs'
+      simp [*]
+    case _ r Hrm =>
+      clear Hrm
+      split
+      case _ y ys Hrm =>
+        intro Hsome
+        exists Priority.Low
+        apply removePrio_mem Priority.Low xs val xs'
+        simp [*]
+      case _ r Hrm =>
+        intro Hcontra
+        cases Hcontra
+
+
+def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ctx α) (B2 ctx α) Unit α :=
+  newConvergentSRDetEvent B1.Fetch.toConvergentNDEvent.toAnticipatedNDEvent.toOrdinaryNDEvent
+  {
+    guard := fun b2 _ => b2.data.length > 0
+    action := fun b2 _ =>
+      match removeByPrio b2.data with
+      | (some x, xs) => (x, { data := xs })
+      | _ => (default, b2)
+
+    safety := fun b2 x => by
+      simp [Machine.invariant]
+      split
+      case _ y ys Hrm =>
+        have Hlen : ys.length = b2.data.length - 1 := by
+          exact removeByPrio_some b2.data Hrm
+        intros Hinv Hgrd
+        simp
+        omega
+      · intros Hinv Hgrd
+        simp ; assumption
+
+    lift_in := id
+    lift_out := id
+
+    strengthening := fun b2 _ => by
+      simp [Machine.invariant, B1.Fetch, Refinement.refine]
+
+    simulation := fun b2 _ => by
+      simp [Machine.invariant, B1.Fetch, Refinement.refine]
+      split
+      case _ y ys Hrm =>
+        simp
+        have Hlen : ys.length = b2.data.length - 1 := by
+          exact removeByPrio_some b2.data Hrm
+        intros Hinv Hgrd
+        constructor
+        · exact removeByPrio_mem b2.data y ys Hrm
+        assumption
+      case _ _ _ Hrm =>
+        simp
+        intro Hinv Hgrd
+        constructor
+        · sorry -- TODO mem_none
+        sorry
+
+    variant := fun b2 => b2.data.length
+
+    convergence := fun b2 _ => by
+      simp [Machine.invariant]
+      split <;> simp [*]
+
   }
--/
+
+
 end Buffer
