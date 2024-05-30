@@ -65,7 +65,7 @@ def B1.Put : ConvergentREvent Nat (B0 ctx) (B1 ctx α) α Unit Unit Unit :=
 
 -- Removing an arbitrary element
 def B1.Fetch : ConvergentRNDEvent Nat (B0 ctx) (B1 ctx α) Unit α Unit Unit :=
-  newConvergentFRNDEvent B0.Fetch.toOrdinaryNDEvent {
+  newConvergentFRNDEvent B0.Fetch.toOrdinaryEvent.toOrdinaryNDEvent {
     guard := fun b1 _ => b1.data.length > 0
     effect := fun b1 _ (y, b1') =>
       y ∈ b1.data ∧ b1'.data.length = b1.data.length - 1
@@ -76,7 +76,7 @@ def B1.Fetch : ConvergentRNDEvent Nat (B0 ctx) (B1 ctx α) Unit α Unit Unit :=
     lift_in := id
     lift_out := fun _ => ()
     strengthening := fun b1 _ => by
-      simp [Machine.invariant, B0.Fetch, FRefinement.lift]
+      simp [Machine.invariant, B0.Fetch, FRefinement.lift, Refinement.refine]
     simulation := fun b1 _ => by
       simp [Machine.invariant, B0.Fetch, FRefinement.lift, Refinement.refine] ; omega
     variant := fun b1 => b1.data.length

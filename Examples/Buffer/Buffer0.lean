@@ -35,27 +35,16 @@ def B0.Put : OrdinaryEvent (B0 ctx) Unit Unit :=
   }
 
 -- non-deterministic event to retrieve an element, if possible
-def B0.Fetch : AnticipatedNDEvent Nat (B0 ctx) Unit Unit :=
-  newAnticipatedNDEvent'' {
-    guard := fun _ => True
-    effect := fun b0 b0' => b0'.size = b0.size ∨ b0'.size = b0.size - 1
+def B0.Fetch : ConvergentEvent Nat (B0 ctx) Unit Unit :=
+  newConvergentEvent'' {
+    guard := fun b0 => b0.size > 0
+    action := fun b0 => { size := b0.size - 1 }
     safety := fun b0 => by
       simp [Machine.invariant]
-      intros Hinv b0' Heff
-      cases Heff
-      case inl Heff =>
-        exact le_of_eq_of_le Heff Hinv
-      case inr Heff =>
-        omega
-    feasibility := fun b0 => by
-      simp [Machine.invariant]
-      intros _
-      exists { size := b0.size }
-      simp
+      omega
     variant := fun b0 => b0.size
-    nonIncreasing := fun b0 => by
+    convergence := fun b0 => by
       simp [Machine.invariant]
-      intros _ Hgrd Heff
       omega
   }
 

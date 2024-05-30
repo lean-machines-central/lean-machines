@@ -18,6 +18,7 @@ structure _NDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) 
 structure OrdinaryNDEvent (M) [Machine CTX M] (α) (β) extends _NDEvent M α β where
   po : _NDEventPO to_NDEvent  (EventKind.TransNonDet Convergence.Ordinary)
 
+@[simp]
 def OrdinaryEvent.toOrdinaryNDEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryNDEvent M α β :=
   let event := ev.to_Event.to_NDEvent
 {
