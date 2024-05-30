@@ -82,7 +82,7 @@ def B1.Fetch : ConvergentRNDEvent Nat (B0 ctx) (B1 ctx α) Unit α Unit Unit :=
     variant := fun b1 => b1.data.length
     convergence := fun b1 _ => by
       simp [Machine.invariant]
-      intros Hinv Hgrd y b1' Heff₁ Heff₂
+      intros _ Hgrd _ b1' _ Heff₂
       have Hlen: b1.data.length > 0 := by
         exact List.length_pos.mpr Hgrd
       omega

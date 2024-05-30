@@ -165,15 +165,13 @@ def ConvergentRNDEvent.toConvergentNDEvent [Preorder v] [WellFoundedLT v] [Machi
 
 structure ConvergentRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : OrdinaryNDEvent AM α' β')
-  extends AnticipatedRNDEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
+  extends _Variant v, RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
   convergence (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → ∀ y, ∀ m', effect m x (y, m')
                  → variant m' < variant m
-
-
 
 @[simp]
 def newConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
@@ -198,7 +196,7 @@ def newConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mach
 
 structure ConvergentRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α α'} (abs : OrdinaryNDEvent AM α' Unit)
-  extends AnticipatedRNDEventSpec' v AM M (α:=α) (α':=α') abs where
+  extends _Variant v, RNDEventSpec' AM M (α:=α) (α':=α') abs where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -213,7 +211,6 @@ def ConvergentRNDEventSpec'.toConvergentRNDEventSpec [Preorder v] [WellFoundedLT
   {
     toRNDEventSpec := ev.toRNDEventSpec
     variant := ev.variant
-    nonIncreasing:= fun m x => by simp ; apply ev.nonIncreasing
     convergence:= fun m x => by simp ; apply ev.convergence
   }
 
@@ -224,7 +221,7 @@ def newConvergentRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mac
 
 structure ConvergentRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit)
-  extends AnticipatedRNDEventSpec'' v AM M abs where
+  extends _Variant v, RNDEventSpec'' AM M abs where
 
   convergence (m : M):
     Machine.invariant m
@@ -239,7 +236,6 @@ def ConvergentRNDEventSpec''.toConvergentRNDEventSpec [Preorder v] [WellFoundedL
   {
     toRNDEventSpec := ev.toRNDEventSpec
     variant := ev.variant
-    nonIncreasing:= fun m x => by simp ; apply ev.nonIncreasing
     convergence:= fun m x => by simp ; apply ev.convergence
   }
 
