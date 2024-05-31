@@ -169,11 +169,42 @@ def removePrio (p : Priority) (xs : List (Priority × α)) : (Option α) × List
                  else let (r, xs') := removePrio p xs
                       (r, (q,x)::xs')
 
-theorem removePrio_some (p : Priority) (xs xs' : List (Priority × α)) (val : α):
+theorem removePrio_none_id (p : Priority) (xs : List (Priority × α)):
+  ∀ xs', removePrio p xs = (none, xs')
+  → xs' = xs :=
+by
+  induction xs
+  case nil =>
+    simp [removePrio]
+  case cons x xs Hind =>
+    simp [removePrio]
+    split
+    · simp
+    case inr Hneq =>
+      intros xs' Hrm
+      cases xs'
+      case nil =>
+        simp [removePrio] at Hrm
+      case cons x' xs' =>
+        have Hrm': x :: (removePrio p xs).2 = x'::xs' := by
+          injection Hrm
+        have Hx : x' = x := by
+          cases Hrm'
+          rfl
+        rw [Hx] at *
+        simp
+        apply Hind
+        cases Hrm'
+        injection Hrm
+        case _ H₁ _ =>
+          simp [←H₁]
+
+theorem removePrio_some_cons (p : Priority) (xs xs' : List (Priority × α)) (val : α):
   removePrio p xs = (some val, xs')
   → xs ≠ [] :=
 by
   cases xs <;> simp [removePrio]
+
 
 theorem removePrio_length (p : Priority) (xs : List (Priority × α)):
   match removePrio p xs with
@@ -196,7 +227,7 @@ by
       case neg Hneq =>
         simp [Hneq]
         have Haux : xs ≠ [] := by
-          exact removePrio_some p xs xs' val Hrm
+          exact removePrio_some_cons p xs xs' val Hrm
         rw [Hind]
         refine Nat.sub_add_cancel ?h
         cases xs
@@ -223,7 +254,7 @@ by
   simp [Hrw] at Hrm
   assumption
 
-theorem removePrio_mem (p : Priority) (xs : List (Priority × α)) (val : α):
+theorem removePrio_mem_some (p : Priority) (xs : List (Priority × α)) (val : α):
   ∀ xs', removePrio p xs = (some val, xs')
   → (p, val) ∈ xs :=
 by
@@ -314,7 +345,24 @@ by
       cases Heq
       rfl
 
-theorem removeByPrio_mem (xs : List (Priority × α)) (val : α):
+theorem removeByPrio_mem_none (xs : List (Priority × α)):
+  ∀ xs', removeByPrio xs = (none, xs')
+  → xs' = xs :=
+by
+  intros xs'
+  simp [removeByPrio]
+  split
+  · simp
+  split
+  · simp
+  split
+  · simp
+  intro H
+  injection H
+  case _ _ H =>
+  exact id (Eq.symm H)
+
+theorem removeByPrio_mem_some (xs : List (Priority × α)) (val : α):
   ∀ xs', removeByPrio xs = (some val, xs')
   → ∃ p, (p, val) ∈ xs :=
 by
@@ -324,7 +372,7 @@ by
   case _ y ys Hrm =>
     intro Hsome
     exists Priority.Hi
-    apply removePrio_mem Priority.Hi xs val xs'
+    apply removePrio_mem_some Priority.Hi xs val xs'
     simp [*]
   case _ r Hrm =>
     clear Hrm
@@ -332,7 +380,7 @@ by
     case _ y ys Hrm' =>
       intro Hsome
       exists Priority.Mid
-      apply removePrio_mem Priority.Mid xs val xs'
+      apply removePrio_mem_some Priority.Mid xs val xs'
       simp [*]
     case _ r Hrm =>
       clear Hrm
@@ -340,7 +388,7 @@ by
       case _ y ys Hrm =>
         intro Hsome
         exists Priority.Low
-        apply removePrio_mem Priority.Low xs val xs'
+        apply removePrio_mem_some Priority.Low xs val xs'
         simp [*]
       case _ r Hrm =>
         intro Hcontra
@@ -383,7 +431,7 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
           exact removeByPrio_some b2.data Hrm
         intros Hinv Hgrd
         constructor
-        · exact removeByPrio_mem b2.data y ys Hrm
+        · exact removeByPrio_mem_some b2.data y ys Hrm
         assumption
       case _ _ _ Hrm =>
         simp
@@ -397,6 +445,7 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
     convergence := fun b2 _ => by
       simp [Machine.invariant]
       split <;> simp [*]
+      <;> sorry -- TODO
 
   }
 
