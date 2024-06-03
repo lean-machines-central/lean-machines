@@ -9,14 +9,14 @@ import EventSystems.NonDet.Convergent
 
 namespace Buffer
 
-structure B0.Context where
+structure BufContext where
   maxSize : Nat
   maxSizeProp : maxSize > 0
 
-structure B0 (ctx : B0.Context) where
+structure B0 (ctx : BufContext) where
   size : Nat
 
-instance: Machine B0.Context (B0 ctx) where
+instance: Machine BufContext (B0 ctx) where
   context := ctx
   invariant b0 := b0.size ≤ ctx.maxSize
   reset := { size := 0 }

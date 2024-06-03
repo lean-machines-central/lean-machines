@@ -17,10 +17,10 @@ inductive Priority where
   | Low | Mid | Hi
   deriving DecidableEq
 
-structure B2 (ctx : B0.Context) (α : Type) where
+structure B2 (ctx : BufContext) (α : Type) where
   data : List (Priority × α)
 
-instance: Machine B0.Context (B2 ctx α) where
+instance: Machine BufContext (B2 ctx α) where
   context := ctx
   invariant b2 := b2.data.length ≤ ctx.maxSize
   reset := { data := [] }

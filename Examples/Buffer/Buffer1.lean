@@ -10,10 +10,10 @@ import Examples.Buffer.Buffer0
 
 namespace Buffer
 
-structure B1 (ctx : B0.Context) (α : Type) where
+structure B1 (ctx : BufContext) (α : Type) where
   data : List α
 
-instance: Machine B0.Context (B1 ctx α) where
+instance: Machine BufContext (B1 ctx α) where
   context := ctx
   invariant b1 := b1.data.length ≤ ctx.maxSize
   reset := { data := [] }
