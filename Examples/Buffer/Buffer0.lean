@@ -34,7 +34,6 @@ def B0.Put : OrdinaryEvent (B0 ctx) Unit Unit :=
     safety := fun b0 => by exact fun _ Hgrd => Hgrd
   }
 
--- non-deterministic event to retrieve an element, if possible
 def B0.Fetch : ConvergentEvent Nat (B0 ctx) Unit Unit :=
   newConvergentEvent'' {
     guard := fun b0 => b0.size > 0
