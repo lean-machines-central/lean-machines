@@ -102,21 +102,9 @@ by
 
 
 instance: SRefinement (M0 ctx.toContext) (M1 ctx) where
-  refine := fun am m => defaultRefine M1.lift am m
-
-  refine_safe m am := by
-    simp
-    intros Hinv Hlift
-    rw [Hlift]
-    apply M1.lift_safe
-    assumption
-
-  refine_uniq m am am' := by simp
-                             intros _ Ham Ham'
-                             rw [Ham, ←Ham']
 
   lift := M1.lift
-  lift_ref m := by simp
+  lift_safe := M1.lift_safe
 
   unlift := M1.unlift
   lift_unlift m am' := by simp

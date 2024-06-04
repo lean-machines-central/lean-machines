@@ -28,8 +28,8 @@ def AbstractSRNDEventSpec.toAbstractFRNDEventSpec  [Machine ACTX AM] [Machine CT
     step_ref := fun m x => by
       simp
       intros Hinv Hgrd y am' Heff
-      have Hlr := lift_ref (self:=instSR.toFRefinement) m Hinv
-      have Hsafe := refine_safe (self:=instSR.toRefinement) (lift m) m Hinv Hlr
+      have Hlr := lift_ref (AM:=AM) m Hinv
+      have Hsafe := refine_safe (self:=instRefinementOfFRefinement) (lift m) m Hinv Hlr
       have Hinv' := abstract.po.safety (lift m) x Hsafe Hgrd y am' Heff
       refine unlift_refine ?Hsafe Hinv Hinv'
       intros
@@ -131,7 +131,7 @@ def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Ma
       intros Hgrd y am' Heff
       have Hainv := abstract.po.safety x Hgrd y am' Heff
       have Hsi := ev.step_inv x Hgrd y am' Heff
-      have Href := lift_ref (self:=instSR.toFRefinement)  (unlift Machine.reset am') Hsi
+      have Href := lift_ref (AM:=AM) (unlift Machine.reset am') Hsi
       have Hlu := lu_reset (self:=instSR) am' Hainv
       rw [Hlu] at Href
       assumption

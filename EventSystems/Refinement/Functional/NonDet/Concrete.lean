@@ -33,11 +33,9 @@ def ConcreteFRNDEventSpec.toConcreteRNDEventSpec [Preorder v] [WellFoundedLT v] 
     simulation := fun m x => by
       intros Hinv Hgrd y m' Heff am Href
       have Hsim := ev.simulation m x Hinv Hgrd y m' Heff
-      have Hlref := lift_ref (self:=instFR) m Hinv
-      have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Hlref
-      rw [Huniq, ←Hsim]
-      have Hsafe := ev.safety m x Hinv Hgrd y m' Heff
-      exact lift_ref m' Hsafe
+      simp [refine] at *
+      simp [Href]
+      exact id (Eq.symm Hsim)
 
     variant := ev.variant
 

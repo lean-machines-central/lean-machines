@@ -33,7 +33,7 @@ by
     exact Hsafe Hinv₁ Hinv₂
 
   have Href: refine (lift (unlift m am)) (unlift m am) := by
-    apply lift_ref (self:=instSR.toFRefinement)
+    apply lift_ref (instFR:=instSR.toFRefinement)
     assumption
 
   rw [lift_unlift] at Href <;> assumption

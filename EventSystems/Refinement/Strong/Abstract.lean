@@ -4,6 +4,7 @@
 -/
 
 import EventSystems.Refinement.Strong.Basic
+import EventSystems.Refinement.Functional.Basic
 import EventSystems.Refinement.Functional.Abstract
 
 open Refinement
@@ -31,12 +32,13 @@ def AbstractSREventSpec.toAbstractFREventSpec [Machine ACTX AM] [Machine CTX M] 
     step_ref := fun m x => by
       simp
       intros Hinv Hgrd
-      have Hlr := lift_ref (self:=instSR.toFRefinement) m Hinv
-      have Hsafe := refine_safe (self:=instSR.toRefinement) (lift m) m Hinv Hlr
+      simp [refine]
+      rw [lift_unlift]
+      · assumption
+      have Hlr := lift_ref (AM:= AM) (M:=M) m Hinv
+      have Hsafe := refine_safe (AM:= AM) (M:=M) (self:=instRefinementOfFRefinement) (lift m) m Hinv Hlr
       have Hinv' := abstract.po.safety (lift m) x Hsafe Hgrd
-      refine unlift_refine ?Hsafe Hinv Hinv'
-      intros
-      exact ev.step_inv m x Hinv Hgrd
+      assumption
 
     step_safe := fun m x => by
       simp
@@ -103,7 +105,7 @@ def AbstractInitSREventSpec.toAbstractInitFREventSpec [Machine ACTX AM] [Machine
       intros Hgrd
       have Hainv := abstract.po.safety x Hgrd
       have Hsi := ev.step_inv x Hgrd
-      have Href := lift_ref (self:=instSR.toFRefinement)  (unlift Machine.reset (abstract.init x).2) Hsi
+      have Href := lift_ref (AM:=AM) (unlift Machine.reset (abstract.init x).2) Hsi
       have Hlu := lu_reset (self:=instSR) (abstract.init x).2 Hainv
       rw [Hlu] at Href
       assumption
@@ -161,8 +163,8 @@ def AbstractSREventSpec.toAbstractAnticipatedFREventSpec [Preorder v] [Machine A
     step_variant := fun m x => by
       simp
       intros Hinv Hgrd Hinv'
-      have Hlr := lift_ref (self:=instSR.toFRefinement) m Hinv
-      have Hsafe := refine_safe (self:=instSR.toRefinement) (lift m) m Hinv Hlr
+      have Hlr := lift_ref (AM:=AM) m Hinv
+      have Hsafe := refine_safe (self:=instRefinementOfFRefinement) (lift m) m Hinv Hlr
       have Hni := abstract.po.nonIncreasing (lift m) x Hsafe Hgrd
       simp at Hni
       rw [lift_unlift] <;> assumption

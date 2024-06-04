@@ -27,13 +27,13 @@ def ConcreteFREventSpec.toConcreteREventSpec  [Preorder v] [WellFoundedLT v] [Ma
     toEventSpec := ev.toEventSpec
     variant := ev.variant
     simulation := fun m x => by intros Hinv Hgrd am Href
-                                have Href' := lift_ref (self:=instFR) m Hinv
-                                have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
+                                simp [refine] at *
+                                --have Href' := lift_ref (self:=instFR) m Hinv
+                                --have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
                                 have Hsim := ev.simulation m x Hinv Hgrd
                                 simp at Hsim
-                                rw [Huniq, Hsim]
-                                have Hsafe := ev.safety m x Hinv Hgrd
-                                apply lift_ref ; assumption
+                                rw [←Hsim]
+                                assumption
     convergence := ev.convergence
   }
 

@@ -23,14 +23,8 @@ def B1.lift (b1 : B1 ctx α) : B0 ctx :=
   { size := b1.data.length }
 
 instance: FRefinement (B0 ctx) (B1 ctx α) where
-  refine := defaultRefine B1.lift
-
-  refine_safe b0 b1 := by simp [Machine.invariant] ; intros ; simp [*]
-
-  refine_uniq b0 b0' b1 := by simp [Machine.invariant] ; intros ; simp [*]
-
   lift := B1.lift
-  lift_ref := fun b1 => by simp
+  lift_safe := fun b1 => by simp [Machine.invariant]
 
 def B1.Init : InitREvent (B0 ctx) (B1 ctx α) Unit Unit :=
   newInitFREvent'' B0.Init {
@@ -95,17 +89,15 @@ def B1.Batch : ConvergentRDetEvent Nat (B0 ctx) (B1 ctx α) (List α) Unit Unit 
     lift_in := fun _ => ()
     safety := fun b1 xs => by simp [Machine.invariant]
     strengthening := fun b1 xs => by
-      simp [Machine.invariant, Refinement.refine, B0.Batch]
-      intros Hinv Hgrd
-      intro Hlen
+      simp [Machine.invariant, Refinement.refine, FRefinement.lift, B0.Batch]
+      intros _ Hgrd Hlen
       cases xs
       case nil => contradiction
       case cons x xs =>
         simp at Hlen
-        simp_arith [Hlen]
-        omega
+        linarith
     simulation := fun b1 xs => by
-      simp [Machine.invariant, Refinement.refine, B0.Batch]
+      simp [Machine.invariant, Refinement.refine, FRefinement.lift, B0.Batch]
       intros _ Hgrd₁ Hgrd₂
       exists xs.length
       simp [*]
@@ -129,7 +121,7 @@ def B1.GetSize : OrdinaryREvent (B0 ctx) (B1 ctx α) Unit Nat :=
     strengthening := fun b1 _ => by
       simp [Machine.invariant, Refinement.refine, B0.GetSize]
     simulation := fun b1 _ => by
-      simp [Machine.invariant, Refinement.refine, B0.GetSize]
+      simp [Machine.invariant, Refinement.refine, FRefinement.lift, B0.GetSize]
   }
 
 end Buffer

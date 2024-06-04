@@ -35,24 +35,17 @@ def FRDetEventSpec.toRDetEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FR
     strengthening := fun m x => by
       intros Hinv Hgrd am Href
       have Hst := ev.strengthening m x Hinv Hgrd
-      have Hlr := lift_ref (self:=instFR) m Hinv
-      have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Hlr
-      rw [Huniq]
-      assumption
+      simp [refine] at Href
+      simp [Href, Hst]
 
     simulation := fun m x => by
       simp
       intros Hinv Hgrd am Href
-      have Hlr := lift_ref (self:=instFR) m Hinv
-      have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Hlr
-      rw [Huniq]
       have Hsim := ev.simulation m x Hinv Hgrd
       simp at Hsim
       exists (lift (ev.action m x).2)
-      constructor
-      · assumption
-      have Hsafe := ev.safety m x Hinv Hgrd
-      exact lift_ref (ev.action m x).2 Hsafe
+      simp [refine] at Href
+      simp [Href, Hsim, refine]
   }
 
 @[simp]
@@ -161,9 +154,6 @@ def InitFRDetEventSpec.toInitRDetEventSpec  [Machine ACTX AM] [Machine CTX M] [i
       have Hsim := ev.simulation x Hgrd
       simp at Hsim
       exists (lift (ev.init x).2)
-      simp [Hsim]
-      have Hsafe := ev.safety x Hgrd
-      apply lift_ref (self:=instFR) (ev.init x).2 Hsafe
   }
 
 @[simp]

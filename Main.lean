@@ -17,6 +17,10 @@ import «Examples».EventB.Courses.M0
 import «Examples».EventB.Courses.M1
 import «Examples».EventB.Courses.M2
 
+import «Examples».Buffer.Buffer0
+import «Examples».Buffer.Buffer1
+import «Examples».Buffer.Buffer2
+
 
 def main : IO Unit :=
   IO.println s!"Hello, {hello}!"
