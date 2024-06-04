@@ -23,7 +23,10 @@ def _AbstractFREventSpec.to_AbstractREventSpec [Machine ACTX AM] [Machine CTX M]
   {
     lift := lift
     lift_ref := lift_ref
-    refine_uniq := refine_uniq
+    refine_uniq := fun am am' m => by
+      intros _ Href₁ Href₂
+      simp [refine] at *
+      simp [Href₁, Href₂]
     unlift := ev.unlift
   }
 

@@ -69,20 +69,9 @@ def B2.unlift [DecidableEq α] (b2 : B2 ctx α) (b1' : B1 ctx α) : B2 ctx α :=
 
 
 instance [DecidableEq α]: SRefinement (B1 ctx α) (B2 ctx α) where
-  refine := defaultRefine B2.lift
-  refine_safe b1 b2 := by
-    simp [Machine.invariant]
-    intros Hinv Href
-    rw [Href]
-    simp [Hinv]
 
   lift := B2.lift
-  lift_ref b2 := by simp [Machine.invariant]
-  refine_uniq b1 b1' b2 := by
-    simp [Machine.invariant, Refinement.refine]
-    intros _ Href Href'
-    rw [←Href'] at Href
-    assumption
+  lift_safe b2 := by simp [Machine.invariant]
 
   unlift := B2.unlift
   lift_unlift b2 b1' := by
@@ -148,10 +137,10 @@ def B2.Fetch [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ctx α
     lift_out := id
 
     strengthening := fun b2 _ => by
-      simp [Machine.invariant, B1.Fetch, Refinement.refine]
+      simp [Machine.invariant, B1.Fetch, Refinement.refine, FRefinement.lift]
 
     simulation := fun b2 _ => by
-      simp [Machine.invariant, B1.Fetch, Refinement.refine]
+      simp [Machine.invariant, B1.Fetch, Refinement.refine, FRefinement.lift]
       split <;> simp [*]
 
     variant := fun b2 => b2.data.length
@@ -523,10 +512,10 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
     lift_out := id
 
     strengthening := fun b2 _ => by
-      simp [Machine.invariant, B1.Fetch, Refinement.refine]
+      simp [Machine.invariant, B1.Fetch, Refinement.refine, FRefinement.lift]
 
     simulation := fun b2 _ => by
-      simp [Machine.invariant, B1.Fetch, Refinement.refine]
+      simp [Machine.invariant, B1.Fetch, Refinement.refine, FRefinement.lift]
       split
       case _ y ys Hrm =>
         simp

@@ -40,21 +40,17 @@ def FRNDEventSpec.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRef
     strengthening := fun m x => by
       intros Hinv Hgrd am Href
       have Hst := ev.strengthening m x Hinv Hgrd
-      have Href' := lift_ref (self:=instFR) m Hinv
-      have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
-      rw [Huniq]
-      exact Hst
+      simp [refine] at Href
+      rw [Href]
+      assumption
 
     simulation := fun m x => by
       intros Hinv Hgrd y m' Heff am Href
       exists (lift m')
       have Hsim := ev.simulation m x Hinv Hgrd y m' Heff
-      have Href' := lift_ref (self:=instFR) m Hinv
-      have Huniq := refine_uniq (self:=instFR) am (lift m) m Hinv Href Href'
-      rw [Huniq]
-      simp [Hsim]
-      have Hsafe := ev.safety m x Hinv Hgrd y m' Heff
-      apply lift_ref (self:=instFR) m' Hsafe
+      simp [refine] at Href
+      simp [Href]
+      exact ⟨Hsim, rfl⟩
   }
 
 @[simp]
@@ -171,10 +167,6 @@ def InitFRNDEventSpec.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [inst
       intros y m' Hinit
       have Hsim := ev.simulation m x y m' Hinit
       exists (lift m')
-      simp [Hsim]
-      -- automatic from here
-      refine lift_ref m' ?_
-      exact ev.safety m x y m' Hinit
   }
 
 @[simp]
