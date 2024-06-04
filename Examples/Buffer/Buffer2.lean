@@ -483,7 +483,7 @@ by
         have Hrm₃ : (removePrio Priority.Low xs).1 = none := by
           apply removePrio_not_some₁
           intro val Hcontra
-          have H₃' := H₂ val
+          have H₃' := H₃ val
           rw [←Hcontra] at H₃'
           exact H₃' (removePrio Priority.Low xs).2 rfl
         have Hrm₃' : ∀ x, (Priority.Low, x) ∉ xs := by
@@ -513,10 +513,10 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
       case _ y ys Hrm =>
         have Hlen : ys.length = b2.data.length - 1 := by
           exact removeByPrio_len_some b2.data Hrm
-        intros Hinv Hgrd
+        intros Hinv _
         simp
         omega
-      · intros Hinv Hgrd
+      · intros Hinv _
         simp ; assumption
 
     lift_in := id
@@ -532,13 +532,13 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
         simp
         have Hlen : ys.length = b2.data.length - 1 := by
           exact removeByPrio_len_some b2.data Hrm
-        intros Hinv Hgrd
+        intros _ _
         constructor
         · exact removeByPrio_mem_some b2.data y ys Hrm
         assumption
       case _ _ _ Hrm =>
         simp
-        intro Hinv Hgrd
+        intro _ Hgrd
         have Hnone: (removeByPrio b2.data).1 = none := by
             refine removeByPrio_not_some₁ b2.data ?_
             intro val
@@ -549,13 +549,13 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
               Hrm'
                 (match removePrio Priority.Hi b2.data with
                   | (some x, xs') => (some x, xs')
-                  | x =>
+                  | _ =>
                     match removePrio Priority.Mid b2.data with
                     | (some x, xs') => (some x, xs')
-                    | x =>
+                    | _ =>
                       match removePrio Priority.Low b2.data with
                       | (some x, xs') => (some x, xs')
-                      | x => (none, b2.data)).2
+                      | _ => (none, b2.data)).2
                 rfl
         have Hcontra: b2.data = [] := by
             exact removeByPrio_mem_nil b2.data Hnone
@@ -567,7 +567,7 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
       simp [Machine.invariant]
       split
       case _ v xs Hrm =>
-        intros Hinv Hgrd
+        intros _ Hgrd
         simp
         have Hlen : xs.length = b2.data.length - 1 := by
           exact removeByPrio_len_some b2.data Hrm
@@ -576,11 +576,11 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
         cases b2.data
         case nil => simp
         case cons y ys =>
-          intros Hlen Hcons
+          intros Hlen _
           rw [Hlen]
           exact Nat.lt.base ((y :: ys).length - 1)
       case _ v xs Hrm =>
-        intro Hinv Hgrd
+        intro _ Hgrd
         have Hnone: (removeByPrio b2.data).1 = none := by
             refine removeByPrio_not_some₁ b2.data ?_
             intro val
@@ -591,13 +591,13 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
               Hrm'
                 (match removePrio Priority.Hi b2.data with
                   | (some x, xs') => (some x, xs')
-                  | x =>
+                  | _ =>
                     match removePrio Priority.Mid b2.data with
                     | (some x, xs') => (some x, xs')
-                    | x =>
+                    | _ =>
                       match removePrio Priority.Low b2.data with
                       | (some x, xs') => (some x, xs')
-                      | x => (none, b2.data)).2
+                      | _ => (none, b2.data)).2
                 rfl
         have Hcontra: b2.data = [] := by
           exact removeByPrio_mem_nil b2.data Hnone
