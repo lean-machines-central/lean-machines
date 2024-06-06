@@ -235,7 +235,8 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
                     have H₁' := H₁ y m' Heff₃  ; clear H₁
                     cases H₁'
                     case intro Hgrd₂ Hgrd₁ =>
-                      apply Hgrd₁ z m'' <;> assumption
+                      apply Hgrd₁ z m''
+                      assumption
               case mp =>
                   simp
                   intros Hgrd₃ Hgrd₂ Hgrd₁
@@ -246,7 +247,8 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
                     intros y m' Heff₃
                     constructor
                     case left =>
-                      apply Hgrd₂ <;> assumption
+                      apply Hgrd₂
+                      assumption
                     case right =>
                       intros z m'' Heff₂
                       apply Hgrd₁ z m'' <;> assumption
