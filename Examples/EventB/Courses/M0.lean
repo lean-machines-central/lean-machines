@@ -1,9 +1,9 @@
 import Mathlib.Tactic
 
-import EventSystems.Event.Basic
-import EventSystems.Event.Ordinary
-import EventSystems.Event.Convergent
-import EventSystems.NonDet.Ordinary
+import LeanMachines.Event.Basic
+import LeanMachines.Event.Ordinary
+import LeanMachines.Event.Convergent
+import LeanMachines.NonDet.Ordinary
 
 import Examples.EventB.Courses.Prelude
 

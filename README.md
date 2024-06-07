@@ -1,4 +1,4 @@
-# Event systems in Lean4
+# Lean Machines
 
 This repository contains a prototype Lean4 framework for the formal
 modeling of stateful entities in the context of functional domain 
@@ -46,17 +46,17 @@ the available examples. This require either *vscode* or *emacs*
 
 ## Repository structure
 
-The framework is decomposed into several modules, within the `EventSystems` directory, structured as follows:
+The framework is decomposed into several modules, within the `LeanMachines` directory, structured as follows:
 
- - EventSystems/Algebra : common algebraic definitions (Mathlib4 extensions)
- - EventSystems/Event : the basic definitions : contexts, machines and deterministic events
+ - LeanMachines/Algebra : common algebraic definitions (Mathlib4 extensions)
+ - LeanMachines/Event : the basic definitions : contexts, machines and deterministic events
  - EventSystem/NonDet : non-deterministic events
 
 The refinement principles are developed in EventSystem/Refinement
 
- - EventSystems/Refinement/Relational : the Event-B relational principles
- - EventSystems/Refinement/Functional : functional abstraction
- - EventSystems/Refinement/Strong : strong refinement for algorithmic refinement
+ - LeanMachines/Refinement/Relational : the Event-B relational principles
+ - LeanMachines/Refinement/Functional : functional abstraction
+ - LeanMachines/Refinement/Strong : strong refinement for algorithmic refinement
 
 All the examples are developed in the Examples/ directory.
 

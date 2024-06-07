@@ -1,6 +1,6 @@
 
-import EventSystems.Event.Basic
-import EventSystems.Event.Ordinary
+import LeanMachines.Event.Basic
+import LeanMachines.Event.Ordinary
 
 namespace BridgeSpec
 

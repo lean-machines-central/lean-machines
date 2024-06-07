@@ -1,11 +1,11 @@
 import Mathlib.Tactic
 
-import EventSystems.Event.Basic
-import EventSystems.Event.Ordinary
-import EventSystems.Event.Convergent
+import LeanMachines.Event.Basic
+import LeanMachines.Event.Ordinary
+import LeanMachines.Event.Convergent
 
-import EventSystems.NonDet.Ordinary
-import EventSystems.NonDet.Convergent
+import LeanMachines.NonDet.Ordinary
+import LeanMachines.NonDet.Convergent
 
 namespace Buffer
 

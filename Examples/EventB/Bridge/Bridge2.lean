@@ -1,9 +1,9 @@
 
 import Mathlib.Tactic
 
-import EventSystems.Refinement.Relational.Basic
-import EventSystems.Refinement.Relational.Convergent
-import EventSystems.Refinement.Relational.Abstract
+import LeanMachines.Refinement.Relational.Basic
+import LeanMachines.Refinement.Relational.Convergent
+import LeanMachines.Refinement.Relational.Abstract
 
 import Examples.EventB.Bridge.Bridge1
 

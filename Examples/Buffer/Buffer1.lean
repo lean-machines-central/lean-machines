@@ -1,10 +1,10 @@
 import Mathlib.Tactic
 
-import EventSystems.Refinement.Functional.Basic
-import EventSystems.Refinement.Functional.Convergent
-import EventSystems.Refinement.Functional.NonDet.Convergent
-import EventSystems.Refinement.Relational.NonDet.Det.Convergent
-import EventSystems.Refinement.Functional.NonDet.Det.Convergent
+import LeanMachines.Refinement.Functional.Basic
+import LeanMachines.Refinement.Functional.Convergent
+import LeanMachines.Refinement.Functional.NonDet.Convergent
+import LeanMachines.Refinement.Relational.NonDet.Det.Convergent
+import LeanMachines.Refinement.Functional.NonDet.Det.Convergent
 
 import Examples.Buffer.Buffer0
 

@@ -1,10 +1,10 @@
-import «EventSystems».Event.Basic
-import «EventSystems».Event.Ordinary
-import «EventSystems».Event.Convergent
-import «EventSystems».NonDet.Basic
-import «EventSystems».NonDet.Convergent
-import «EventSystems».Refinement.Relational.Basic
-import «EventSystems».Refinement.Relational.Convergent
+import «LeanMachines».Event.Basic
+import «LeanMachines».Event.Ordinary
+import «LeanMachines».Event.Convergent
+import «LeanMachines».NonDet.Basic
+import «LeanMachines».NonDet.Convergent
+import «LeanMachines».Refinement.Relational.Basic
+import «LeanMachines».Refinement.Relational.Convergent
 
 import «Examples».Buffer.Buffer0
 import «Examples».Buffer.Buffer1

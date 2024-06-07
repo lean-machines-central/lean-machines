@@ -2,12 +2,12 @@
 
 import Mathlib.Tactic
 
-import EventSystems.Refinement.Strong.Basic
-import EventSystems.Refinement.Strong.Convergent
-import EventSystems.Refinement.Strong.Abstract
-import EventSystems.Refinement.Strong.Concrete
+import LeanMachines.Refinement.Strong.Basic
+import LeanMachines.Refinement.Strong.Convergent
+import LeanMachines.Refinement.Strong.Abstract
+import LeanMachines.Refinement.Strong.Concrete
 
-import EventSystems.Refinement.Strong.NonDet.Det.Convergent
+import LeanMachines.Refinement.Strong.NonDet.Det.Convergent
 
 import Examples.Buffer.Buffer1
 

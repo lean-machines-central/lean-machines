@@ -3,9 +3,9 @@ import Mathlib.Tactic
 import Examples.EventB.Bridge.Prelude
 import Examples.EventB.Bridge.Bridge0
 
-import EventSystems.Refinement.Relational.Basic
-import EventSystems.Refinement.Relational.Convergent
-import EventSystems.Refinement.Relational.Concrete
+import LeanMachines.Refinement.Relational.Basic
+import LeanMachines.Refinement.Relational.Convergent
+import LeanMachines.Refinement.Relational.Concrete
 
 
 namespace BridgeSpec

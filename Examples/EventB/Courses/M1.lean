@@ -1,8 +1,8 @@
 
-import EventSystems.Refinement.Strong.Basic
-import EventSystems.Refinement.Strong.NonDet.Abstract
-import EventSystems.Refinement.Strong.Convergent
-import EventSystems.Refinement.Strong.Concrete
+import LeanMachines.Refinement.Strong.Basic
+import LeanMachines.Refinement.Strong.NonDet.Abstract
+import LeanMachines.Refinement.Strong.Convergent
+import LeanMachines.Refinement.Strong.Concrete
 
 import Examples.EventB.Courses.M0
 

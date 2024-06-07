@@ -1,16 +1,16 @@
 import Lake
 open Lake DSL
 
-package «event-systems» where
+package «lean-machines» where
   -- add package configuration options here
 
-lean_lib «EventSystems» where
+lean_lib «LeanMachines» where
   -- add library configuration options here
 
 lean_lib «Examples» where
 
 @[default_target]
-lean_exe «event-systems» where
+lean_exe «lean-machines» where
   root := `Main
 
 require mathlib from git
