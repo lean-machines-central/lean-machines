@@ -478,12 +478,11 @@ axiom OrdinaryNDEvent_split_feasibility_ax {CTX} {M} [Machine CTX M] [Semigroup 
   → (∃ y, ∃ y', ∃ m', (Arrow.split ev₁ ev₂).effect m (x, x') ((y, y'), m'))
 
 class ParallelMachine (M) [Machine CTX M] extends Semigroup M where
-  merge_safe (m₁ m₂ : M):
+  par_safe (m₁ m₂ : M):
     Machine.invariant m₁
     → Machine.invariant m₂
     → Machine.invariant (m₁ * m₂)
 
-  merge_idem (m : M): m * m = m
 
 instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
 
@@ -510,7 +509,7 @@ instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
                                      have Hsafe₁ := ev₁.po.safety m x Hinv Hgrd₁ y m'₁ Heff₁
                                      have Hsafe₂ := ev₂.po.safety m x' Hinv Hgrd₂ y' m'₂ Heff₂
                                      rw [Hm']
-                                     apply ParallelMachine.merge_safe m'₁ m'₂ <;> assumption
+                                     apply ParallelMachine.par_safe m'₁ m'₂ <;> assumption
 
         -- this could be called "weak feasibility"
         feasibility := fun m (x, x') => by simp [Arrow.split, event]
@@ -528,7 +527,6 @@ instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
       }
     }
 
-  /-
   -- XXX : once again, an explicit `first` must be defined because `first-from-split` does
   --       not satisfy the `arrow_unit` law
   first {α β γ : Type} (ev : OrdinaryNDEvent M α β) : OrdinaryNDEvent M (α × γ) (β × γ) :=
@@ -539,21 +537,18 @@ instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
     po := {
       safety := fun m (x,y) => by simp [event, Arrow.first]
                                   intros Hinv Hgrd
-                                  intro (y',z) m'
-                                  simp
-                                  intro Heff _
-                                  apply ev.po.safety m x Hinv Hgrd y' m' Heff
+                                  intros u _ m' Heff _
+                                  apply ev.po.safety m x Hinv Hgrd u m' Heff
 
       feasibility := fun m (x,y) => by simp [event, Arrow.first]
                                        intros Hinv Hgrd
                                        have Hfeas := ev.po.feasibility m x Hinv Hgrd
                                        obtain ⟨y',m', Heff⟩ := Hfeas
-                                       exists (y',y)
-                                       simp
-                                       exists m'
-    }
+                                       exists y' ; exists m'
 
-    -/
+    }
+  }
+
 
 
 instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) where
@@ -564,35 +559,13 @@ instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) wh
          constructor
          · funext m (x₁, x₂) ((y₁, y₂), m')
            simp
-           constructor
-           · simp
-             intros H₁ H₂ H₃
-             simp [*]
-             exact ParallelMachine.merge_idem m
-           -- next
-           simp
-           intros H₁ H₂ H₃
-           exists m
-           simp [*]
-           exact Eq.symm (ParallelMachine.merge_idem m)
+           constructor <;> (intros ; simp [*])
          -- next
          apply cast_heq
-         simp
          congr
          funext m (x₁, x₂) ((y₁, y₂), m')
          simp
-         constructor
-         · intros H₁
-           exists m
-           simp [H₁]
-           exact Eq.symm (ParallelMachine.merge_idem m)
-         -- next
-         intro Hext
-         obtain ⟨m₁, ⟨H₁,H₂⟩⟩ := Hext
-         obtain ⟨m₂, ⟨⟨H₃,H₄⟩, H₅⟩⟩ := H₂
-         simp [*]
-         exact ParallelMachine.merge_idem m
-
+         constructor <;> (intros ; simp [*])
 
   arrow_fun f g := by simp [Arrow.arrow]
                       have Hfun := LawfulArrow.arrow_fun (arr := _NDEvent M) f g
@@ -610,17 +583,13 @@ instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) wh
                            obtain ⟨xx₁, gx₂, mm, Hex⟩ := Hex
                            obtain ⟨⟨H₁,⟨H₂,H₃⟩⟩, ⟨m'₁, ⟨Heff₁, ⟨m'₂, Hex₂⟩⟩⟩⟩ := Hex
                            exists y₁ ; exists x₂
-                           simp [*]
-                           exists m'₁
-                           simp [*]
-                           simp [*] at Heff₁
+                           simp [*] at *
                            assumption
                          -- next
                          intro Hex
                          obtain ⟨yy₁, xx₂, ⟨⟨m'₁, ⟨Heff₁, ⟨mm, Hmm⟩⟩⟩, H⟩⟩ := Hex
                          exists x₁ ; exists (g x₂) ; exists m
                          simp [*]
-                         exists m'₁
                        -- next
                        apply cast_heq
                        simp
@@ -632,17 +601,12 @@ instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) wh
                          obtain ⟨yy₁, ⟨xx₂, ⟨⟨m'₁, ⟨Heff₁,⟨mm, Hmm⟩⟩⟩, H₂⟩⟩⟩ := Hex
                          simp [*] at *
                          exists x₁ ; exists (g x₂) ; exists m
-                         simp [*]
-                         exists m'₁
                        -- next
                        intro Hex
                        obtain ⟨xx1, ⟨gx₂, ⟨mm, H₁, ⟨mm'₁, ⟨Heff₁, ⟨mmm, H₂⟩⟩⟩⟩⟩⟩ := Hex
                        exists y₁ ; exists x₂
-                       simp [*]
-                       exists mm'₁
                        simp [*] at *
                        assumption
-
 
   arrow_unit ev := by simp [Arrow.arrow, Arrow.first, Arrow.split]
                       constructor
@@ -650,14 +614,33 @@ instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) wh
                         funext m (x₁,x₂) (y,m')
                         simp
                         constructor
-                        · intro Hex
-                          obtain ⟨xx2, ⟨mm',⟨Heff, ⟨mm, ⟨⟨H₁,H₂⟩, H₃⟩⟩⟩⟩⟩ := Hex
+                        · intro Heff
                           exists x₁ ; exists m
+                        -- next
+                        simp
+                      case right =>
+                        apply cast_heq
+                        congr
+                        . funext m (x₁,x₂)
                           simp
-                          sorry -- maybe use arrow_unit from _NDEvent ?
+                        -- next
+                        funext m (x₁,x₂) (y,m')
+                        simp
+                        constructor
+                        · intro Hex
+                          obtain ⟨xx₁, mm, ⟨⟨H₁, H₂⟩, Heff⟩⟩ := Hex
+                          simp [*] at Heff
+                          assumption
+                        -- next
+                        intro Heff
+                        exists x₁ ; exists m
 
   arrow_assoc {α β γ δ} ev :=
       by simp [Arrow.arrow, Arrow.first]
          have Hasc := @LawfulArrow.arrow_assoc (arr:=_NDEvent M) _ _ α β γ δ ev.to_NDEvent
          simp [Arrow.arrow, Arrow.first] at Hasc
-         sorry -- same idea ?
+         simp [Hasc]
+         apply cast_heq
+         congr
+         simp
+         simp [Hasc]
