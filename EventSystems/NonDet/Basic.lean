@@ -1,4 +1,6 @@
 
+import Mathlib.Algebra.Algebra.Basic
+
 import EventSystems.Event.Prelude
 import EventSystems.Event.Basic
 import EventSystems.Event.Ordinary
@@ -66,20 +68,6 @@ instance [Machine CTX M] : Functor (_NDEvent M γ) where
 instance [Machine CTX M] : LawfulFunctor (_NDEvent M γ) where
   map_const := rfl
   id_map ev := by simp [Functor.map]
-                  cases ev
-                  case mk evr Peff =>
-                    simp
-                    funext m x (y,m')
-                    apply propext
-                    constructor
-                    · intro Hz
-                      cases Hz
-                      case _ z H =>
-                        simp at H
-                        simp [H]
-                    intro Heff
-                    simp
-                    exists y
 
   comp_map g h ev := by simp [Functor.map]
                         funext m x (y,m')
@@ -217,15 +205,7 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
   id_left ev := by cases ev
                    case mk evr eff =>
                      simp
-                     funext m x (z, m'')
-                     simp
-                     constructor
-                     · intro Heff
-                       cases Heff
-                       case _ y Heff =>
-                         simp [Heff]
-                     intro Heff
-                     exists z
+
 
   id_assoc ev₁ ev₂ ev₃ := by
     cases ev₁
@@ -255,7 +235,8 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
                     have H₁' := H₁ y m' Heff₃  ; clear H₁
                     cases H₁'
                     case intro Hgrd₂ Hgrd₁ =>
-                      apply Hgrd₁ z m'' <;> assumption
+                      apply Hgrd₁ z m''
+                      assumption
               case mp =>
                   simp
                   intros Hgrd₃ Hgrd₂ Hgrd₁
@@ -266,7 +247,8 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
                     intros y m' Heff₃
                     constructor
                     case left =>
-                      apply Hgrd₂ <;> assumption
+                      apply Hgrd₂
+                      assumption
                     case right =>
                       intros z m'' Heff₂
                       apply Hgrd₁ z m'' <;> assumption
@@ -355,7 +337,7 @@ instance [Machine CTX M]: Arrow (_NDEvent M) where
 -/
 
 -- a more direct definition
-instance [Machine CTX M]: Arrow (_NDEvent M) where
+instance [Machine CTX M] [Semigroup M]: Arrow (_NDEvent M) where
   arrow {α β} (f : α → β) : _NDEvent M α β := {
     guard := fun _ _ => True
     effect := fun m x (y, m') => y = f x ∧ m' = m
@@ -364,11 +346,11 @@ instance [Machine CTX M]: Arrow (_NDEvent M) where
   split {α α' β β'} (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α' β') : _NDEvent M (α × α') (β × β') := {
     guard := fun m (x,y) => ev₁.guard m x ∧ ev₂.guard m y
     effect := fun m (x, y) ((x', y'), m') =>
-                ev₁.effect m x (x', m') ∧ ev₂.effect m y (y', m')
+                ∃ m'₁ m'₂, ev₁.effect m x (x', m'₁) ∧ ev₂.effect m y (y', m'₂) ∧ m' = m'₁ * m'₂
   }
   first := first_NDEvent
 
-instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
+instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext f := by simp [Arrow.arrow, Arrow.first]
                     funext m (x, z) ((y, z'), m')
@@ -392,16 +374,13 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                        simp
                        constructor
                        · intro Hex
-                         obtain ⟨⟨x'', z⟩, Hex⟩ := Hex
-                         obtain ⟨m'', ⟨⟨H₁, H₂⟩, ⟨H₃,H₄⟩⟩⟩ := Hex
-                         exists (y₂, y₁)
+                         obtain ⟨x'', z, m'₁, ⟨⟨⟨H₁, H₂⟩, H₃⟩, ⟨H₄, H₅⟩⟩⟩ := Hex
+                         exists y₂ ; exists y₁
                          simp [*] at *
-                         simp [H₁] at H₃
-                         simp [H₁, H₃]
+                         assumption
                        · intro Hex
-                         obtain ⟨⟨y₃, y₄⟩, ⟨⟨H₁,H₂,H₂'⟩,H₃,H₄⟩⟩ := Hex
-                         exists (x, g y₄)
-                         exists m
+                         obtain ⟨y₃, y₄, ⟨⟨H₁,H₂,H₂'⟩,H₃,H₄⟩⟩ := Hex
+                         exists x ; exists (g y₁) ; exists m
                          simp [*] at *
 
   arrow_unit ev := by simp [Arrow.arrow, Arrow.first]
@@ -409,16 +388,12 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                       simp
                       constructor
                       · intro Hex
-                        obtain ⟨⟨y₃, y₄⟩, ⟨⟨H₁,_⟩,H₃⟩⟩ := Hex
                         exists x
                         exists m
-                        simp [*] at *
                       · intro Hex
                         obtain ⟨x', Hex⟩  := Hex
-                        obtain ⟨m'', ⟨H₁ , H₂⟩⟩ := Hex
-                        exists (y₂, y₁)
-                        simp
-                        simp [H₁] at H₂
+                        obtain ⟨m'', ⟨⟨H₁ , H₂⟩, H₃⟩⟩ := Hex
+                        rw [H₁, H₂] at H₃
                         assumption
 
   arrow_assoc ev := by simp [Arrow.arrow, Arrow.first]
@@ -426,21 +401,16 @@ instance [Machine CTX M]: LawfulArrow (_NDEvent M) where
                        simp
                        constructor
                        · intro Hex
-                         obtain ⟨⟨⟨y',z''⟩, t''⟩, H⟩ := Hex
+                         obtain ⟨y',z'', t'', H⟩ := Hex
                          obtain ⟨⟨⟨H₁, H₂⟩, H₃⟩, ⟨H₄, H₅, H₆⟩⟩ := H
                          simp [*] at *
-                         simp [H₅,H₂,H₄]
-                         exists (x, z, t)
+                         exists x ; exists z ; exists t
                          exists m
-                         simp [H₁, H₃, H₆]
                        ·  intro Hex
-                          obtain ⟨⟨x',z'',t''⟩, Hex⟩ := Hex
-                          obtain ⟨m'', ⟨⟨H₁, H₂⟩, ⟨H₃,H₄⟩⟩⟩ := Hex
+                          obtain ⟨x',z'',t'', Hex⟩ := Hex
+                          obtain ⟨m'', ⟨⟨H₁, H₂⟩, ⟨H₃,H₄,H₅⟩⟩⟩ := Hex
                           simp [*] at *
-                          simp [H₁] at H₃
-                          exists ((y, z), t)
-                          simp [H₃]
-                          simp [H₁, H₄]
+                          exists y ; exists z ; exists t
 
 /-  Other misc. combinators -/
 
