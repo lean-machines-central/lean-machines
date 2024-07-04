@@ -26,7 +26,6 @@ abbrev Schedule := List (Period × List ExpertId)
 structure Plant where
   experts : List Expert
   schedule : Schedule
-  alarms : List Alarm
 deriving DecidableEq
 
 def expertOnDuty_aux (exp : Expert) (sched : Schedule) : List Period :=
@@ -50,3 +49,6 @@ def fetchExperts (per : Period) (plant : Plant) : List ExpertId :=
 
 def numberOfExperts (per : Period) (plant : Plant) : Nat :=
   (fetchExperts per plant).length
+
+-- Note :  should be abstract at first
+def expertToPage (alarm : Alarm) (plan : Plant) : Option Expert := sorry
