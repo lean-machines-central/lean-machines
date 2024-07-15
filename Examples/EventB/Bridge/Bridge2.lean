@@ -267,7 +267,6 @@ def LeaveIsland₁ : ConvergentREvent Nat (Bridge1 ctx) (Bridge2 ctx) Unit Unit 
                                 simp [Bridge1.LeaveIsland]
                                 simp [Machine.invariant, invariant₂] at Hinv
                                 simp [*] at *
-                                simp [@tsub_lt_self_iff, Hinv]
 
     strengthening := fun b2 => by simp
                                   intro Hinv Hgrd₁ _

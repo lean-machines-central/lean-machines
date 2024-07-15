@@ -77,8 +77,6 @@ def B1.Fetch : ConvergentRNDEvent Nat (B0 ctx) (B1 ctx α) Unit α Unit Unit :=
     convergence := fun b1 _ => by
       simp [Machine.invariant]
       intros _ Hgrd _ b1' _ Heff₂
-      have Hlen: b1.data.length > 0 := by
-        exact List.length_pos.mpr Hgrd
       omega
    }
 
@@ -100,7 +98,6 @@ def B1.Batch : ConvergentRDetEvent Nat (B0 ctx) (B1 ctx α) (List α) Unit Unit 
       simp [Machine.invariant, Refinement.refine, FRefinement.lift, B0.Batch]
       intros _ Hgrd₁ Hgrd₂
       exists xs.length
-      simp [*]
     variant := fun b1 => ctx.maxSize - b1.data.length
     convergence := fun b1 xs => by
       simp [Machine.invariant]

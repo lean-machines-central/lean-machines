@@ -125,9 +125,7 @@ def EnterIsland : ConvergentRDetEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit 
                                simp [Hinv₂]
     variant := fun b1 => b1.nbToIsland
     convergence := fun b1 => by simp [Machine.invariant]
-                                intros _ _ Hgrd
-                                apply Nat.pred_lt
-                                exact Nat.pos_iff_ne_zero.mp Hgrd
+
     simulation := fun b1 => by simp [Machine.invariant, Refinement.refine]
                                intros _ _ Hgrd b0 Href
                                rw [Nat_sub_add_comm_cancel]
@@ -153,8 +151,7 @@ def LeaveIsland : ConvergentRDetEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit 
     variant := fun b1 => b1.nbOnIsland
     convergence := fun b1 => by simp [Machine.invariant]
                                 intros _ _ Hgrd₁ _
-                                apply Nat.pred_lt
-                                exact Nat.pos_iff_ne_zero.mp Hgrd₁
+                                exact Hgrd₁
     simulation := fun b1 => by simp [Machine.invariant, Refinement.refine]
                                intros _ _ Hgrd₁ Hgrd₂ b0 Href
                                simp [Hgrd₂]
@@ -211,7 +208,6 @@ by
       left
       exact Nat.pos_of_ne_zero H₁
 
-  done
 
 end Bridge1
 

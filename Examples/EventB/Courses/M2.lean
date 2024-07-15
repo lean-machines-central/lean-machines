@@ -513,9 +513,9 @@ by
   simp [invariant₃]
   intros Hinv₃ Hgrd₁ c'
   split
-  case inl Heq =>
+  case _ Heq =>
     simp [Heq, Hgrd₁]
-  case inr Hneq =>
+  case _ Hneq =>
     intro H₁
     apply Hinv₃ ; assumption
 
@@ -526,7 +526,7 @@ by
   simp [invariant₄]
   intros Hinv₄ Hgrd₃ c'
   split
-  case inl Heq =>
+  case _ Heq =>
     rw [Heq]
     intro q Hq
     simp at Hq
@@ -536,7 +536,7 @@ by
       apply Hinv₄' ; assumption
     case inr Hq =>
       simp [Hq, Hgrd₃]
-  case inr Heq =>
+  case _ Heq =>
     apply Hinv₄
 
 theorem PO_safety₅ (m2 : M2 ctx) (p : Member) (c : Course) :
@@ -546,11 +546,11 @@ by
   simp [invariant₅]
   intros Hinv₅ Hgrd₄ c'
   split
-  case inl Heq =>
+  case _ Heq =>
     simp [Heq]
     exact Decidable.not_imp_iff_and_not.mp fun a => Hgrd₄ (a (Hinv₅ c))
 
-  case inr Hneq =>
+  case _ Hneq =>
     apply Hinv₅
 
 def course_pairs (c : Course) (ps : Finset Member) : Finset (Course × Member):=
@@ -771,10 +771,10 @@ by
       rw [Hind Hc]
       rw [all_pairs_insert]
       split
-      case inl Heq =>
+      case _ Heq =>
         rw [Heq] at Hneq
         contradiction
-      case inr Hneq' =>
+      case _ Hneq' =>
         rfl
 
 theorem all_pairs_mem₁ (cs : Finset Course) (attns : Course → Finset Member):

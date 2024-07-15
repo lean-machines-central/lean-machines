@@ -5,14 +5,14 @@
 -- cf. https://blog.ocharles.org.uk/blog/guest-posts/2013-12-21-24-days-of-hackage-contravariant.html
 
 class ContravariantFunctor (cf : Type u → Type v) where
-  contramap {α β : Type u}:  (β → α) → cf α → cf β
-  contraConst {α β : Type u}:  α → cf α → cf β := fun b => contramap (fun _ => b)
+  contramap {α β}:  (β → α) → cf α → cf β
+  contraConst {α β}:  α → cf α → cf β := fun b => contramap (fun _ => b)
 
 open ContravariantFunctor
 
 class LawfullContravariantFunctor (cf : Type u → Type v) [ContravariantFunctor cf] : Prop where
   cmap_id (y : cf α) : contramap id y = y
-  cmap_comp {α β γ : Type u} (f : β → γ) (g : γ → α) : contramap (g ∘ f) = (contramap f) ∘ (contramap (cf:=cf) g)
+  cmap_comp {α β γ} (f : β → γ) (g : γ → α) : contramap (g ∘ f) = (contramap f) ∘ (contramap (cf:=cf) g)
 
 section ContraFun
 
@@ -25,8 +25,8 @@ instance : ContravariantFunctor (CoFun γ) where
   contramap {α β : Type u} (f : β → α)  (g : CoFun γ α) := g ∘ f
 
 instance : LawfullContravariantFunctor (CoFun γ) where
-  cmap_id {α : Type u} (g : CoFun γ α) := by rfl
-  cmap_comp {α β γ : Type u} (f : β → γ) (g : γ → α) := by rfl
+  cmap_id {α} (g : CoFun γ α) := by rfl
+  cmap_comp {α β γ} (f : β → γ) (g : γ → α) := by rfl
 
 end ContraFun
 

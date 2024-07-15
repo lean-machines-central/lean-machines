@@ -95,7 +95,7 @@ def AddExpert : ConvergentEvent Nat (ASys0 ctx) Expert Unit := newConvergentEven
     refine Finset.card_lt_card ?h -- apply?
     refine Finset.ssubset_iff_subset_ne.mpr ?h.a -- apply?
     constructor
-    · exact Finset.subset_union_left asys.experts {exp} -- apply?
+    · exact Finset.subset_union_left
     · intro Hcontra
       rw [Hcontra] at Hgrd₁
       have Hin: exp ∈ asys.experts ∪ {exp} := by
