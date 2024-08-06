@@ -621,7 +621,7 @@ instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) wh
                       case right =>
                         apply cast_heq
                         congr
-                        . funext m (x₁,x₂)
+                        · funext m (x₁,x₂)
                           simp
                         -- next
                         funext m (x₁,x₂) (y,m')

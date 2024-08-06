@@ -21,6 +21,7 @@ import «Examples».Buffer.Buffer0
 import «Examples».Buffer.Buffer1
 import «Examples».Buffer.Buffer2
 
+import «Examples».VDM.AlarmSystem.AlarmSystem1
 
 def main : IO Unit :=
   IO.println s!"Hello, {hello}!"

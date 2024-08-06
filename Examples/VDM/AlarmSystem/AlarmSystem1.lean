@@ -75,7 +75,7 @@ def AddExpert : ConvergentREvent Nat (ASys0 ctx.toContext) (ASys1 ctx) Expert Un
       intro per
       apply subset_trans (b:=asys.experts)
       · exact Hinv₃ per
-      · exact Finset.subset_union_left asys.experts {exp}
+      · exact Finset.subset_union_left
     -- next
     simp [ASys1.invariant₄] at *
     exact fun per a => Hinv₄ per a
@@ -105,7 +105,8 @@ def action (asys : ASys1 ctx) (per : Period) (exp : Expert) : ASys1 ctx := {
 
 end AssignExpert
 
-def AssignExpert : ConvergentRDetEvent Nat (ASys0 ctx.toContext) (ASys1 ctx) (Period × Expert) Unit := newConcreteSREvent' {
+def AssignExpert : OrdinaryRDetEvent (ASys0 ctx.toContext) (ASys1 ctx) (Period × Expert) Unit :=
+newConcreteSREvent' {
   guard := fun asys (per, exp) => AssignExpert.guard₁ asys per
                                   ∧ AssignExpert.guard₂ asys exp
                                   ∧ AssignExpert.guard₃ asys per exp
@@ -113,7 +114,7 @@ def AssignExpert : ConvergentRDetEvent Nat (ASys0 ctx.toContext) (ASys1 ctx) (Pe
 
   safety := fun asys (per, exp) => by
     simp [Machine.invariant]
-    intros Hinv₁ Hinv₂ Hinv₃ Hinv₄ Hgrd₁ Hgrd₂ Hgrd₃
+    intros Hinv₁ Hinv₂ Hinv₃ Hinv₄ Hgrd₁ Hgrd₂ _
     constructor
     · exact Hinv₁
     constructor
@@ -133,7 +134,7 @@ def AssignExpert : ConvergentRDetEvent Nat (ASys0 ctx.toContext) (ASys1 ctx) (Pe
       intro per'
       split
       case _ Heq =>
-        intro Hne
+        intro _
         exact le_of_eq_of_le (congrArg Period.pid Heq) Hgrd₁
       case _ Hneq =>
         intro Hne
@@ -142,7 +143,9 @@ def AssignExpert : ConvergentRDetEvent Nat (ASys0 ctx.toContext) (ASys1 ctx) (Pe
   simulation := fun asys (per, exp) => by
     simp [Machine.invariant, FRefinement.lift]
 
-  -- TODO/Question : how can this be convergent ?
+  -- Remark : it would be rather limiting to enforce this
+  --          concrete event to be convergent
+  --          (cf. Event-B book about introducing concrete events)
 
 }
 

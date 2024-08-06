@@ -109,7 +109,7 @@ def LeaveToMainland : OrdinaryREvent (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
 
 
 def EnterIsland : ConvergentRDetEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
-  newConcreteREvent'' {
+  newConcreteConvergentREvent'' {
     guard := fun b1 => b1.nbToIsland > 0
     action := fun b1 => ⟨b1.nbToIsland - 1, b1.nbOnIsland + 1, b1.nbFromIsland⟩
     safety := fun b1 => by simp [Machine.invariant]
@@ -135,7 +135,7 @@ def EnterIsland : ConvergentRDetEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit 
 
 
 def LeaveIsland : ConvergentRDetEvent Nat (Bridge0 ctx) (Bridge1 ctx) Unit Unit :=
-  newConcreteREvent'' {
+  newConcreteConvergentREvent'' {
     guard := fun b1 => b1.nbOnIsland > 0 ∧ b1.nbToIsland = 0
     action := fun b1 => ⟨b1.nbToIsland, b1.nbOnIsland - 1, b1.nbFromIsland + 1⟩
     safety := fun b1 => by simp [Machine.invariant]

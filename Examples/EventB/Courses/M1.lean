@@ -360,7 +360,7 @@ by
 end Register
 
 def Register : ConvergentRDetEvent Nat (M0 ctx.toContext) (M1 ctx) (Member × Course) Unit :=
-  newConcreteSREvent' {
+  newConcreteConvergentSREvent' {
     guard := fun m (p,c) => Register.guard m p c
     action := fun m (p,c) => Register.action m p c
     safety := fun m (p,c) => by simp [Machine.invariant]
@@ -380,7 +380,7 @@ def Register : ConvergentRDetEvent Nat (M0 ctx.toContext) (M1 ctx) (Member × Co
 
     variant := Register.variant
     convergence := fun m (p,c) => Register.PO_convergence m p c
-    simulation := fun m (p,c) => Register.PO_simulation m p c
+    simulation := fun m (p,c) => by exact fun _ _ am sim => sim
   }
 
 end M1

@@ -89,7 +89,7 @@ structure ConcreteAnticipatedFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM)
       variant m' ≤ variant m
 
 @[simp]
-def ConcreteAnticipatedFREventSpec.toConcreteAnticipatedREventSpec  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def ConcreteAnticipatedFREventSpec.toConcreteAnticipatedREventSpec  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : ConcreteAnticipatedFREventSpec v AM M α β) : ConcreteAnticipatedREventSpec v AM M α β :=
   {
     toEventSpec := ev.toEventSpec
@@ -166,7 +166,7 @@ structure ConcreteConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) 
       variant m' < variant m
 
 @[simp]
-def ConcreteConvergentFREventSpec.toConcreteConvergentREventSpec  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def ConcreteConvergentFREventSpec.toConcreteConvergentREventSpec  [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
   (ev : ConcreteConvergentFREventSpec v AM M α β) : ConcreteConvergentREventSpec v AM M α β :=
   {
     toEventSpec := ev.toEventSpec
