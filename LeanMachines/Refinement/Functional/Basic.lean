@@ -24,6 +24,8 @@ instance [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]: Refinement AM M w
     rw [Ham]
     exact lift_safe m Hinv
 
+--def FRefinement.toRefinement (instFR : FRefinement AM M) : Refinement AM M :=
+ -- by sorry
 
 theorem lift_ref [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M] (m : M) :
   Machine.invariant m

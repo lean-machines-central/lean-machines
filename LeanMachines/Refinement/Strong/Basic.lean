@@ -32,7 +32,7 @@ by
   have Hinv₃ : Machine.invariant (unlift m am) := by
     exact Hsafe Hinv₁ Hinv₂
 
-  have Href: refine (lift (unlift m am)) (unlift m am) := by
+  have Href: refine (self:=inferInstanceAs (Refinement AM M)) (lift (unlift m am)) (unlift m am) := by
     apply lift_ref (instFR:=instSR.toFRefinement)
     assumption
 

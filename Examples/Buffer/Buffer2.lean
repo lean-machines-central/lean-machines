@@ -169,7 +169,7 @@ by
     simp [removePrio]
     split
     · simp
-    case inr Hneq =>
+    case _ Hneq =>
       intros xs' Hrm
       cases xs'
       case nil =>
@@ -261,11 +261,11 @@ by
     intro xs'
     simp [removePrio]
     split
-    case inl Heq =>
+    case _ Heq =>
       intro Hsome
       cases Hsome
       simp [Heq]
-    case inr Hneq =>
+    case _ Hneq =>
       simp
       intros Hrm₁ Hrm₂
       right
@@ -290,7 +290,7 @@ by
     simp [removePrio]
     split
     · simp
-    case inr Hneq =>
+    case _ Hneq =>
       intros xs' Hrm val
       constructor
       · intro Hfalse
@@ -548,6 +548,9 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
                 rfl
         have Hcontra: b2.data = [] := by
             exact removeByPrio_mem_nil b2.data Hnone
+        have Hcontra': b2.data.length = 0 := by
+          exact List.length_eq_zero.mpr Hcontra
+        rw [Hcontra'] at Hgrd
         contradiction
 
     variant := fun b2 => b2.data.length
@@ -590,6 +593,9 @@ def B2.FetchPrio [DecidableEq α] [Inhabited α]: ConvergentRDetEvent Nat (B1 ct
                 rfl
         have Hcontra: b2.data = [] := by
           exact removeByPrio_mem_nil b2.data Hnone
+        have Hcontra': b2.data.length = 0 := by
+          exact List.length_eq_zero.mpr Hcontra
+        rw [Hcontra'] at Hgrd
         contradiction
 
   }
