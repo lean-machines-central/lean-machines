@@ -17,7 +17,7 @@ inductive Qualification :=
 abbrev ExpertId := Nat
 
 structure Expert where
-  eid : ExpertId
+  id : ExpertId
   quali : Qualification
   deriving Repr, DecidableEq
 
@@ -34,7 +34,7 @@ def ASys0.invariant₁ (asys : ASys0 ctx) : Prop :=
 
 def ASys0.invariant₂ (asys : ASys0 ctx) : Prop :=
   ∀ exp₁ ∈ asys.experts, ∀ exp₂ ∈ asys.experts,
-    exp₁ ≠ exp₂ → exp₁.eid ≠ exp₂.eid
+    exp₁ ≠ exp₂ → exp₁.id ≠ exp₂.id
 
 @[simp]
 def ASys0.reset : ASys0 ctx := { experts := ∅ }
@@ -54,7 +54,7 @@ def Init : InitEvent (ASys0 ctx) Unit Unit := newInitEvent'' {
 }
 
 def AddExpert : ConvergentEvent Nat (ASys0 ctx) Expert Unit := newConvergentEvent' {
-  guard := fun asys exp => exp ∉ asys.experts ∧ asys.experts.card < ctx.maxExperts ∧ ∀ exp' ∈ asys.experts, exp'.eid ≠ exp.eid
+  guard := fun asys exp => exp ∉ asys.experts ∧ asys.experts.card < ctx.maxExperts ∧ ∀ exp' ∈ asys.experts, exp'.id ≠ exp.id
   action := fun asys exp => { experts := asys.experts ∪ {exp} }
 
   safety := fun asys exp => by

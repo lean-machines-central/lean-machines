@@ -8,7 +8,7 @@ import LeanMachines.Refinement.Strong.Concrete
 namespace AlarmSystem
 
 structure Period where
-  pid : Nat
+  id : Nat
   deriving Repr, DecidableEq, Ord
 
 instance: LE Period := Ord.toLE inferInstance
@@ -21,19 +21,18 @@ structure ASys1 (ctx : ASys1.Context) extends ASys0 ctx.toContext where
   schedule : Period → Finset Expert
 
 @[simp]
-def ASys1.invariant₁ (asys : ASys1 ctx) := ASys0.invariant₁ asys.toASys0
+def ASys1.invariant₁ (asys : ASys1 ctx) :=
+  Machine.invariant asys.toASys0
 
-def ASys1.invariant₂ (asys : ASys1 ctx) := ASys0.invariant₂ asys.toASys0
-
-def ASys1.invariant₃ (asys : ASys1 ctx) :=
+def ASys1.invariant₂ (asys : ASys1 ctx) :=
   ∀ per, asys.schedule per ⊆ asys.experts
 
-def ASys1.invariant₄ (asys : ASys1 ctx) :=
-  ∀ per, asys.schedule per ≠ ∅ → per.pid ≤ ctx.maxPeriods
+def ASys1.invariant₃ (asys : ASys1 ctx) :=
+  ∀ per, asys.schedule per ≠ ∅ → per.id ≤ ctx.maxPeriods
 
 instance: Machine ASys1.Context (ASys1 ctx) where
   context := ctx
-  invariant asys := ASys1.invariant₁ asys ∧ ASys1.invariant₂ asys ∧ ASys1.invariant₃ asys ∧ ASys1.invariant₄ asys
+  invariant asys := ASys1.invariant₁ asys ∧ ASys1.invariant₂ asys ∧ ASys1.invariant₃ asys
   reset := { toASys0 := ASys0.reset
              schedule := fun _ => ∅}
 
@@ -56,36 +55,44 @@ def Init : InitEvent (ASys1 ctx) Unit Unit := newInitEvent'' {
   safety := by
     intro H ; clear H
     simp [Machine.reset, Machine.invariant, ASys1.invariant₁, ASys1.invariant₂
-    , ASys1.invariant₃, ASys1.invariant₄, ASys0.invariant₁, ASys0.invariant₂]
+    , ASys1.invariant₃, ASys0.invariant₁, ASys0.invariant₂]
 }
+
+theorem superposition (asys : ASys1 ctx):
+  Machine.invariant asys.toASys0
+  → invariant₂ asys
+  → invariant₃ asys
+  → Machine.invariant asys :=
+by
+  simp [Machine.invariant] ; intros ; simp [*]
 
 def AddExpert : ConvergentREvent Nat (ASys0 ctx.toContext) (ASys1 ctx) Expert Unit := newAbstractConvergentSREvent' ASys0.AddExpert {
   step_inv := fun asys exp => by
-    have Hsafe := ASys0.AddExpert.po.safety asys.toASys0 exp
-    simp [Machine.invariant, ASys0.AddExpert, FRefinement.lift, SRefinement.unlift] at *
-    intros Hinv₁ Hinv₂ Hinv₃ Hinv₄ Hgrd₁ Hgrd₂ Hgrd₃
-    have Hsafe' := Hsafe Hinv₁ Hinv₂ Hgrd₁ Hgrd₂ Hgrd₃ ; clear Hsafe
-    obtain ⟨Hsafe₁, Hsafe₂⟩ := Hsafe'
-    constructor
-    · exact Hsafe₁
-    constructor
-    · exact Hsafe₂
-    constructor
-    · simp [ASys1.invariant₃] at *
-      intro per
+    simp [FRefinement.lift, SRefinement.unlift]
+    intros Hinv Hgrd
+    have Hainv : Machine.invariant asys.toASys0 := by
+      exact Refinement.refine_safe asys.toASys0 asys Hinv rfl
+    have Hsafe := ASys0.AddExpert.po.safety asys.toASys0 exp Hainv Hgrd
+    obtain ⟨_, Hinv₂, Hinv₃⟩ := Hinv
+    simp [ASys0.AddExpert] at *
+    apply superposition
+    · exact Hsafe
+    · intro per
       apply subset_trans (b:=asys.experts)
-      · exact Hinv₃ per
-      · exact Finset.subset_union_left
+      · simp
+        exact Hinv₂ per
+      · simp
+        exact Finset.subset_union_left
     -- next
-    simp [ASys1.invariant₄] at *
-    exact fun per a => Hinv₄ per a
-    }
+    simp [ASys1.invariant₃] at *
+    exact fun per a => Hinv₃ per a
+  }
 
 namespace AssignExpert
 
 @[simp]
 def guard₁ (_ : ASys1 ctx) (per : Period) : Prop :=
-  per.pid ≤ ctx.maxPeriods
+  per.id ≤ ctx.maxPeriods
 
 @[simp]
 def guard₂ (asys : ASys1 ctx) (exp : Expert) : Prop :=
@@ -116,29 +123,29 @@ newConcreteSREvent' {
     simp [Machine.invariant]
     intros Hinv₁ Hinv₂ Hinv₃ Hinv₄ Hgrd₁ Hgrd₂ _
     constructor
-    · exact Hinv₁
+    · exact ⟨Hinv₁, Hinv₂⟩
     constructor
-    · exact Hinv₂
-    constructor
-    · simp [ASys1.invariant₃] at *
+    · simp [ASys1.invariant₂] at *
       intro per'
       split
       case _ Heq =>
+        have Hinv₃ := Hinv₃ per
         refine Finset.union_subset_iff.mpr ?_
         constructor
-        · exact Hinv₃ per
+        · assumption
         · exact Finset.singleton_subset_iff.mpr Hgrd₂
-      case _ Heq =>
+      case _ Nheq =>
         exact Hinv₃ per'
-    · simp [ASys1.invariant₄] at *
-      intro per'
-      split
-      case _ Heq =>
-        intro _
-        exact le_of_eq_of_le (congrArg Period.pid Heq) Hgrd₁
-      case _ Hneq =>
-        intro Hne
-        exact Hinv₄ per' Hne
+    -- next
+    simp [ASys1.invariant₃] at *
+    intro per'
+    split
+    case _ Heq =>
+      intro _
+      exact le_of_eq_of_le (congrArg Period.id Heq) Hgrd₁
+    case _ Hneq =>
+      intro Hper'
+      exact Hinv₄ per' Hper'
 
   simulation := fun asys (per, exp) => by
     simp [Machine.invariant, FRefinement.lift]
