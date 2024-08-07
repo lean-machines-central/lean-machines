@@ -3,26 +3,61 @@ import LeanMachines.Event.Basic
 import LeanMachines.Event.Ordinary
 import LeanMachines.Event.Convergent
 
+/-!
+
+# Relational refinement
+
+This module contains the basic definitions of the relational
+refinement principles for LeanMachines.
+
+This is heavily inspired by the Event-B refinement principles
+with some slight differences:
+
+  - concrete events are not obligatory convergent (but may be, of course)
+  - event merging is only indirectly supported
+  - events can be composed in various ways, and machines do not directly
+    integrate events.
+  - alternative (and compatible) refinement principles may be (and are) proposed
+
+-/
+
+/-!
+
+## Machine refinement
+
+-/
+
+/-- The typeclass definition for the functional refinement
+of an abstract machine type `AM` (in context `ACTX`) by
+ a (more) concrete machine type `M` (in context `CTX`).
+-/
+
 class Refinement {ACTX : outParam (Type u₁)} (AM)
                  [Machine ACTX AM]
                  {CTX : outParam (Type u₂)} (M)
                  [Machine CTX M] where
 
+  /-- The relation between the abstract machine type `AM` and
+   the concrete machine type `M`, defined as a type-theoretic proposition. -/
   refine : AM → M → Prop
 
+  /-- The safety requirement of refinement. -/
   refine_safe (am : AM) (m : M):
     Machine.invariant m
     → refine am m
     → Machine.invariant am
 
-  /-
-  Note : this one was needed at some point
-  refine_reset (am : AM):
-    refine am Machine.reset
-    → am = Machine.reset
-  -/
 open Refinement
 
+/-!
+
+## Event refinement
+
+### Ordinary transitional events
+
+-/
+
+/-- Internal representation of proof obligations for ordinary events. -/
 structure _REventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
    (ev : _Event M α β) (kind : EventKind) (α' β')
    extends _EventPO ev kind where
@@ -50,6 +85,10 @@ structure _REventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
         let (z, am') := abstract.action am (lift_in x)
         lift_out y = z ∧ refine am' m'
 
+/-- The (internal) type of ordinary refined events
+with: `AM` the abstact machine type, `M` the concrete maching type,
+ `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
+ `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`) -/
 structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (α β) (α':=α) (β':=β) extends _Event M α β where
   po : _REventPO (instR:=instR) to_Event (EventKind.TransDet Convergence.Ordinary) α' β'
@@ -62,6 +101,13 @@ def OrdinaryREvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement
     po := ev.po.to_EventPO
   }
 
+/-- Specification of ordinary refined events.
+The proof obligations, beyond `safety` are guard `strengthening`
+and abstract event `simulation`.
+
+The input and output types can be lifted to the abstract, if needed,
+ using the `lift_in` and `lift_out` components.
+ -/
 structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   {α β α' β'} (abstract : OrdinaryEvent AM α' β')
   extends EventSpec M α β where
@@ -84,6 +130,10 @@ structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refineme
         lift_out y = z ∧ refine am' m'
 
 
+/-- Smart constructor for ordinary refined event,
+with: `abs` the (ordinary) event to refine, and
+  `ev` the refined event specification (cf. `REventSpec`).
+-/
 @[simp]
 def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
@@ -97,6 +147,7 @@ def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     }
   }
 
+/-- Variant of `REventSpec` with implicit `Unit` output type -/
 structure REventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   {α α'} (abstract : OrdinaryEvent AM α' Unit)
   extends EventSpec' M α where
@@ -128,11 +179,13 @@ def REventSpec'.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     simulation := fun m x => by simp ; apply ev.simulation m x
   }
 
+/-- Variant of `newREvent` with implicit `Unit` output type -/
 @[simp]
 def newREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev : REventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryREvent AM M α Unit α' Unit :=
   newREvent abs ev.toREventSpec
 
+/-- Variant of `REventSpec` with implicit `Unit` input and output types -/
 structure REventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (abstract : OrdinaryEvent AM Unit Unit)
   extends EventSpec'' M where
@@ -162,13 +215,19 @@ def REventSpec''.toREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M
     simulation := fun m x => by simp ; apply ev.simulation m
   }
 
+/-- Variant of `newREvent` with implicit `Unit` input and output types -/
 @[simp]
 def newREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev : REventSpec'' AM M abs) : OrdinaryREvent AM M Unit Unit :=
   newREvent abs ev.toREventSpec
 
-/--/ Initialization events -/
+/-!
 
+### Ordinary initialization events
+
+-/
+
+/-- Internal representation of proof obligations for ordinary initialization events. -/
 structure _InitREventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
    (ev : _InitEvent M α β) (kind : EventKind) (α' β')
    extends _InitEventPO ev kind where
@@ -188,6 +247,10 @@ structure _InitREventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM
       let (z, am') := abstract.init (lift_in x)
       lift_out y = z ∧ refine am' m'
 
+/-- The (internal) type of ordinary refined initialization events
+with: `AM` the abstact machine type, `M` the concrete maching type,
+ `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
+ `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`) -/
 structure InitREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (α) (β) (α':=α) (β':=β)
   extends _InitEvent M α β where
@@ -200,6 +263,13 @@ def InitREvent.toInitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (
   po := ev.po.to_InitEventPO
 }
 
+/-- Specification of ordinary refined initialization events.
+The proof obligations, beyond `safety` are guard `strengthening`
+and abstract event `simulation`.
+
+The input and output types can be lifted to the abstract, if needed,
+ using the `lift_in` and `lift_out` components.
+ -/
 structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   {α β α' β'} (abstract : InitEvent AM α' β')
   extends InitEventSpec M α β where
@@ -217,6 +287,10 @@ structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refi
       let (z, am') := abstract.init (lift_in x)
       lift_out y = z ∧ refine am' m'
 
+/-- Smart constructor for ordinary refined initialization event,
+with: `abs` the (ordinary) event to refine, and
+  `ev` the refined event specification (cf. `InitREventSpec`).
+-/
 @[simp]
 def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM α' β')
@@ -244,6 +318,7 @@ def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     }
   }
 
+/-- Variant of `REventSpec'` with implicit `Unit` output type -/
 structure InitREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   {α α'} (abstract : InitEvent AM α' Unit)
   extends InitEventSpec' M α where
@@ -271,12 +346,14 @@ def InitREventSpec'.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refineme
     simulation := fun x => by simp ; apply ev.simulation
   }
 
+/-- Variant of `newInitREvent` with implicit `Unit` output type -/
 @[simp]
 def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM α' Unit)
   (ev : InitREventSpec' AM M (α:=α) (α':=α') abs) : InitREvent AM M α Unit α' Unit :=
   newInitREvent abs ev.toInitREventSpec
 
+/-- Variant of `REventSpec` with implicit `Unit` input and output types -/
 structure InitREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (abstract : InitEvent AM Unit Unit)
   extends InitEventSpec'' M where
@@ -302,6 +379,7 @@ def InitREventSpec''.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refinem
     simulation := fun () => by simp ; apply ev.simulation
   }
 
+/-- Variant of `newREvent` with implicit `Unit` input and output types -/
 @[simp]
 def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM Unit Unit)

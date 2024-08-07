@@ -2,12 +2,31 @@
 import LeanMachines.Event.Basic
 import LeanMachines.Refinement.Relational.Basic
 
+/-!
+
+# Functional refinement
+
+This module contains the basic definitions of the functional
+refinement principles for LeanMachines.
+-/
+
+/-!
+
+## Machine refinement
+
+-/
+
+/-- The typeclass definition for the functional refinement
+of an abstract machine type `AM` (in context `ACTX`) by
+ a (more) concrete machine type `M` (in context `CTX`).
+-/
 class FRefinement {ACTX : outParam (Type u₁)} (AM)
                   {CTX : outParam (Type u₂)} (M)
                   [Machine ACTX AM] [Machine CTX M] where
-
+  /-- The *lifting* of a concrete state `m` to the abstract level. -/
   lift (m : M): AM
 
+  /-- The safety requirement of the `FRefinement.lift` method. -/
   lift_safe (m : M):
     Machine.invariant m
     → Machine.invariant (lift m)
@@ -15,6 +34,11 @@ class FRefinement {ACTX : outParam (Type u₁)} (AM)
 open Refinement
 open FRefinement
 
+/--
+The (somewhat meta-theoretical) proof that functional refinement is preserving
+the relational `Refinement` principles. Technically, any (typeclass) instance
+of a `FRefinement` is also an instance of `Refinement`.
+-/
 instance [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]: Refinement AM M where
   refine (am : AM) (m : M) := am = lift m
 
@@ -24,15 +48,24 @@ instance [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]: Refinement AM M w
     rw [Ham]
     exact lift_safe m Hinv
 
---def FRefinement.toRefinement (instFR : FRefinement AM M) : Refinement AM M :=
- -- by sorry
-
+/-- This theorem allows to go back to the relational refinement level if needed. -/
 theorem lift_ref [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M] (m : M) :
   Machine.invariant m
   → refine (AM:=AM) (self:=instRefinementOfFRefinement) (lift m) m :=
 by
   simp [refine]
 
+/-!
+
+## Event refinement
+
+For functional refinement, the event specifications are prefixed with by `FR`.
+
+-/
+
+/-- Specification of ordinary refined events.
+cf.  `REventSpec` in relational refinement.
+ -/
 structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
   {α β α' β'} (abstract : OrdinaryEvent AM α' β')
   extends EventSpec M α β where
