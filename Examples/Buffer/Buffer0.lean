@@ -40,11 +40,12 @@ def B0.Fetch : ConvergentEvent Nat (B0 ctx) Unit Unit :=
     action := fun b0 => { size := b0.size - 1 }
     safety := fun b0 => by
       simp [Machine.invariant]
-      omega
+      intros H _
+      exact Nat.le_add_right_of_le H
+
     variant := fun b0 => b0.size
     convergence := fun b0 => by
       simp [Machine.invariant]
-      omega
   }
 
 def B0.GetSize : OrdinaryEvent (B0 ctx) Unit Nat :=
