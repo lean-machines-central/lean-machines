@@ -3,17 +3,64 @@ import LeanMachines.Algebra.Contravariant
 import LeanMachines.Algebra.Profunctor
 import LeanMachines.Algebra.Arrow
 
+/-!
+
+# Basic definitions
+
+This module contains the basic definitions of the LeanMachines
+framework:
+
+ - Machine types, instances of the `Machine` typeclass
+ - Events, elements of the type `_Event`.
+
+ Note that the user-level specifications of events are
+ defined in the modules `Ordinary` (for ordinary events)
+  and `Convergent` (for anticipated and convergent events).
+
+-/
+
+/-!
+
+## Machine types
+
+-/
+
+/-- The main definition of a **Machine** type, i.e. a state-based
+ specification of a **system** (software, hardware model, ...).
+
+This comprises:
+
+ - a `context` of type `CTX`, allowing the machine to depend upon a
+ mathematical context, in particular **static parameters** and related
+ properties.
+
+ - an `invariant` property defining the overall safety requirements of
+ the machine states.
+
+ - a `reset` state, that defines the (unique) state of the machine before
+ its initialization (very often, this is the default initialization state,
+  but it can also be an unreachable "pre-init" state if required).
+
+-/
 class Machine (CTX : outParam (Type u)) (M) where
+  /-- The context (i.e. parameters) of the machine. -/
   context : CTX
+  /-- The invariant property that must be satisified
+  by a machine (state) of type `M`. -/
   invariant : M → Prop
+  /-- The "before initialization", or *reset state*. -/
   reset : M
 
+/-- Enumeration for event kinds (ordinary, anticipated or convergent). -/
 inductive Convergence where
   | Ordinary
-  | Convergent
   | Anticipated
+  | Convergent
   deriving Repr, BEq, DecidableEq
 
+/-- Event kinds: initialization or transitional,
+ deterministic or non-deterministic,
+ ordinary, anticipated or convergent. -/
 inductive EventKind where
   | InitDet
   | InitNonDet
@@ -23,6 +70,8 @@ inductive EventKind where
 
 open EventKind
 
+/-- The common root of all event representations.
+This simply defines the notion of a guard. -/
 structure _EventRoot (M) [Machine CTX M] (α : Type) where
   guard : M → α → Prop := fun _ _ => True
 
@@ -36,13 +85,31 @@ by
   simp [*] at *
   simp [*]
 
+/-!
+## Deterministic events
+-/
+
+/-- The internal representation of all *deterministic* transitional events
+with: `M` the machine type,
+`α` the input type, and `β` the output type of the event
+This extends `_EventRoot` with a notion of (deterministic) actions.
+.-/
 structure _Event (M) [Machine CTX M] (α) (β : Type)
   extends _EventRoot M α where
 
-  -- TODO : ensure in action that the guard is true ?
-  -- action (m : M) (x : α) {grd: guard m x}: (β × M)
   action (m : M) (x : α): (β × M)
 
+ -- Note : a possible alternative would be to require
+  --  the guard to hold, implicitly, something like:
+  -- `action (m : M) (x : α) {grd: guard m x}: (β × M)`
+  -- However, this does not work well in practice, at least
+  -- with this alternative.
+
+/-- The internal representation of all *deterministic* initialization events
+with: `M` the machine type,
+`α` the input type, and `β` the output type of the event
+This extends `_EventRoot` with a notion of (deterministic) actions.
+.-/
 structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard : α → Prop
   init: α → (β × M)
@@ -65,23 +132,35 @@ by
   simp [*] at *
   simp [*]
 
+/-- The deterministic skip event, that does nothing.
+Note that the output type must match the input type,
+ hence a non-deterministic notion of skip event is
+ best in most situations (cf. `_NDEvent` in the `NonDet` module). -/
 @[simp]
 def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
 {
   action := fun m x => (x, m)
 }
 
+/-- Any type-theoretic function can be lifted to the
+status of a (non-guarded) event. -/
 @[simp]
 def fun_Event  (M) [Machine CTX M] (f : α → β) : _Event M α β :=
 {
   action := fun m x => (f x, m)
 }
 
+/-- This allows to lift a "stateful" function. -/
 @[simp]
 def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : _Event M α β :=
 {
   action := fun m x => (xf m x, m)
 }
+
+/-!
+## Algebraic properties of events
+-/
+
 
 /- Functor -/
 
