@@ -3,8 +3,6 @@ import LeanMachines.Algebra.Contravariant
 import LeanMachines.Algebra.Profunctor
 import LeanMachines.Algebra.Arrow
 
-def hello := "world"
-
 class Machine (CTX : outParam (Type u)) (M) where
   context : CTX
   invariant : M → Prop

@@ -85,10 +85,15 @@ structure _REventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
         let (z, am') := abstract.action am (lift_in x)
         lift_out y = z ∧ refine am' m'
 
-/-- The (internal) type of ordinary refined events
+/-- The representation of ordinary refined events
 with: `AM` the abstact machine type, `M` the concrete maching type,
  `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
- `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`) -/
+ `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`)
+
+Note that events, of type `OrdinaryREvent`, are not directly constructed using this
+structure. More user-friendly specification structures, such as `REventSpec`, and smart constructors,
+ such as `newREvent` are preferably employed in practice.
+ -/
 structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (α β) (α':=α) (β':=β) extends _Event M α β where
   po : _REventPO (instR:=instR) to_Event (EventKind.TransDet Convergence.Ordinary) α' β'
@@ -102,14 +107,21 @@ def OrdinaryREvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement
   }
 
 /-- Specification of ordinary refined events.
-The proof obligations, beyond `safety` are guard `strengthening`
-and abstract event `simulation`.
+with: `AM` the abstact machine type, `M` the concrete maching type,
+ `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
+ `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`)
+The `abs` parameter is the ordinary event intended to be refined.
+
+Note that `abs` should not be anticipated nor convergent.
 
 The input and output types can be lifted to the abstract, if needed,
  using the `lift_in` and `lift_out` components.
+
+The proof obligations, beyond `safety` (of abstract events) are guard `strengthening`
+and abstract event `simulation`.
  -/
 structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  {α β α' β'} (abstract : OrdinaryEvent AM α' β')
+  {α β α' β'} (abs : OrdinaryEvent AM α' β')
   extends EventSpec M α β where
 
   lift_in : α → α'
@@ -119,14 +131,14 @@ structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refineme
     Machine.invariant m
     → guard m x
     → ∀ am, refine am m
-      → abstract.guard am (lift_in x)
+      → abs.guard am (lift_in x)
 
   simulation (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → ∀ am, refine am m
       → let (y, m') := action m x
-        let (z, am') := abstract.action am (lift_in x)
+        let (z, am') := abs.action am (lift_in x)
         lift_out y = z ∧ refine am' m'
 
 

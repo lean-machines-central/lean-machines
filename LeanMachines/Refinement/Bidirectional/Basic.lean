@@ -1,6 +1,6 @@
 
-import EventSystems.Event.Basic
-import EventSystems.Refinement.Strong.Basic
+import LeanMachines.Event.Basic
+import LeanMachines.Refinement.Strong.Basic
 
 class BiRefinement {ACTX : outParam (Type u₁)} (AM)
                  {CTX : outParam (Type u₂)} (M)
