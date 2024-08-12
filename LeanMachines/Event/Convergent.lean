@@ -114,6 +114,52 @@ structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [Machine CTX M] (α) (
 def newAnticipatedEvent {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec v M α β) : AnticipatedEvent v M α β :=
   AnticipatedEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.nonIncreasing
 
+/-- Variant of `AnticipatedEventSpec` with implicit `Unit` output type -/
+structure AnticipatedEventSpec' (v) [Preorder v] (M) [Machine CTX M] (α)
+  extends _Variant v, EventSpec' M α where
+
+  nonIncreasing (m : M) (x : α):
+    Machine.invariant m
+    → guard m x
+    → let m' := (action m x)
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedEventSpec'.toAnticipatedEventSpec {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec' v M α) : AnticipatedEventSpec v M α Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    variant := ev.variant
+    nonIncreasing := ev.nonIncreasing
+  }
+
+/-- Variant of `newAnticipatedEvent` with implicit `Unit` output type -/
+@[simp]
+def newAnticipatedEvent' {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec' v M α ) : AnticipatedEvent v M α Unit :=
+  newAnticipatedEvent ev.toAnticipatedEventSpec
+
+/-- Variant of `AnticipatedEventSpec` with implicit `Unit` input and output types -/
+structure AnticipatedEventSpec'' (v) [Preorder v] (M) [Machine CTX M]
+  extends _Variant v, EventSpec'' M where
+
+  nonIncreasing (m : M):
+    Machine.invariant m
+    → guard m
+    → let m' := (action m)
+      variant m' ≤ variant m
+
+@[simp]
+def AnticipatedEventSpec''.toAnticipatedEventSpec {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec'' v M) : AnticipatedEventSpec v M Unit Unit :=
+  {
+    toEventSpec := ev.toEventSpec
+    variant := ev.variant
+    nonIncreasing := fun m () => by apply ev.nonIncreasing
+  }
+
+/-- Variant of `newAnticipatedEvent` with implicit `Unit` input and output types -/
+@[simp]
+def newAnticipatedEvent'' {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec'' v M) : AnticipatedEvent v M Unit Unit :=
+  newAnticipatedEvent ev.toAnticipatedEventSpec
+
 
 /-!
 ### Convergent events
@@ -265,7 +311,7 @@ def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT 
     convergence := fun m () => by apply ev.convergence
   }
 
-/-- Variant of `newEvent` with implicit `Unit` input and output types -/
+/-- Variant of `newConvergentEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newConvergentEvent'' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEvent v M Unit Unit :=
   newConvergentEvent ev.toConvergentEventSpec
