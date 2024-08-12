@@ -274,12 +274,19 @@ instance [Preorder v] [Machine CTX M] : Functor (AnticipatedNDEvent v M γ) wher
     }
   }
 
+/- TODO : issue with dependent equality, should be workable ...
 instance [Preorder v] [Machine CTX M] : LawfulFunctor (AnticipatedNDEvent v M γ) where
   map_const := by simp [Functor.map, Functor.mapConst]
-  id_map ev := by cases ev
+  id_map ev := by simp [Functor.map]
+                  cases ev
                   case mk _ev po =>
                     simp [Functor.map]
-                    sorry -- don't know how to finish this
+                    cases po
+                    case mk _v _po _ni =>
+                      -- this can be maybe work by specifying the cast ?
+                      apply heq_of_cast_eq
+                      sorry
+
   comp_map g h ev := by simp [Functor.map]
                         have hcmp := LawfulFunctor.comp_map g h ev.to_NDEvent
                         simp [Functor.map] at hcmp
@@ -287,6 +294,7 @@ instance [Preorder v] [Machine CTX M] : LawfulFunctor (AnticipatedNDEvent v M γ
                         · assumption
                         -- same
                         sorry
+... -/
 
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Functor (ConvergentNDEvent v M γ) where
@@ -318,6 +326,7 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Functor (ConvergentNDE
     }
   }
 
+/- TODO : issue with dependent equality, should be workable ...
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulFunctor (ConvergentNDEvent v M γ) where
   map_const := by simp [Functor.map, Functor.mapConst]
   id_map ev := by cases ev
@@ -331,6 +340,7 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulFunctor (Converg
                         · assumption
                         -- same
                         sorry
+-/
 
 abbrev CoAnticipatedNDEvent (v) [Preorder v] (M) [Machine CTX M] (α) (β) := AnticipatedNDEvent v M β α
 
@@ -446,6 +456,7 @@ instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedNDEvent v M) wher
   g <$> ev'
 
 
+/- TODO : issue with dependent equality, should be workable ...
 instance  [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedNDEvent v M) where
   dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
@@ -463,6 +474,7 @@ instance  [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedNDEvent v 
                                  clear Hdc'
                                  -- cast_heq does not work so I'm stuck ...
                                  sorry
+-/
 
 instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M) where
   first' {α β γ} (event : AnticipatedNDEvent v M α β): AnticipatedNDEvent v M (α × γ) (β × γ) :=
@@ -496,7 +508,8 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M
       }
     }
 
-instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedNDEvent v M) where
+-- TODO: lawful strong profunctor
+-- instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedNDEvent v M) where
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (ConvergentNDEvent v M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : ConvergentNDEvent v M α γ) : ConvergentNDEvent v M β δ :=
@@ -504,6 +517,7 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (Convergent
   g <$> ev'
 
 
+/- TODO : issue with dependent equality, should be workable ...
 instance  [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (ConvergentNDEvent v M) where
   dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
@@ -521,6 +535,7 @@ instance  [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (Con
                                  clear Hdc'
                                  -- cast_heq does not work so I'm stuck ...
                                  sorry
+-/
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (ConvergentNDEvent v M) where
   first' {α β γ} (event : ConvergentNDEvent v M α β): ConvergentNDEvent v M (α × γ) (β × γ) :=
@@ -561,4 +576,5 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
       }
     }
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentNDEvent v M) where
+-- TODO: lawful strong profunctor
+-- instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentNDEvent v M) where
