@@ -5,20 +5,49 @@ import LeanMachines.Algebra.Contravariant
 import LeanMachines.Algebra.Profunctor
 import LeanMachines.Algebra.Arrow
 
-/- Ordinary events -/
+/-!
+# Ordinary Deterministic events
 
+This module defines the user-level API for constructing
+and manipulating **ordinary** deterministic events.
+In LeanMachines, an event is said **ordinary** if it
+is not demonstrated anticipated or convergent
+(cf. `Convergent.lean`).
+
+**Remark**: there is an alternative notion of ordinary events
+in B-classic.
+
+-/
+
+
+/-- The internal representation of proof obligations for ordinary events. -/
 structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
   safety (m : M) (x : α):
     Machine.invariant m
     → ev.guard m x
     → Machine.invariant (ev.action m x).snd
 
+/-- Type type of deterministic events without convergence properties.
+It is an event for machine type `M` with input type `α` and output type `β` -/
 structure OrdinaryEvent (M) [Machine CTX M] (α) (β) extends _Event M α β where
   po : _EventPO to_Event  (EventKind.TransDet Convergence.Ordinary)
 
+/-- The specification of a deterministic, ordinary event for machine `M`
+with input type `α` and output type `β`. . -/
 structure EventSpec (M) [Machine CTX M] (α) (β) where
+  /-- The guard property of the event, in machine state `m` with input `x`. -/
   guard (m : M) (x : α) : Prop := True
+  /-- The (deterministic) action of the event, with
+      previous machine state `m` and input `x`, building a pair
+      `(y, m')` with `y` an output value and `m'` the next machine state.
+
+      **Remark: the guard property is supposed valid any time the action
+      is to be performed in proof obligations. However, this is not captured
+      at the type level (a type-level guard-dependent variant is currently being
+      investigated). -/
   action (m : M) (x : α) : β × M
+
+  /-- The safety proof obligation. -/
   safety (m : M) (x : α) :
     Machine.invariant m
     → guard m x
@@ -41,15 +70,20 @@ def EventSpec.to_Event [Machine CTX M] (ev : EventSpec M α β) : _Event M α β
     action := ev.action
   }
 
+/-- Construction of an ordinary deterministic event from a
+`EventSpec` specification. -/
 @[simp]
 def newEvent {M} [Machine CTX M] (ev : EventSpec M α β) : OrdinaryEvent M α β :=
   { to_Event := ev.to_Event
-    po := { safety := fun m x => by simp
-                                    intros Hinv Hgrd
-                                    apply ev.safety <;> assumption
+    po := {
+      safety := fun m x => by
+        simp
+        intros Hinv Hgrd
+        apply ev.safety <;> assumption
     }
   }
 
+/-- Variant of `EventSpec` with implicit `Unit` output type -/
 structure EventSpec' (M) [Machine CTX M] (α) where
   guard (m : M) (x : α) : Prop := True
   action (m : M) (x : α) : M
@@ -66,10 +100,12 @@ def EventSpec'.toEventSpec [Machine CTX M] (ev : EventSpec' M α) : EventSpec M 
     safety := fun m x => by simp ; apply ev.safety
   }
 
+/-- Variant of `newEvent` with implicit `Unit` output type -/
 @[simp]
 def newEvent' {M} [Machine CTX M] (ev : EventSpec' M α) : OrdinaryEvent M α Unit :=
   newEvent ev.toEventSpec
 
+/-- Variant of `EventSpec` with implicit `Unit` input and output types -/
 structure EventSpec'' (M) [Machine CTX M] where
   guard (m : M) : Prop := True
   action (m : M) : M
@@ -86,6 +122,7 @@ def EventSpec''.toEventSpec [Machine CTX M] (ev : EventSpec'' M) : EventSpec M U
     safety := fun m () => by simp ; apply ev.safety
   }
 
+/-- Variant of `newEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newEvent'' {M} [Machine CTX M] (ev : EventSpec'' M) : OrdinaryEvent M Unit Unit :=
   newEvent ev.toEventSpec
@@ -94,19 +131,36 @@ def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   newEvent ((skip_Event M α).toEventSpec
                                  (by intros ; simp [skip_Event] ; assumption))
 
-/- Initialization events (a kind of Ordinary event...) -/
+/-!
 
+## Initialization events (deterministic)
+
+Initialization events, of the deterministic kind,
+are ordinary deterministic events with the *reset* state as a pre-state.
+
+ -/
+
+/-- The internal representation of proof obligations for initialization events. -/
 structure _InitEventPO [Machine CTX M] (ev : _InitEvent M α β) (kind : EventKind) where
   safety (x : α):
     ev.guard x
     → Machine.invariant (ev.init x).snd
 
+
+/-- Type type of deterministic initialization events.
+It is an event for machine type `M` with input type `α` and output type `β` -/
 structure InitEvent (M) [Machine CTX M] (α) (β) extends _InitEvent M α β where
   po : _InitEventPO to_InitEvent EventKind.InitDet
 
+/-- The specification of a deterministic, ordinary event for machine `M`
+with input type `α` and output type `β`. . -/
 structure InitEventSpec (M) [Machine CTX M] (α) (β) where
+  /-- The guard property of the event, an initialization with input `x`. -/
   guard (x : α) : Prop := True
+  /-- The (deterministic) action of the event, with input `x`, building a pair
+      `(y, m)` with `y` an output value and `m` an initial machine state.-/
   init (x : α) : β × M
+  /-- The safety proof obligation. -/
   safety (x : α) :
     guard x
     → Machine.invariant (init x).2
@@ -118,6 +172,8 @@ def InitEventSpec.to_InitEvent [Machine CTX M] (ev : InitEventSpec M α β) : _I
     init := ev.init
   }
 
+/-- Construction of a deterministic initialization event from a
+`InitEventSpec` specification. -/
 @[simp]
 def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : InitEvent M α β :=
   {
@@ -130,6 +186,7 @@ def newInitEvent {M} [Machine CTX M] (ev : InitEventSpec M α β) : InitEvent M 
     }
   }
 
+/-- Variant of `InitEventSpec` with implicit `Unit` output type -/
 structure InitEventSpec' (M) [Machine CTX M] (α) where
   guard (x : α) : Prop := True
   init (x : α) : M
@@ -145,10 +202,12 @@ def InitEventSpec'.toInitEventSpec [Machine CTX M] (ev : InitEventSpec' M α) : 
     safety := fun x => by simp ; apply ev.safety
   }
 
+/-- Variant of `newInitEvent` with implicit `Unit` output type -/
 @[simp]
 def newInitEvent' {M} [Machine CTX M] (ev : InitEventSpec' M α) : InitEvent M α Unit :=
   newInitEvent ev.toInitEventSpec
 
+/-- Variant of `InitEventSpec` with implicit `Unit` input and output types -/
 structure InitEventSpec'' (M) [Machine CTX M] where
   guard : Prop := True
   init : M
@@ -164,13 +223,20 @@ def InitEventSpec''.toInitEventSpec [Machine CTX M] (ev : InitEventSpec'' M) : I
     safety := fun () => by simp ; apply ev.safety
   }
 
+/-- Variant of `newInitEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newInitEvent'' {M} [Machine CTX M] (ev : InitEventSpec'' M) : InitEvent M Unit Unit :=
   newInitEvent ev.toInitEventSpec
 
+/-!
+## Algebraic properties of events
 
-/-
-   Algebraic properties
+The following instantiate various algebraic structures, complementing
+the structural properties of the representation types (`_Event`) with
+more "lawful" properties for the main event type (`OrdinaryEvent`).
+
+This part is rather experimental and is thus not fully documented yet.
+
 -/
 
 /- Functor -/

@@ -86,7 +86,7 @@ by
   simp [*]
 
 /-!
-## Deterministic events
+## Deterministic events (internal representation)
 -/
 
 /-- The internal representation of all *deterministic* transitional events
@@ -159,6 +159,12 @@ def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : _Event M α β :=
 
 /-!
 ## Algebraic properties of events
+
+The following instantiate various algebraic structures
+for the representation type of deterministic events: `_Event`.
+
+This part is rather experimental and is thus not fully documented yet.
+
 -/
 
 

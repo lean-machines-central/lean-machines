@@ -4,11 +4,49 @@ import Mathlib.Order.RelClasses
 import LeanMachines.Event.Basic
 import LeanMachines.Event.Ordinary
 
+
+/-!
+## Convergent deterministic events
+
+This module defines the user-level API for constructing
+and manipulating **convergent** (and anticipated) deterministic events.
+
+Convergent events cannot be enabled infinitely often in isolation.
+For this, a further convergence proof obligation is added to
+the "ordinary" POs. The ingredients we use are the same as in Event-B:
+
+ 1. the introduction of a **variant**, a well-founded ordering relation
+
+ 2. a proof that the variant decreases strictly each time the event
+ action is "performed".
+
+Alternatively, **anticipated** event are proved only "non-increasing",
+which allows to postpone the actual convergence proof to further
+refinements of the event.
+
+ We rely on Mathlib's notion of well-founded relations, most notably
+ the `Preorder` and `WellFoundedLT` typeclasses from the
+ `Order.RelClasses` package of Mathlib.
+
+Basic well-founded orders are proposed, such as the natural ordering for
+natural numbers (type `Nat`), or subset ordering for finite sets
+ (type `FinSet α`), and so on.  Order composition means are also
+ available, such as lexicographic produc ordering, multiset ordering, etc.
+ And of course, custom orderings can be defined (cf. Mathlib's documentation).
+
+-/
+
+/-- The definition of a `variant` of type `v` obtained from
+a machine pre-state. The type `v` must be a preorder
+(i.e. an instance of the `Preorder` typeclass). -/
 structure _Variant (v) [Preorder v] [Machine CTX M] where
   variant : M → v
 
-/- Anticipated events -/
+/-!
+### Anticipated events
+-/
 
+/-- The internal representation of proof obligations for anticipated events. -/
 structure _AnticipatedEventPO (v) [Preorder v] [Machine CTX M] (ev : _Event M α β) (kind : EventKind)
           extends _Variant v, _EventPO ev kind  where
 
@@ -18,12 +56,16 @@ structure _AnticipatedEventPO (v) [Preorder v] [Machine CTX M] (ev : _Event M α
     → let (_, m') := ev.action m x
       variant m' ≤ variant m
 
+/-- Type type of deterministic anticipated events.
+It is an event for machine type `M` with input type `α` and output type `β`.
+The non-increasing argument is based on the variant type `v` assumed
+to be a preorder. -/
 structure AnticipatedEvent (v) [Preorder v] (M) [Machine CTX M] (α) (β)
           extends (_Event M α β)  where
   po : _AnticipatedEventPO v to_Event (EventKind.TransDet Convergence.Anticipated)
 
 @[simp]
-def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
+private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
   (variant : M → v)
   (Hnincr: ∀ (m : M) (x : α),
     Machine.invariant m
@@ -40,6 +82,7 @@ def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (ev : Ord
     }
   }
 
+/-- The "downgrading" of an anticipated event to an ordinary one. -/
 @[simp]
 def AnticipatedEvent.toOrdinaryEvent [Preorder v] [Machine CTX M]
   (ev : AnticipatedEvent v M α β) : OrdinaryEvent M α β :=
@@ -50,21 +93,33 @@ def AnticipatedEvent.toOrdinaryEvent [Preorder v] [Machine CTX M]
     }
   }
 
+/-- The specification of a deterministic, anticipated event for machine `M`
+with input type `α` and output type `β`. The non-increasing proof relies
+ on a variant type `v` assumed to be a preorder.
+Note that the guard, action and safety PO of the event must be also
+specified, as in the ordinary case (cf. `OrdinaryEventSpec`).
+  -/
 structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [Machine CTX M] (α) (β)
   extends _Variant v, EventSpec M α β where
-
+  /-- Proof obligation: the variant is non-increasing. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → let m' := (action m x).2
       variant m' ≤ variant m
 
+/-- Construction of an anticipated deterministic event from a
+`AnticipatedEventSpec` specification. -/
 @[simp]
 def newAnticipatedEvent {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec v M α β) : AnticipatedEvent v M α β :=
   AnticipatedEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.nonIncreasing
 
-/- Convergent events -/
 
+/-!
+### Convergent events
+-/
+
+/-- The internal representation of proof obligations for convergent events. -/
 structure _ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : _Event M α β) (kind : EventKind)
           extends _AnticipatedEventPO v ev kind  where
 
@@ -74,12 +129,16 @@ structure _ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M] 
     → let (_, m') := ev.action m x
       variant m' < variant m
 
+/-- Type type of deterministic convergent events.
+It is an event for machine type `M` with input type `α` and output type `β`.
+The convergence argument is based on the variant type `v` assumed
+to be a well-founded preorder. -/
 structure ConvergentEvent (v) [Preorder v]  [WellFoundedLT v] (M) [Machine CTX M] (α) (β)
           extends (_Event M α β)  where
   po : _ConvergentEventPO v to_Event (EventKind.TransDet Convergence.Convergent)
 
 @[simp]
-def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
+private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
   (variant : M → v)
   (Hconv: ∀ (m : M) (x : α),
     Machine.invariant m
@@ -112,6 +171,7 @@ def ConvergentEvent.toOrdinaryEvent [Preorder v] [WellFoundedLT v] [Machine CTX 
     }
   }
 
+/-- The "downgrading" of a convergent event to an anticipated one. -/
 @[simp]
 def ConvergentEvent.toAnticipatedEvent [Preorder v] [WellFoundedLT v] [Machine CTX M]
   (ev : ConvergentEvent v M α β) : AnticipatedEvent v M α β :=
@@ -125,15 +185,23 @@ def ConvergentEvent.toAnticipatedEvent [Preorder v] [WellFoundedLT v] [Machine C
   }
 
 
+/-- The specification of a deterministic, convergent event for machine `M`
+with input type `α` and output type `β`. The convergence proof relies
+ on a variant type `v` assumed to be a well-founded preorder.
+Note that the guard, action and safety PO of the event must be also
+specified, as in the ordinary case (cf. `OrdinaryEventSpec`).
+  -/
 structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α) (β)
   extends _Variant v, EventSpec M α β where
-
+  /-- Proof obligation: the variant is strictly decreasing. -/
   convergence (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → let m' := (action m x).2
       variant m' < variant m
 
+/-- Construction of a convergent deterministic event from a
+`ConvergentEventSpec` specification. -/
 @[simp]
 def newConvergentEvent {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec v M α β) : ConvergentEvent v M α β :=
   ConvergentEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.convergence
@@ -156,6 +224,7 @@ def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Mach
     }
   }
 
+/-- Variant of `ConvergentEventSpec` with implicit `Unit` output type -/
 structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α)
   extends _Variant v, EventSpec' M α where
 
@@ -173,10 +242,12 @@ def ConvergentEventSpec'.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v
     convergence := ev.convergence
   }
 
+/-- Variant of `newConvergentEvent` with implicit `Unit` output type -/
 @[simp]
 def newConvergentEvent' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec' v M α ) : ConvergentEvent v M α Unit :=
   newConvergentEvent ev.toConvergentEventSpec
 
+/-- Variant of `ConvergentEventSpec` with implicit `Unit` input and output types -/
 structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M]
   extends _Variant v, EventSpec'' M where
 
@@ -194,11 +265,18 @@ def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT 
     convergence := fun m () => by apply ev.convergence
   }
 
+/-- Variant of `newEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newConvergentEvent'' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEvent v M Unit Unit :=
   newConvergentEvent ev.toConvergentEventSpec
 
-/- Algebraic properties -/
+/-!
+## Algebraic properties of events
+
+The following instantiate various algebraic structures for anticipated
+and convergent events (experimental, not documented).
+
+-/
 
 @[simp]
 def mapAnticipatedEvent [Preorder v] [Machine CTX M] (f : α → β) (ev : AnticipatedEvent v M γ α) : AnticipatedEvent v M γ β :=
