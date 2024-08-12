@@ -92,7 +92,7 @@ by
 /-- The internal representation of all *deterministic* transitional events
 with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
-This extends `_EventRoot` with a notion of (deterministic) actions.
+This extends `_EventRoot` with a notion of (deterministic/functional) action.
 .-/
 structure _Event (M) [Machine CTX M] (α) (β : Type)
   extends _EventRoot M α where
@@ -108,7 +108,6 @@ structure _Event (M) [Machine CTX M] (α) (β : Type)
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
-This extends `_EventRoot` with a notion of (deterministic) actions.
 .-/
 structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard : α → Prop

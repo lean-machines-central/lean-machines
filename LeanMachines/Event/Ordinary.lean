@@ -9,25 +9,25 @@ import LeanMachines.Algebra.Arrow
 # Ordinary Deterministic events
 
 This module defines the user-level API for constructing
-and manipulating **ordinary** deterministic events.
+and manipulating **ordinary deterministic** events.
 In LeanMachines, an event is said **ordinary** if it
 is not demonstrated anticipated or convergent
-(cf. `Convergent.lean`).
+(cf. `Event.Convergent` module).
 
 **Remark**: there is an alternative notion of ordinary events
 in B-classic.
 
 -/
 
-
-/-- The internal representation of proof obligations for ordinary events. -/
+/-- The internal representation of proof obligations for ordinary
+deterministic events. -/
 structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
   safety (m : M) (x : α):
     Machine.invariant m
     → ev.guard m x
     → Machine.invariant (ev.action m x).snd
 
-/-- Type type of deterministic events without convergence properties.
+/-- The type of deterministic events without convergence properties.
 It is an event for machine type `M` with input type `α` and output type `β` -/
 structure OrdinaryEvent (M) [Machine CTX M] (α) (β) extends _Event M α β where
   po : _EventPO to_Event  (EventKind.TransDet Convergence.Ordinary)
@@ -152,7 +152,7 @@ It is an event for machine type `M` with input type `α` and output type `β` -/
 structure InitEvent (M) [Machine CTX M] (α) (β) extends _InitEvent M α β where
   po : _InitEventPO to_InitEvent EventKind.InitDet
 
-/-- The specification of a deterministic, ordinary event for machine `M`
+/-- The specification of a deterministic ordinary event for machine `M`
 with input type `α` and output type `β`. . -/
 structure InitEventSpec (M) [Machine CTX M] (α) (β) where
   /-- The guard property of the event, an initialization with input `x`. -/

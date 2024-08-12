@@ -5,6 +5,20 @@ import LeanMachines.Event.Prelude
 import LeanMachines.Event.Basic
 import LeanMachines.Event.Ordinary
 
+/-!
+
+# Non-deterministic events (internal representation)
+
+This module contains the basic (internal) definitions for
+non-deterministic events.
+
+-/
+
+/-- The internal representation of all *non-deterministic* transitional events
+with: `M` the machine type,
+`α` the input type, and `β` the output type of the event
+This extends `_EventRoot` with a notion of (non-deterministic/relational) effect.
+.-/
 structure _NDEvent (M) [Machine CTX M] (α) (β : Type)
   extends _EventRoot M α where
 
@@ -31,6 +45,10 @@ def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :
                                   m'' = m' ∧ x'' = x'
 }
 
+/-- The internal representation of *non-deterministic* initialization events
+with: `M` the machine type,
+`α` the input type, and `β` the output type of the event
+.-/
 structure _InitNDEvent (M) [Machine CTX M] (α) (β : Type) where
   guard: α → Prop
   init: α → (β × M) → Prop
@@ -56,7 +74,14 @@ def skip_NDEvent [Machine CTX M] : _NDEvent M α β :=
     effect := fun m _ (_, m') => m' = m
   }
 
--- The functor instance is existential, not suprising given the relational context
+
+/-!
+# Algebraic properties of non-deterministic events
+(experimental, for now undocumented)
+-/
+
+
+-- Remark: The functor instance is existential, not suprising given the relational context
 instance [Machine CTX M] : Functor (_NDEvent M γ) where
   map f ev :=
   {

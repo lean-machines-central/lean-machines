@@ -1,8 +1,28 @@
 import LeanMachines.Event.Basic
 import LeanMachines.NonDet.Basic
 
-/- Ordinary non-deterministic events -/
+/-!
+# Ordinary Non-deterministic events
 
+This module defines the user-level API for constructing
+and manipulating **ordinary non-deterministic** events.
+(cf. `Even/Ordinary` module for the deterministic case).
+
+There are importance differences with deterministic events:
+
+- the functional action of deterministic events is replaced by a
+relational notion of effect
+
+- a feasibility proof obligation is added to the safety requirement
+
+-/
+
+/-!
+## Transitional events
+-/
+
+/-- The internal representation of proof obligations for ordinary
+non-deterministic events. -/
 structure _NDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) where
   safety (m : M) (x : α):
     Machine.invariant m
@@ -15,6 +35,8 @@ structure _NDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) 
     → ev.guard m x
     → ∃ y, ∃ m', ev.effect m x (y, m')
 
+/-- The type of non-deterministic events without convergence properties.
+It is an event for machine type `M` with input type `α` and output type `β` -/
 structure OrdinaryNDEvent (M) [Machine CTX M] (α) (β) extends _NDEvent M α β where
   po : _NDEventPO to_NDEvent  (EventKind.TransNonDet Convergence.Ordinary)
 
@@ -33,16 +55,34 @@ def OrdinaryEvent.toOrdinaryNDEvent [Machine CTX M] (ev : OrdinaryEvent M α β)
   }
 }
 
+/-- The specification of a non-deterministic, ordinary event for machine `M`
+with input type `α` and output type `β`. . -/
 structure NDEventSpec (M) [Machine CTX M] (α) (β) where
+  /-- The guard property of the event, in machine state `m` with input `x`. -/
   guard (m : M) (x : α) : Prop := True
+
+  /-- The (non-deterministic) effect of the event, with
+      previous machine state `m` and input `x`, with relation to  pair
+      `(y, m')` with `y` an output value and `m'` the next machine state.
+
+      **Remark: the guard property is supposed valid any time the effect
+      must hold in the POs. However, this is not captured
+      at the type level (a type-level guard-dependent variant is currently being
+      investigated). -/
   effect (m : M) (x : α) (_ : β × M) : Prop
 
+  /-- The safety proof obligation. -/
   safety (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → ∀ y, ∀ m', effect m x (y, m')
                  → Machine.invariant m'
 
+  /-- The feasibility proof obligation.
+  This PO may be difficult to establish concretely in some models.
+  In this case it is still considered an important
+  axiom (which means a Lean4 axiom should be used to discharge the PO).
+  -/
   feasibility (m : M) (x : α):
     Machine.invariant m
     → guard m x
@@ -54,6 +94,8 @@ def NDEventSpec.to_NDEvent [Machine CTX M] (ev : NDEventSpec M α β) : _NDEvent
     effect := ev.effect
   }
 
+/-- Construction of an ordinary non-deterministic event from a
+`NDEventSpec` specification. -/
 @[simp]
 def newNDEvent {M} [Machine CTX M] (ev : NDEventSpec M α β) : OrdinaryNDEvent M α β :=
   {
@@ -67,6 +109,7 @@ def newNDEvent {M} [Machine CTX M] (ev : NDEventSpec M α β) : OrdinaryNDEvent 
     }
   }
 
+/-- Variant of `NDEventSpec` with implicit `Unit` output type -/
 structure NDEventSpec' (M) [Machine CTX M] (α) where
   guard (m : M) (x : α) : Prop := True
   effect (m : M) (x : α) (m' : M) : Prop
@@ -90,10 +133,12 @@ def NDEventSpec'.toNDEventSpec [Machine CTX M] (ev : NDEventSpec' M α) : NDEven
     feasibility := fun m x => by simp ; apply ev.feasibility
   }
 
+/-- Variant of `newNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newNDEvent' {M} [Machine CTX M] (ev : NDEventSpec' M α) : OrdinaryNDEvent M α Unit :=
   newNDEvent ev.toNDEventSpec
 
+/-- Variant of `NDEventSpec` with implicit `Unit` input and output types -/
 structure NDEventSpec'' (M) [Machine CTX M] where
   guard (m : M) : Prop := True
   effect (m : M) (m' : M) : Prop
@@ -117,12 +162,16 @@ def NDEventSpec''.toNDEventSpec [Machine CTX M] (ev : NDEventSpec'' M) : NDEvent
     feasibility := fun m x => by simp ; apply ev.feasibility
   }
 
+/-- Variant of `newNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newNDEvent'' {M} [Machine CTX M] (ev : NDEventSpec'' M) : OrdinaryNDEvent M Unit Unit :=
   newNDEvent ev.toNDEventSpec
 
-/- Initialiazation events -/
+/-!
+## Initialiazation events
+-/
 
+/-- The internal representation of proof obligations for initialization events. -/
 structure _InitNDEventPO [Machine CTX M] (ev : _InitNDEvent M α β) (kind : EventKind) where
   safety (x : α):
     ev.guard x
@@ -133,18 +182,28 @@ structure _InitNDEventPO [Machine CTX M] (ev : _InitNDEvent M α β) (kind : Eve
     ev.guard x
     → ∃ y, ∃ m', ev.init x (y, m')
 
+/-- Type type of non-deterministic initialization events.
+It is an event for machine type `M` with input type `α` and output type `β` -/
 structure InitNDEvent (M) [Machine CTX M] (α) (β) extends _InitNDEvent M α β where
   po : _InitNDEventPO to_InitNDEvent  EventKind.InitNonDet
 
+/-- The specification of a non-deterministic intialization event for machine `M`
+with input type `α` and output type `β`.
+The effect of the event is called an `init`.
+-/
 structure InitNDEventSpec (M) [Machine CTX M] (α) (β) where
+  /-- The guard property of the event, an initialization with input `x`. -/
   guard (x : α) : Prop := True
+  /-- The (non-deterministic) effect of the event, with
+      previous machine state `m` and input `x`, with relation to  pair
+      `(y, m')` with `y` an output value and `m'` the next machine state. -/
   init (x : α) (_ : β × M) : Prop
-
+  /-- The safety proof obligation. -/
   safety (x : α):
     guard x
     → ∀ y, ∀ m, init x (y, m)
                 → Machine.invariant m
-
+  /-- The feasibility proof obligation. -/
   feasibility (x : α):
     guard x
     → ∃ y, ∃ m, init x (y, m)
@@ -157,6 +216,8 @@ def InitNDEventSpec.to_InitNDEvent [Machine CTX M]
     init := ev.init
   }
 
+/-- Construction of a on-deterministic initialization event from a
+`InitNDEventSpec` specification. -/
 @[simp]
 def newInitNDEvent {M} [Machine CTX M] (ev : InitNDEventSpec M α β) : InitNDEvent M α β :=
   {
@@ -167,6 +228,7 @@ def newInitNDEvent {M} [Machine CTX M] (ev : InitNDEventSpec M α β) : InitNDEv
     }
   }
 
+/-- Variant of `InitNDEventSpec` with implicit `Unit` output type -/
 structure InitNDEventSpec' (M) [Machine CTX M] (α) where
   guard (x : α) : Prop := True
   init (x : α) (m : M) : Prop
@@ -193,10 +255,13 @@ def InitNDEventSpec'.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec' M 
                                apply ev.feasibility x Hgrd
   }
 
+/-- Variant of `newInitNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newInitNDEvent' [Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEvent M α Unit :=
   newInitNDEvent ev.toInitNDEventSpec
 
+
+/-- Variant of `InitNDEventSpec` with implicit `Unit` input and output types -/
 structure InitNDEventSpec'' (M) [Machine CTX M] where
   guard : Prop := True
   init (m : M) : Prop
@@ -223,11 +288,21 @@ def InitNDEventSpec''.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec'' 
                                apply ev.feasibility Hgrd
   }
 
+/-- Variant of `newInitNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newInitNDEvent'' [Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEvent M Unit Unit :=
   newInitNDEvent ev.toInitNDEventSpec
 
-/- Algebraic properties -/
+/-!
+## Algebraic properties of events
+
+The following instantiate various algebraic structures, complementing
+the structural properties of the representation types (`_NDEvent`) with
+more "lawful" properties for the main event type (`OrdinaryNDEvent`).
+
+This part is rather experimental and is thus not fully documented yet.
+
+-/
 
 instance [Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
   map {α β} (f : α → β) event :=

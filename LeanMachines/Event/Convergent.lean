@@ -56,7 +56,7 @@ structure _AnticipatedEventPO (v) [Preorder v] [Machine CTX M] (ev : _Event M α
     → let (_, m') := ev.action m x
       variant m' ≤ variant m
 
-/-- Type type of deterministic anticipated events.
+/-- The type of deterministic anticipated events.
 It is an event for machine type `M` with input type `α` and output type `β`.
 The non-increasing argument is based on the variant type `v` assumed
 to be a preorder. -/
@@ -175,7 +175,7 @@ structure _ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M] 
     → let (_, m') := ev.action m x
       variant m' < variant m
 
-/-- Type type of deterministic convergent events.
+/-- The type of deterministic convergent events.
 It is an event for machine type `M` with input type `α` and output type `β`.
 The convergence argument is based on the variant type `v` assumed
 to be a well-founded preorder. -/
@@ -253,7 +253,7 @@ def newConvergentEvent {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (e
   ConvergentEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.convergence
 
 @[simp]
-def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : AnticipatedEvent v M α β)
+private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : AnticipatedEvent v M α β)
     (hconv : (m : M) → (x : α)
     → Machine.invariant m
     → ev.guard m x
