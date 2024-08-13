@@ -218,7 +218,7 @@ structure AbstractInitREventSpec (AM) [Machine ACTX AM]
   {α β} (abstract : InitEvent AM α β)
           extends _AbstractREventSpec AM M α where
 
-  /-- Proof obligation: lifting, then unlifting is safe wrt. the `refine` invariant. -/
+  /-- Proof obligation: unlifting abstract state change is safe wrt. the `refine` invariant. -/
   step_ref (x : α):
     abstract.guard x
     → let (_, am') := abstract.init x
@@ -300,7 +300,7 @@ def AbstractInitREventSpec''.toAbstractInitREventSpec [Machine ACTX AM] [Machine
     step_safe := fun () => ev.step_safe
   }
 
-/-- Variant of `newAbstractREvent` with implicit `Unit` input and output types -/
+/-- Variant of `newAbstractInitREvent` with implicit `Unit` input and output types -/
 @[simp]
 def newAbstractRInitEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM Unit Unit) (ev : AbstractInitREventSpec'' AM M abs) : InitREvent AM M Unit Unit :=

@@ -10,12 +10,10 @@ import LeanMachines.Algebra.Arrow
 
 This module defines the user-level API for constructing
 and manipulating **ordinary deterministic** events.
+
 In LeanMachines, an event is said **ordinary** if it
 is not demonstrated anticipated or convergent
 (cf. `Event.Convergent` module).
-
-**Remark**: there is an alternative notion of ordinary events
-in B-classic.
 
 -/
 

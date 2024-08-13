@@ -4,7 +4,20 @@ import LeanMachines.NonDet.Ordinary
 import LeanMachines.Refinement.Relational.Basic
 
 open Refinement
+/-!
 
+# Relational refinement of Non-deterministic events
+
+This module contains the principles of relational refinement
+for ordinary, non-deterministic events.
+
+-/
+
+/-!
+## Ordinary non-deterministic events
+-/
+
+/-- Internal representation of proof obligations for ordinary non-deterministic events. -/
 structure _RNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
    (ev : _NDEvent M α β) (kind : EventKind) (α' β')
    extends _NDEventPO ev kind where
@@ -28,6 +41,15 @@ structure _RNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M
         → ∃ am', abstract.effect am (lift_in x) (lift_out y, am')
                  ∧ refine am' m'
 
+/-- The representation of ordinary refined non-deterministic events
+with: `AM` the abstact machine type, `M` the concrete maching type,
+ `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
+ `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`)
+
+Note that events, of type `OrdinaryRNDEvent`, are not directly constructed using this
+structure. More user-friendly specification structures, such as `RNDEventSpec`, and smart constructors,
+ such as `newRNDEvent` are preferably employed in practice.
+ -/
 structure OrdinaryRNDEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (α β) (α':=α) (β':=β) extends _NDEvent M α β where
   po : _RNDEventPO (instR:=instR) to_NDEvent (EventKind.TransNonDet Convergence.Ordinary) α' β'
@@ -40,21 +62,42 @@ def OrdinaryRNDEvent.toOrdinaryNDEvent [Machine ACTX AM] [Machine CTX M] [Refine
     po := ev.po.to_NDEventPO
   }
 
+/-- Specification of ordinary refined non-deterministic events.
+with: `AM` the abstact machine type, `M` the concrete maching type,
+ `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
+ `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`)
+The `abs` parameter is the ordinary non-deterministic event intended to be refined.
+
+Note that `abs` should not be anticipated nor convergent.
+
+The input and output types can be lifted to the abstract, if needed,
+ using the `lift_in` and `lift_out` components.
+
+The proof obligations, beyond `safety` and `feasibility` (of abstract events),
+are guard `strengthening` and abstract event `simulation`.
+ -/
 structure RNDEventSpec (AM) [Machine ACTX AM]
                         (M) [Machine CTX M]
                         [Refinement AM M]
   {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
   extends NDEventSpec M α β where
 
+  /-- Transformation of input parameters: how a concrete parameter must be interpreted
+  at the abstract level. -/
   lift_in : α → α'
+
+  /-- Transformation of output value: how a concrete output must be interpreted
+  at the abstract level. -/
   lift_out : β → β'
 
+  /-- Proof obligation: guard strengthening. -/
   strengthening (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → ∀ am, refine am m
       → abstract.guard am (lift_in x)
 
+  /-- Proof obligation: action simulation. -/
   simulation (m : M) (x : α):
     Machine.invariant m
     → guard m x
@@ -64,6 +107,10 @@ structure RNDEventSpec (AM) [Machine ACTX AM]
         → ∃ am', abstract.effect am (lift_in x) (lift_out y, am')
                  ∧ refine am' m'
 
+/-- Smart constructor for ordinary refined non-deterministic event,
+with: `abs` the (ordinary) non-deterministic event to refine, and
+  `ev` the refined event specification (cf. `RNDEventSpec`).
+-/
 @[simp]
 def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRNDEvent AM M α β α' β' :=
@@ -78,6 +125,7 @@ def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     }
   }
 
+/-- Variant of `RNDEventSpec` with implicit `Unit` output type -/
 structure RNDEventSpec' (AM) [Machine ACTX AM]
                         (M) [Machine CTX M]
                         [Refinement AM M]
@@ -116,11 +164,13 @@ def RNDEventSpec'.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement A
       <;> assumption
   }
 
+/-- Variant of `newRNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' Unit) (ev : RNDEventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryRNDEvent AM M α Unit α' Unit :=
   newRNDEvent abs ev.toRNDEventSpec
 
+/-- Variant of `RNDEventSpec` with implicit `Unit` input and output types -/
 structure RNDEventSpec'' (AM) [Machine ACTX AM]
                         (M) [Machine CTX M]
                         [Refinement AM M]
@@ -156,13 +206,17 @@ def RNDEventSpec''.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement 
       <;> assumption
   }
 
+/-- Variant of `newRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit) (ev : RNDEventSpec'' AM M abs) : OrdinaryRNDEvent AM M Unit Unit :=
   newRNDEvent abs ev.toRNDEventSpec
 
-/- Initialization events -/
+/-!
+## Non-deterministic initialization events
+-/
 
+/-- Internal representation of proof obligations for ordinary initialization events. -/
 structure _InitRNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
    (ev : _InitNDEvent M α β) (kind : EventKind) (α' β')
    extends _InitNDEventPO ev kind where
@@ -182,6 +236,10 @@ structure _InitRNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement 
       → ∃ am', abstract.init (lift_in x) (lift_out y, am')
                ∧ refine am' m'
 
+/-- The (internal) type of ordinary refined non-deterministic initialization events
+with: `AM` the abstact machine type, `M` the concrete maching type,
+ `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
+ `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`) -/
 structure InitRNDEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (α) (β) (α':=α) (β':=β)
   extends _InitNDEvent M α β where
@@ -194,6 +252,13 @@ def InitRNDEvent.toInitNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM 
   po := ev.po.to_InitNDEventPO
 }
 
+/-- Specification of ordinary refined initialization events.
+The proof obligations, beyond `safety` and `feasibility` are guard `strengthening`
+and abstract event `simulation`.
+
+The input and output types can be lifted to the abstract, if needed,
+ using the `lift_in` and `lift_out` components.
+ -/
 structure InitRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : InitNDEvent AM α' β')
   extends InitNDEventSpec M α β where
@@ -211,6 +276,10 @@ structure InitRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinemen
       → ∃ am', abstract.init (lift_in x) (lift_out y, am')
                ∧ refine am' m'
 
+/-- Smart constructor for non-deterministic refined initialization event,
+with: `abs` the (ordinary) event to refine, and
+  `ev` the refined event specification (cf. `InitRNDEventSpec`).
+-/
 @[simp]
 def newInitRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : InitNDEvent AM α' β')
@@ -246,6 +315,7 @@ def newInitRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     }
   }
 
+/-- Variant of `InitRNDEventSpec` with implicit `Unit` output type -/
 structure InitRNDEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   {α α'} (abstract : InitNDEvent AM α' Unit)
   extends InitNDEventSpec' M α where
@@ -277,12 +347,14 @@ def InitRNDEventSpec'.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refi
       apply ev.simulation x Hgrd m' Hini
   }
 
+/-- Variant of `newInitRNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   {α α'} (abs : InitNDEvent AM α' Unit)
   (ev : InitRNDEventSpec' AM M (α:=α) (α':=α') abs) : InitRNDEvent AM M α Unit α' Unit :=
   newInitRNDEvent abs ev.toInitRNDEventSpec
 
+/-- Variant of `InitRNDEventSpec` with implicit `Unit` input and output types -/
 structure InitRNDEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
   (abstract : InitNDEvent AM Unit Unit)
   extends InitNDEventSpec'' M where
@@ -312,6 +384,7 @@ def InitRNDEventSpec''.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Ref
       apply ev.simulation Hgrd m' Hini
   }
 
+/-- Variant of `newInitRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newInitRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitNDEvent AM Unit Unit)

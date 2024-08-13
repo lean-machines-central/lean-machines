@@ -4,36 +4,68 @@ import LeanMachines.Refinement.Relational.NonDet.Basic
 import LeanMachines.Refinement.Relational.NonDet.Convergent
 import LeanMachines.Refinement.Relational.Abstract
 
+/-!
+
+# Reusing abstract non-deterministic events
+
+This module establish generic principles for the
+reuse of abstract non-deterministic events at the concrete level
+ in case of a relational refinement.
+
+**Important**: like for the deterministic case, it is simpler to
+reuse abstract events in the case of functional refinement,
+ or event better, strong refinement, when applicable.
+
+cf. module `Refinement.Relational.Abstract` (deterministic case) for
+more informations about the reuse model.
+
+-/
+
 open Refinement
 
+/-!
+## Transitional abstract events
+-/
+
+/-- Reuse of abstract events: the `lift/unlift` part specific to non-determinism.
+(machine-level properties are the same as in the deterministic case). -/
 structure _AbstractRNDEventSpec (AM) [Machine ACTX AM]
                                (M) [Machine CTX M]
                                [Refinement AM M] (α)
           extends _AbstractREventSpec AM M α where
 
+  /-- Proof obligation: lifting an unlifted abstract state change is invariant
+  (a kind of functionality constraint). -/
   lift_unlift (m : M) (am am' : AM) (x : α):
     Machine.invariant m → Machine.invariant am'
     → lift (unlift am am' m x) = am'
 
-
+/-- The specification of the reuse of an `abstract` non-deterministic
+event, with the `lift` and `unlift` operations, the associated proof obligations,
+ and the further two event-level proof obligations specific to non-determinism. -/
 structure AbstractRNDEventSpec (AM) [Machine ACTX AM]
                                (M) [Machine CTX M]
                                [Refinement AM M]
   {α β} (abstract : OrdinaryNDEvent AM α β)
           extends _AbstractRNDEventSpec AM M α where
 
+  /-- Proof obligation: lifting, then unlifting is safe wrt. the `refine` invariant. -/
   step_ref (m : M) (x : α):
     Machine.invariant m
     → abstract.guard (lift m) x
     → ∀ y, ∀ am', abstract.effect (lift m) x (y, am')
                   → refine am' (unlift (lift m) am' m x)
 
+  /-- Proof obligation: invariant preservation of the abstract event. -/
   step_safe (m : M) (x : α):
     Machine.invariant m
     → abstract.guard (lift m) x
     → ∀ y, ∀ am', abstract.effect (lift m) x (y, am')
                   → Machine.invariant (unlift (lift m) am' m x)
 
+/-- The construction of a reused non-deterministic abstract event (ordinary case).
+Parameter `abs` is the event to reuse  (event of abstract machine)
+Parameter `ev` is the reuse specification (cf. `AbstractRNDEventSpec`). -/
 @[simp]
 def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
   (abs : OrdinaryNDEvent AM α β) (ev : AbstractRNDEventSpec AM M abs) : OrdinaryRNDEvent AM M α β :=
@@ -95,6 +127,7 @@ def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M
     }
   }
 
+/-- Variant of `AbstractRNDEventSpec` with implicit `Unit` input type -/
 structure AbstractRNDEventSpec' (AM) [Machine ACTX AM]
                                (M) [Machine CTX M]
                                [Refinement AM M]
@@ -127,6 +160,7 @@ def AbstractRNDEventSpec'.toAbstractRNDEventSpec [Machine ACTX AM] [Machine CTX 
   }
 
 
+/-- Variant of `newAbstractRNDEvent` with implicit `Unit` input type -/
 @[simp]
 def newAbstractRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α Unit) (ev : AbstractRNDEventSpec' AM M abs) : OrdinaryRNDEvent AM M α Unit :=
@@ -142,6 +176,7 @@ structure _AbstractRNDEventSpec'' (AM) [Machine ACTX AM]
     → lift (unlift am am' m) = am'
 
 
+/-- Variant of `AbstractRNDEventSpec` with implicit `Unit` input and output types -/
 structure AbstractRNDEventSpec'' (AM) [Machine ACTX AM]
                                  (M) [Machine CTX M]
                                  [Refinement AM M]
@@ -175,27 +210,39 @@ def AbstractRNDEventSpec''.toAbstractRNDEventSpec [Machine ACTX AM] [Machine CTX
       apply ev.step_safe <;> assumption
   }
 
+/-- Variant of `newAbstractRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newAbstractRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit) (ev : AbstractRNDEventSpec'' AM M abs) : OrdinaryRNDEvent AM M Unit Unit :=
   newAbstractRNDEvent abs ev.toAbstractRNDEventSpec
 
+/-!
+## Initialization abstract events
+-/
 
+
+/-- The specification of the reuse of an `abstract` non-deterministic
+initialization event, with the `lift` and `unlift` operations,
+the associated proof obligations,  and further three event-level proof obligations. -/
 structure AbstractInitRNDEventSpec (AM) [Machine ACTX AM]
                                    (M) [Machine CTX M]
                                   [Refinement AM M]
   {α β} (abstract : InitNDEvent AM α β)
           extends _AbstractREventSpec AM M α where
 
+  /-- Proof obligation:  lifting abstract state change is invariant
+  (a kind of functionality). -/
   lift_unlift (am' : AM) (x : α):
     Machine.invariant am'
     → lift (unlift Machine.reset am' Machine.reset x) = am'
 
+  /-- Proof obligation: unlifting abstract state change is safe wrt. the `refine` invariant. -/
   step_ref (x : α):
     abstract.guard x
     → ∀ y, ∀ am', abstract.init x (y, am')
                   → refine am' (unlift Machine.reset am' Machine.reset x)
 
+  /-- Proof obligation: invariant preservation of the abstract event. -/
   step_safe (x : α):
     abstract.guard x
     → ∀ y, ∀ am', abstract.init x (y, am')
@@ -210,6 +257,9 @@ def AbstractInitRNDEventSpec.to_InitNDEvent  [Machine ACTX AM] [Machine CTX M] [
                              ∧ m' =  ev.unlift Machine.reset am' Machine.reset x
   }
 
+/-- The construction of a reused non-deterministic abstract initialization event.
+Parameter `abs` is the event to reuse  (event of abstract machine)
+Parameter `ev` is the reuse specification (cf. `AbstractInitRNDEventSpec`). -/
 @[simp]
 def newAbstractInitRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
   (abs : InitNDEvent AM α β) (ev : AbstractInitRNDEventSpec AM M abs) : InitRNDEvent AM M α β :=
@@ -264,6 +314,7 @@ def newAbstractInitRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement 
     }
   }
 
+/-- Variant of `AbstractInitRNDEventSpec` with implicit `Unit` output type -/
 structure AbstractInitRNDEventSpec' (AM) [Machine ACTX AM]
                                    (M) [Machine CTX M]
                                   [Refinement AM M]
@@ -284,6 +335,7 @@ structure AbstractInitRNDEventSpec' (AM) [Machine ACTX AM]
     → ∀ am', abstract.init x ((), am')
              → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
+/-- Variant of `AbstractInitRNDEventSpec` with implicit `Unit` output type -/
 @[simp]
 def AbstractInitRNDEventSpec'.toAbstractInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abstract : InitNDEvent AM α Unit)
@@ -299,11 +351,13 @@ def AbstractInitRNDEventSpec'.toAbstractInitRNDEventSpec [Machine ACTX AM] [Mach
       apply ev.step_safe <;> assumption
   }
 
+/-- Variant of `newAbstractInitRNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newAbstractInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitNDEvent AM α Unit) (ev : AbstractInitRNDEventSpec' AM M abs) : InitRNDEvent AM M α Unit :=
   newAbstractInitRNDEvent abs ev.toAbstractInitRNDEventSpec
 
+/-- Variant of `AbstractInitRNDEventSpec` with implicit `Unit` input and output types -/
 structure AbstractInitRNDEventSpec'' (AM) [Machine ACTX AM]
                                      (M) [Machine CTX M]
                                      [Refinement AM M]
@@ -340,11 +394,18 @@ def AbstractInitRNDEventSpec''.toAbstractInitRNDEventSpec [Machine ACTX AM] [Mac
       apply ev.step_safe <;> assumption
   }
 
+/-- Variant of `newAbstractInitRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newAbstractInitRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitNDEvent AM Unit Unit) (ev : AbstractInitRNDEventSpec'' AM M abs) : InitRNDEvent AM M Unit Unit :=
   newAbstractInitRNDEvent abs ev.toAbstractInitRNDEventSpec
 
+/-!
+## Anticipated abstract events
+-/
+
+/-- Reuse of an abstract anticipated event with `abs` a non-deterministic anticipated event.
+The requirements are those of `AbstractRNDEventSpec`. -/
 @[simp]
 def newAbstractAnticipatedRNDEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
   (abs : AnticipatedNDEvent v AM α β) (ev : AbstractRNDEventSpec AM M abs.toOrdinaryNDEvent) : AnticipatedRNDEvent v AM M α β :=
@@ -369,16 +430,20 @@ def newAbstractAnticipatedRNDEvent [Preorder v] [Machine ACTX AM] [Machine CTX M
     }
   }
 
+/-- Variant of `newAbstractAnticipatedRNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newAbstractAnticipatedRNDEvent' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : AnticipatedNDEvent v AM α Unit) (ev : AbstractRNDEventSpec' AM M abs.toOrdinaryNDEvent) : AnticipatedRNDEvent v AM M α Unit :=
   newAbstractAnticipatedRNDEvent abs ev.toAbstractRNDEventSpec
 
+/-- Variant of `AbstractAnticipatedRNDEventSpec` with implicit `Unit` input and output types -/
 @[simp]
 def newAbstractAnticipatedRNDEvent'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : AnticipatedNDEvent v AM Unit Unit) (ev : AbstractRNDEventSpec'' AM M abs.toOrdinaryNDEvent) : AnticipatedRNDEvent v AM M Unit Unit :=
   newAbstractAnticipatedRNDEvent abs ev.toAbstractRNDEventSpec
 
+/-- Reuse of an abstract convergent event with `abs` a non-deterministic convergent event.
+The requirements are those of `AbstractRNDEventSpec`. -/
 @[simp]
 def newAbstractConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
   (abs : ConvergentNDEvent v AM α β) (ev : AbstractRNDEventSpec AM M abs.toAnticipatedNDEvent.toOrdinaryNDEvent) : ConvergentRNDEvent v AM M α β :=
@@ -403,11 +468,13 @@ def newAbstractConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX A
     }
   }
 
+/-- Variant of `newAbstractConvergentRNDEvent` with implicit `Unit` output type. -/
 @[simp]
 def newAbstractConvergentRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : ConvergentNDEvent v AM α Unit) (ev : AbstractRNDEventSpec' AM M abs.toAnticipatedNDEvent.toOrdinaryNDEvent) : ConvergentRNDEvent v AM M α Unit :=
   newAbstractConvergentRNDEvent abs ev.toAbstractRNDEventSpec
 
+/-- Variant of `newAbstractConvergentRNDEvent` with implicit `Unit` input and output types. -/
 @[simp]
 def newAbstractConvergentRNDEvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : ConvergentNDEvent v AM Unit Unit) (ev : AbstractRNDEventSpec'' AM M abs.toAnticipatedNDEvent.toOrdinaryNDEvent) : ConvergentRNDEvent v AM M Unit Unit :=

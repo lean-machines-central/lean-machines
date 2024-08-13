@@ -124,15 +124,22 @@ structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refineme
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
   extends EventSpec M α β where
 
+  /-- Transformation of input parameters: how a concrete parameter must be interpreted
+  at the abstract level. -/
   lift_in : α → α'
+
+  /-- Transformation of output value: how a concrete output must be interpreted
+  at the abstract level. -/
   lift_out : β → β'
 
+  /-- Proof obligation: guard strengthening. -/
   strengthening (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → ∀ am, refine am m
       → abs.guard am (lift_in x)
 
+  /-- Proof obligation: action simulation. -/
   simulation (m : M) (x : α):
     Machine.invariant m
     → guard m x
@@ -234,9 +241,7 @@ def newREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   newREvent abs ev.toREventSpec
 
 /-!
-
 ### Ordinary initialization events
-
 -/
 
 /-- Internal representation of proof obligations for ordinary initialization events. -/
@@ -330,7 +335,7 @@ def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
     }
   }
 
-/-- Variant of `REventSpec'` with implicit `Unit` output type -/
+/-- Variant of `InitREventSpec` with implicit `Unit` output type -/
 structure InitREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   {α α'} (abstract : InitEvent AM α' Unit)
   extends InitEventSpec' M α where
@@ -365,7 +370,7 @@ def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : InitREventSpec' AM M (α:=α) (α':=α') abs) : InitREvent AM M α Unit α' Unit :=
   newInitREvent abs ev.toInitREventSpec
 
-/-- Variant of `REventSpec` with implicit `Unit` input and output types -/
+/-- Variant of `InitREventSpec` with implicit `Unit` input and output types -/
 structure InitREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (abstract : InitEvent AM Unit Unit)
   extends InitEventSpec'' M where

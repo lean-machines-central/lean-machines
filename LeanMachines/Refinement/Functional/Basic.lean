@@ -11,9 +11,7 @@ refinement principles for LeanMachines.
 -/
 
 /-!
-
 ## Machine refinement
-
 -/
 
 /-- The typeclass definition for the functional refinement
@@ -60,6 +58,8 @@ by
 ## Event refinement
 
 For functional refinement, the event specifications are prefixed with by `FR`.
+
+cf. the module `Refinement.Refinement.Basic` for further documentation.
 
 -/
 

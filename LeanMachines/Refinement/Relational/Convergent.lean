@@ -11,20 +11,7 @@ convergent events.
 
 This builds on the well-founded ordering relations of Mathlib4,
  which means convergence is not restricted to e.g. natural number
- of finite set orderings.
-
-Technically, anticipated and convergence event specifications depend
-on a component `variant` of type `v`. For anticipated events, the
-type `v` must be instance of Mathlib's `Preorder` typeclass, with
-the usual requirements of preordering: reflexivity and transitivity.
-For convergent events, the subclass `WellFoundedLT` must also be
-instantiated, with the main requirement that the "lower than" relation
-(denoted by `LT.lt` or more simply `·<·`) of the preorder is well-founded.
-See Mathlib's documentation about these typeclasses for details.
-
- *Remark*: One drawback is that Mathlib4 is then a (rather large) dependency
- but building on such a rich mathematical toolkit is more of an
- asset than an hindrance.
+ of finite set orderings (cf. module `Event.Convergent`).
 
 -/
 
@@ -45,7 +32,7 @@ structure _AnticipatedREventPO (v) [Preorder v]  [Machine ACTX AM] [Machine CTX 
     → let (_, m') := ev.action m x
       variant m' ≤ variant m
 
-/-- The representation of anticipated events, constructed
+/-- The representation of anticipated refined events, constructed
 by specifications structures, e.g. `AnticipatedREventSpec`,
  and smart constructors, e.g. `newAnticipatedREvent`. -/
 structure AnticipatedREvent (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
@@ -83,6 +70,7 @@ structure AnticipatedREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Mac
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
   extends _Variant v, REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
+  /-- Proof obligation: the variant does not increases. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
     → guard m x
@@ -152,12 +140,13 @@ private def _newAnticipatedREvent' [Preorder v] [Machine ACTX AM] [Machine CTX M
   (abs : OrdinaryEvent AM α' Unit) (ev : AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs) : AnticipatedREvent v AM M α Unit α' Unit :=
   _newAnticipatedREvent abs ev.toAnticipatedREventSpec
 
-/-- Variant of `newAnticipatedREvent` with implicit `Unit` output type -/
+/-- Variant of `newAnticipatedREventFromOrdinary` with implicit `Unit` output type -/
 @[simp]
 def newAnticipatedREventfromOrdinary' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev : AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs) : AnticipatedREvent v AM M α Unit α' Unit :=
   _newAnticipatedREvent' abs ev
 
+/-- Variant of `newAnticipatedREventFromAnticipated` with implicit `Unit` output type -/
 @[simp]
 def newAnticipatedREventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : AnticipatedEvent v AM α' Unit) (ev : AnticipatedREventSpec' v AM M (α:=α) (α':=α') abs.toOrdinaryEvent) : AnticipatedREvent v AM M α Unit α' Unit :=
@@ -188,12 +177,13 @@ private def _newAnticipatedREvent'' [Preorder v] [Machine ACTX AM] [Machine CTX 
   (abs : OrdinaryEvent AM Unit Unit) (ev : AnticipatedREventSpec'' v AM M abs) : AnticipatedREvent v AM M Unit Unit :=
   _newAnticipatedREvent abs ev.toAnticipatedREventSpec
 
-/-- Variant of `newAnticipatedREvent` with implicit `Unit` input and output types -/
+/-- Variant of `newAnticipatedREventfromOrdinary` with implicit `Unit` input and output types -/
 @[simp]
 def newAnticipatedREventfromOrdinary'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev : AnticipatedREventSpec'' v AM M abs) : AnticipatedREvent v AM M Unit Unit :=
   _newAnticipatedREvent'' abs ev
 
+/-- Variant of `newAnticipatedREventfromAnticipated` with implicit `Unit` input and output types -/
 @[simp]
 def newAnticipatedREventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : AnticipatedEvent v AM Unit Unit) (ev : AnticipatedREventSpec'' v AM M abs.toOrdinaryEvent) : AnticipatedREvent v AM M Unit Unit :=
@@ -203,7 +193,7 @@ def newAnticipatedREventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machin
 ### Convergent refined events
 -/
 
-/-- Internal representation of proof obligations for  events -/
+/-- Internal representation of proof obligations for convergent refined events -/
 structure _ConvergentREventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : _Event M α β) (kind : EventKind) (α') (β')
   extends _AnticipatedREventPO (instR:=instR) v ev kind α' β' where
@@ -214,7 +204,7 @@ structure _ConvergentREventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACTX A
     → let (_, m') := ev.action m x
       variant m' < variant m
 
-/-- The representation of convergent events, constructed
+/-- The representation of convergent refined events, constructed
 by specifications structures, e.g. `ConvergentREventSpec`,
  and smart constructors, e.g. `newConvergentREvent`. -/
 structure ConvergentREvent (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
@@ -234,7 +224,7 @@ def ConvergentREvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine A
     }
   }
 
-/-- Specification of anticipated refined events.
+/-- Specification of convergent refined events.
 with: `v` a variant type assumed to be pre-ordered with well-founded less-than relation,
  `AM` the abstact machine type, `M` the concrete maching type,
  `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
@@ -250,6 +240,7 @@ structure ConvergentREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine 
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
   extends _Variant v, REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
+  /-- Proof obligation: the variant strictly decreases. -/
   convergence (m : M) (x : α):
     Machine.invariant m
     → guard m x
@@ -258,7 +249,7 @@ structure ConvergentREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine 
 
 /-- Smart constructor for convergent refined event,
 with: `abs` the event to refine, and
-  `ev` the refined event specification (cf. `AnticipatedREventSpec`).
+  `ev` the refined event specification (cf. `ConvergentREventSpec`).
 -/
 @[simp]
 def newConvergentREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]

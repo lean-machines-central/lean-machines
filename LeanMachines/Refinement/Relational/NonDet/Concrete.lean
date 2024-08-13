@@ -6,13 +6,31 @@ import LeanMachines.NonDet.Ordinary
 import LeanMachines.Refinement.Relational.Basic
 import LeanMachines.Refinement.Relational.NonDet.Convergent
 
+/-!
+
+# Defining new, concrete non-deterministic events
+
+Concrete events are events only available at the concrete level
+when defining a refined machine.
+
+This module implements the non-deterministic case, cf.
+ `Refinement.Relational.Concrete` for further information and
+ the deterministic case.
+
+-/
+
 open Refinement
 
-/- Ordinary concrete events -/
+/-!
+## Concrete ordinary events
+-/
 
+/-- The specification of a concrete (ordinary) non-deterministic event, refining (non-deterministic) Skip.-/
 structure ConcreteRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β)
   extends NDEventSpec M α β where
 
+  /-- Proof obligation: the refined event safely simulates the non-deterministic Skip event
+   (no state change at the abstract level). -/
   simulation (m : M) (x : α):
     Machine.invariant m
     → guard m x
@@ -20,7 +38,8 @@ structure ConcreteRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR
                    → ∀ am, refine am m
                            → refine (self:=instR) am m'
 
-
+/-- The construction of a concrete (ordinary) non-deterministic event
+ from a `ConcreteRNDEventSpec` specification. -/
 @[simp]
 def newConcreteRNDEvent [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : ConcreteRNDEventSpec AM M α β) : OrdinaryRNDEvent AM M α β :=
@@ -37,6 +56,7 @@ def newConcreteRNDEvent [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM 
     }
   }
 
+/-- Variant of `ConcreteRNDEventSpec` with implicit `Unit` output type -/
 structure ConcreteRNDEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α)
   extends NDEventSpec' M α where
 
@@ -55,11 +75,13 @@ def ConcreteRNDEventSpec'.toConcreteRNDEventSpec [Machine ACTX AM] [Machine CTX 
     simulation := fun m x => by simp ; apply ev.simulation
   }
 
+/-- Variant of `newConcreteRNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newConcreteRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConcreteRNDEventSpec' AM M α) : OrdinaryRNDEvent AM M α Unit :=
   newConcreteRNDEvent ev.toConcreteRNDEventSpec
 
+/-- Variant of `ConcreteRNDEventSpec` with implicit `Unit` input and output types -/
 structure ConcreteRNDEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   extends NDEventSpec'' M where
 
@@ -78,22 +100,33 @@ def ConcreteRNDEventSpec''.toConcreteRNDEventSpec [Machine ACTX AM] [Machine CTX
     simulation := fun m => by simp ; apply ev.simulation
   }
 
+/-- Variant of `newConcreteRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newConcreteNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConcreteRNDEventSpec'' AM M) : OrdinaryRNDEvent AM M Unit Unit :=
   newConcreteRNDEvent ev.toConcreteRNDEventSpec
 
-/-  Anticipated concrete events -/
+/-!
+## Concrete anticipated events
 
+**Remark**:  for Event-B (conceptual) compatibility, this is the minimal set of requirements
+for introducing new, concrete events in a refined machine.
+-/
+
+/-- The specification of a concrete non-deterministic anticipated event, with the requirements
+of `ConcreteRNDEventSpec` together with anticipation requirements (variant, etc).-/
 structure ConcreteAnticipatedRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β)
   extends _Variant v (M:=M), ConcreteRNDEventSpec AM M α β where
 
+  /-- Proof obligation: the concrete variant does not increases. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → ∀ y, ∀ m', effect m x (y, m')
                  → variant m' ≤ variant m
 
+/-- The construction of a concrete non-deterministic anticipated event
+from a `ConcreteAnticipatedRNDEventSpec` specification. -/
 @[simp]
 def newConcreteAnticipatedRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : ConcreteAnticipatedRNDEventSpec v AM M α β) : AnticipatedRNDEvent v AM M α β :=
@@ -115,6 +148,7 @@ def newConcreteAnticipatedRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX 
     }
   }
 
+/-- Variant of `ConcreteAnticipatedRNDEventSpec` with implicit `Unit` output type -/
 structure ConcreteAnticipatedRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α)
   extends _Variant v (M:=M), ConcreteRNDEventSpec' AM M α where
 
@@ -134,11 +168,13 @@ def ConcreteAnticipatedRNDEventSpec'.toConcreteAnticipatedRNDEventSpec [Preorder
     nonIncreasing := fun m x => by simp ; apply ev.nonIncreasing
   }
 
+/-- Variant of `newConcreteAnticipatedRNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newConcreteAnticipatedRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConcreteAnticipatedRNDEventSpec' v AM M α) : AnticipatedRNDEvent v AM M α Unit :=
   newConcreteAnticipatedRNDEvent ev.toConcreteAnticipatedRNDEventSpec
 
+/-- Variant of `ConcreteAnticipatedRNDEventSpec` with implicit `Unit` input and output types -/
 structure ConcreteAnticipatedRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   extends _Variant v (M:=M), ConcreteRNDEventSpec'' AM M where
 
@@ -158,23 +194,30 @@ def ConcreteAnticipatedRNDEventSpec''.toConcreteAnticipatedRNDEventSpec [Preorde
     nonIncreasing := fun m => by simp ; apply ev.nonIncreasing
   }
 
+/-- Variant of `newConcreteAnticipatedRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newConcreteAnticipatedNDEvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConcreteAnticipatedRNDEventSpec'' v AM M) : AnticipatedRNDEvent v AM M Unit Unit :=
   newConcreteAnticipatedRNDEvent ev.toConcreteAnticipatedRNDEventSpec
 
+/-!
+## Concrete convergent events
+-/
 
-/-  Convergent concrete events -/
-
+/-- The specification of a concrete non-deterministic convergent event, with the requirements
+of `ConcreteRNDEventSpec` together with convergence requirements (variant, etc).-/
 structure ConcreteConvergentRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β)
   extends _Variant v (M:=M), ConcreteRNDEventSpec AM M α β where
 
+  /-- Proof obligation: the variant strictly decrases. -/
   convergence (m : M) (x : α):
     Machine.invariant m
     → guard m x
     → ∀ y, ∀ m', effect m x (y, m')
                  → variant m' < variant m
 
+/-- The construction of a concrete non-deterministic convergent event
+from a `ConcreteConvergentRNDEventSpec` specification. -/
 @[simp]
 def newConcreteConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : ConcreteConvergentRNDEventSpec v AM M α β) : ConvergentRNDEvent v AM M α β :=
@@ -197,6 +240,7 @@ def newConcreteConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX A
     }
   }
 
+/-- Variant of `ConcreteConvergentRNDEventSpec` with implicit `Unit` output type -/
 structure ConcreteConvergentRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α)
   extends _Variant v (M:=M), ConcreteRNDEventSpec' AM M α where
 
@@ -216,11 +260,13 @@ def ConcreteConvergentRNDEventSpec'.toConcreteConvergentRNDEventSpec [Preorder v
     convergence := fun m x => by simp ; apply ev.convergence
   }
 
+/-- Variant of `newConcreteConvergentRNDEvent` with implicit `Unit` output type -/
 @[simp]
 def newConcreteConvergentRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConcreteConvergentRNDEventSpec' v AM M α) : ConvergentRNDEvent v AM M α Unit :=
   newConcreteConvergentRNDEvent ev.toConcreteConvergentRNDEventSpec
 
+/-- Variant of `ConcreteConvergentRNDEventSpec` with implicit `Unit` input and output types -/
 structure ConcreteConvergentRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   extends _Variant v (M:=M), ConcreteRNDEventSpec'' AM M where
 
@@ -240,6 +286,7 @@ def ConcreteConvergentRNDEventSpec''.toConcreteConvergentRNDEventSpec [Preorder 
     convergence := fun m => by simp ; apply ev.convergence
   }
 
+/-- Variant of `newConcreteConvergentRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newConcreteConvergentNDEvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (ev : ConcreteConvergentRNDEventSpec'' v AM M) : ConvergentRNDEvent v AM M Unit Unit :=
