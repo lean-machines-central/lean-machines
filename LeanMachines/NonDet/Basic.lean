@@ -81,7 +81,7 @@ def skip_NDEvent [Machine CTX M] : _NDEvent M α β :=
 -/
 
 
--- Remark: The functor instance is existential, not suprising given the relational context
+-- Remark: The functor instance is existential, not surprising given the relational context
 instance [Machine CTX M] : Functor (_NDEvent M γ) where
   map f ev :=
   {
