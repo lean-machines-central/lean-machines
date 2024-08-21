@@ -31,9 +31,8 @@ def AbstractSRNDEventSpec.toAbstractFRNDEventSpec  [Machine ACTX AM] [Machine CT
       have Hlr := lift_ref (AM:=AM) m Hinv
       have Hsafe := refine_safe (self:=instRefinementOfFRefinement) (lift m) m Hinv Hlr
       have Hinv' := abstract.po.safety (lift m) x Hsafe Hgrd y am' Heff
-      refine unlift_refine ?Hsafe Hinv Hinv'
-      intros
-      exact ev.step_inv m x Hinv Hgrd y am' Heff
+      exact unlift_refine Hinv Hinv'
+
 
     step_safe := fun m x => by
       simp
@@ -65,13 +64,11 @@ structure AbstractSRNDEventSpec' (AM) [Machine ACTX AM]
              → Machine.invariant (unlift m am')
 
 @[simp]
-def AbstractSRNDEventSpec'.toAbstractSRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractSRNDEventSpec'.toAbstractSRNDEventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (abstract : OrdinaryNDEvent AM α Unit)
   (ev : AbstractSRNDEventSpec' AM M abstract) : AbstractSRNDEventSpec AM M abstract :=
   {
-    step_inv := fun m x => by
-      intros Hinv Hgrd _ am' Heff
-      apply ev.step_inv m x <;> assumption
+    step_inv := fun m x => fun a a_1 _ am' a_2 => ev.step_inv m x a a_1 am' a_2
   }
 
 @[simp]

@@ -157,7 +157,7 @@ instance [Monad m]: Arrow (Kleisli m) where
 
 instance [Monad m] [LawfulMonad m]: LawfulCategory (Kleisli m) where
   id_right _ := by simp
-  id_left _ := by  simp
+  id_left _ := by simp
   id_assoc _ _ _ := by simp
 
 instance [Monad m] [LawfulMonad m]: LawfulArrow (Kleisli m) where
