@@ -45,7 +45,7 @@ This comprises:
 class Machine (CTX : outParam (Type u)) (M) where
   /-- The context (i.e. parameters) of the machine. -/
   context : CTX
-  /-- The invariant property that must be satisified
+  /-- The invariant property that must be satisfied
   by a machine (state) of type `M`. -/
   invariant : M → Prop
   /-- The "before initialization", or *reset state*. -/
@@ -274,7 +274,7 @@ variable (γ)
 #check (Arrow.arrow f : _KEvent M γ α β)
 -/
 
--- Arrows are less poweful (but more general) than Monads
+-- Arrows are less powerful (but more general) than Monads
 -- but Events are monads in their output type
 -- and both monads and arrows do not apply on input types
 
