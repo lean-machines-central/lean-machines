@@ -64,7 +64,7 @@ structure AbstractSRNDEventSpec' (AM) [Machine ACTX AM]
              → Machine.invariant (unlift m am')
 
 @[simp]
-def AbstractSRNDEventSpec'.toAbstractSRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractSRNDEventSpec'.toAbstractSRNDEventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
   (abstract : OrdinaryNDEvent AM α Unit)
   (ev : AbstractSRNDEventSpec' AM M abstract) : AbstractSRNDEventSpec AM M abstract :=
   {
