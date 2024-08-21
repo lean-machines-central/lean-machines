@@ -77,7 +77,7 @@ which allows to combine input and output transformations in tuples, and opens up
 
 Applicative functors are (covariant) functors with two added requirements:
 
-$pure: \alpha \rightarrow \EV{m}{\gamma}{\alpha}$  (for an arbirary $\gamma$)
+$pure: \alpha \rightarrow \EV{m}{\gamma}{\alpha}$  (for an arbitrary $\gamma$)
 
 $apply: \EV{m}{\gamma}{\alpha \rightarrow \beta} \rightarrow \EV{m}{\gamma}{\alpha} \rightarrow \EV{m}{\gamma}{\beta}$
 
@@ -129,7 +129,7 @@ $comp : \EV{m}{\beta}{\gamma} \rightarrow \EV{m}{\alpha}{\beta} \rightarrow \EV{
 
 \textbf{Usage}:
 \begin{itemize}
-\item $id$ is an event that propates its input to the output, which is isomorphic to an Event-B event ``without'' an actual (i.e. changed) output.
+\item $id$ is an event that propagates its input to the output, which is isomorphic to an Event-B event ``without'' an actual (i.e. changed) output.
 \item $comp$ (and in particular the operator $\SEQ$) realizes the \textbf{sequential composition} of events, and is thus most useful
 \end{itemize}
 
@@ -151,7 +151,7 @@ $split : \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\alpha'}{\beta'} \rightarrow \
 
 \textbf{Derived operators}
 
-The follwing operators are derivable from $arrow$ and $split$ :
+The following operators are derivable from $arrow$ and $split$ :
 
 $first : \EV{m}{\alpha}{\beta} \rightarrow \EV{m}{\alpha \times \gamma}{\beta \times \gamma}$ (for an arbitrary $\gamma$)
 
