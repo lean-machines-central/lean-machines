@@ -42,25 +42,20 @@ theorem comp_assoc:
   f ∘ g ∘ h = (f ∘ g) ∘ h := rfl
 
 theorem swap_fun_convol:
-  @swap_fun α β ∘ swap_fun = id :=
-by
-  funext x
-  simp [swap_fun]
+  @swap_fun α β ∘ swap_fun = id := rfl
 
 -- first' ≡ dimap swap swap . second'
 theorem StrongProfunctor.first_dimap {α β γ : Type u} (pf) [instPF: StrongProfunctor pf] [LawfulStrongProfunctor pf]:
   @first' pf instPF α β γ =
   Profunctor.dimap swap_fun swap_fun ∘ defaultSecond' pf :=
 by
-  simp [defaultSecond']
-  rw [comp_assoc]
+  rw [defaultSecond', comp_assoc]
   have H : (@dimap pf toProfunctor (γ × α) (α × γ) (γ × β) (β × γ) swap_fun swap_fun)
            ∘ (@dimap pf toProfunctor (α × γ) (γ × α) (β × γ) (γ × β) swap_fun swap_fun)
            = dimap (swap_fun ∘ swap_fun) (swap_fun ∘ swap_fun) := by
     rw [←LawfulProfunctor.dimap_comp]
   rw [H]
-  simp [swap_fun_convol]
-  simp [LawfulProfunctor.dimap_id]
+  simp only [swap_fun_convol, LawfulProfunctor.dimap_id]
   rfl
 
 section ProFun
@@ -69,8 +64,8 @@ instance: Profunctor (·→·) where
   dimap f h g := h ∘ g ∘ f
 
 instance: LawfulProfunctor (·→·) where
-  dimap_id := by intros ; rfl
-  dimap_comp _ _ _ _ := by rfl
+  dimap_id := rfl
+  dimap_comp _ _ _ _ := rfl
 
 instance: StrongProfunctor (·→·) where
   first' f := fun (x, y) => (f x, y)
