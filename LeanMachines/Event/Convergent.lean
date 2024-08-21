@@ -31,7 +31,7 @@ refinements of the event.
 Basic well-founded orders are proposed, such as the natural ordering for
 natural numbers (type `Nat`), or subset ordering for finite sets
  (type `FinSet α`), and so on.  Order composition means are also
- available, such as lexicographic produc ordering, multiset ordering, etc.
+ available, such as lexicographic product ordering, multiset ordering, etc.
  And of course, custom orderings can be defined (cf. Mathlib's documentation).
 
 -/
