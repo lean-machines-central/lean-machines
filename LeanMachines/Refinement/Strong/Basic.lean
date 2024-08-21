@@ -61,21 +61,10 @@ class SRefinement {ACTX : outParam (Type u₁)} (AM)
 open Refinement
 open SRefinement
 
-theorem unlift_refine  [Machine ACTX AM] [Machine CTX M] [instSR:SRefinement AM M]
-  {m : M} {am : AM} (Hsafe: Machine.invariant m
-                            → Machine.invariant am
-                            → Machine.invariant (unlift m am)):
-  Machine.invariant m → Machine.invariant am
-  → refine am (unlift m am) :=
-by
-  intros Hinv₁ Hinv₂
-  have Hinv₃ : Machine.invariant (unlift m am) := by
-    exact Hsafe Hinv₁ Hinv₂
-
-  have Href: refine (self:=inferInstanceAs (Refinement AM M)) (lift (unlift m am)) (unlift m am) := by
-    apply lift_ref (instFR:=instSR.toFRefinement)
-    assumption
-
+theorem unlift_refine [Machine ACTX AM] [Machine CTX M] [instSR:SRefinement AM M] {m : M} {am : AM}:
+    Machine.invariant m → Machine.invariant am → refine am (unlift m am) := by
+  intro Hinv₁ Hinv₂
+  have Href: refine (self:=inferInstanceAs (Refinement AM M)) (lift (unlift m am)) (unlift m am) := rfl
   rw [lift_unlift] at Href <;> assumption
 
 /-!
