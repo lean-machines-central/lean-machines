@@ -6,9 +6,9 @@ import LeanMachines.Event.Convergent
 open Refinement
 open FRefinement
 
-structure AnticipatedFREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure AnticipatedFREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
-  extends _Variant v, FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
+  extends _Variant v (instM:=instM), FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -30,9 +30,9 @@ def newAnticipatedFREventfromOrdinary [Preorder v] [Machine ACTX AM] [Machine CT
   (abs : OrdinaryEvent AM α' β') (ev : AnticipatedFREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : AnticipatedREvent v AM M α β α' β' :=
   newAnticipatedREventfromOrdinary abs ev.toAnticipatedREventSpec
 
-structure AnticipatedFREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure AnticipatedFREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
   {α α'} (abs : OrdinaryEvent AM α' Unit)
-  extends _Variant v, FREventSpec' AM M (α:=α) (α':=α') abs where
+  extends _Variant v (instM:=instM), FREventSpec' AM M (α:=α) (α':=α') abs where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -54,9 +54,9 @@ def newAnticipatedFREventfromOrdinary' [Preorder v] [Machine ACTX AM] [Machine C
   (abs : OrdinaryEvent AM α' Unit) (ev : AnticipatedFREventSpec' v AM M (α:=α) (α':=α') abs) : AnticipatedREvent v AM M α Unit α' Unit :=
   newAnticipatedFREventfromOrdinary abs ev.toAnticipatedFREventSpec
 
-structure AnticipatedFREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure AnticipatedFREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit)
-  extends _Variant v, FREventSpec'' AM M abs where
+  extends _Variant v (instM:=instM), FREventSpec'' AM M abs where
 
   nonIncreasing (m : M):
     Machine.invariant m
@@ -93,9 +93,9 @@ def newAnticipatedFREventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machi
   (abs : AnticipatedEvent v AM Unit Unit) (ev : AnticipatedFREventSpec'' v AM M abs.toOrdinaryEvent) : AnticipatedREvent v AM M Unit Unit :=
   newAnticipatedFREventfromAnticipated abs ev.toAnticipatedFREventSpec
 
-structure ConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure ConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
-  extends _Variant v, FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
+  extends _Variant v (instM:=instM), FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -117,9 +117,9 @@ def newConvergentFREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machi
   (abs : OrdinaryEvent AM α' β') (ev : ConvergentFREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : ConvergentREvent v AM M α β α' β' :=
   newConvergentREvent abs ev.toConvergentREventSpec
 
-structure ConvergentFREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure ConvergentFREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
   {α α'} (abs : OrdinaryEvent AM α' Unit)
-  extends _Variant v, FREventSpec' AM M (α:=α) (α':=α') abs where
+  extends _Variant v (instM:=instM), FREventSpec' AM M (α:=α) (α':=α') abs where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -141,9 +141,9 @@ def newConvergentFREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mach
   (abs : OrdinaryEvent AM α' Unit) (ev : ConvergentFREventSpec' v AM M (α:=α) (α':=α') abs) : ConvergentREvent v AM M α Unit α' Unit :=
   newConvergentFREvent abs ev.toConvergentFREventSpec
 
-structure ConvergentFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure ConvergentFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit)
-  extends _Variant v, FREventSpec'' AM M abs where
+  extends _Variant v (instM:=instM), FREventSpec'' AM M abs where
 
   convergence (m : M):
     Machine.invariant m

@@ -19,8 +19,8 @@ the deterministic case and common properties (e.g. what is convergence?).
 -/
 
 /-- The internal representation of proof obligations for anticipated events. -/
-structure _AnticipatedNDEventPO (v) [Preorder v] [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind)
-          extends _Variant v, _NDEventPO ev kind  where
+structure _AnticipatedNDEventPO (v) [Preorder v] [instM:Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind)
+          extends _Variant v (instM:=instM), _NDEventPO ev kind  where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -73,8 +73,8 @@ with input type `α` and output type `β`. The non-increasing proof relies
 Note that the guard, effect and safety PO of the event must be also
 specified, as in the ordinary case (cf. `OrdinaryNDEventSpec`).
   -/
-structure AnticipatedNDEventSpec (v) [Preorder v] {CTX} (M) [Machine CTX M] (α) (β)
-  extends _Variant v, NDEventSpec M α β where
+structure AnticipatedNDEventSpec (v) [Preorder v] {CTX} (M) [instM:Machine CTX M] (α) (β)
+  extends _Variant v (instM:=instM), NDEventSpec M α β where
   /-- Proof obligation: the variant is non-increasing. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -89,8 +89,8 @@ def newAnticipatedNDEvent [Preorder v] [Machine CTX M] (ev : AnticipatedNDEventS
   AnticipatedNDEvent_fromOrdinary (newNDEvent ev.toNDEventSpec) ev.to_Variant.variant ev.nonIncreasing
 
 /-- Variant of `AnticipatedNDEventSpec` with implicit `Unit` output type -/
-structure AnticipatedNDEventSpec' (v) [Preorder v] {CTX} (M) [Machine CTX M] (α)
-  extends _Variant v, NDEventSpec' M α where
+structure AnticipatedNDEventSpec' (v) [Preorder v] {CTX} (M) [instM:Machine CTX M] (α)
+  extends _Variant v (instM:=instM), NDEventSpec' M α where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -115,8 +115,8 @@ def newAnticipatedNDEvent' [Preorder v] [Machine CTX M] (ev : AnticipatedNDEvent
   newAnticipatedNDEvent ev.toAnticipatedNDEventSpec
 
 /-- Variant of `AnticipatedNDEventSpec` with implicit `Unit` input and output types -/
-structure AnticipatedNDEventSpec'' (v) [Preorder v] {CTX} (M) [Machine CTX M]
-  extends _Variant v, NDEventSpec'' M where
+structure AnticipatedNDEventSpec'' (v) [Preorder v] {CTX} (M) [instM:Machine CTX M]
+  extends _Variant v (instM:=instM), NDEventSpec'' M where
 
   nonIncreasing (m : M):
     Machine.invariant m
@@ -209,8 +209,8 @@ with input type `α` and output type `β`. The convergence proof relies
 Note that the guard, action and safety PO of the event must be also
 specified, as in the ordinary case (cf. `OrdinaryNDEventSpec`).
   -/
-structure ConvergentNDEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α) (β)
-  extends _Variant v, NDEventSpec M α β where
+structure ConvergentNDEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M] (α) (β)
+  extends _Variant v (instM:=instM), NDEventSpec M α β where
   /-- Proof obligation: the variant is strictly decreasing. -/
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -244,8 +244,8 @@ private def ConvergentNDEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v]
   }
 
 /-- Variant of `ConvergentNDEventSpec` with implicit `Unit` output type -/
-structure ConvergentNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α)
-  extends _Variant v, NDEventSpec' M α where
+structure ConvergentNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M] (α)
+  extends _Variant v (instM:=instM), NDEventSpec' M α where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -270,8 +270,8 @@ def newConvergentNDEvent' [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : C
   newConvergentNDEvent ev.toConvergentNDEventSpec
 
 /-- Variant of `ConvergentNDEventSpec` with implicit `Unit` input and output types -/
-structure ConvergentNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M]
-  extends _Variant v, NDEventSpec'' M where
+structure ConvergentNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M]
+  extends _Variant v (instM:=instM), NDEventSpec'' M where
 
   convergence (m : M):
     Machine.invariant m

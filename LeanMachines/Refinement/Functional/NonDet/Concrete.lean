@@ -83,8 +83,8 @@ def newConcreteFRNDEvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
 
 /- Anticipated concrete events -/
 
-structure ConcreteAnticipatedFRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: FRefinement AM M] (α) (β)
-  extends _Variant v, ConcreteFRNDEventSpec AM M α β where
+structure ConcreteAnticipatedFRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [instR: FRefinement AM M] (α) (β)
+  extends _Variant v (instM:=instM), ConcreteFRNDEventSpec AM M α β where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -164,8 +164,8 @@ def newConcreteAnticipatedFRNDEvent'' [Preorder v] [WellFoundedLT v] [Machine AC
 
 /- Convergent concrete events -/
 
-structure ConcreteConvergentFRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: FRefinement AM M] (α) (β)
-  extends _Variant v, ConcreteFRNDEventSpec AM M α β where
+structure ConcreteConvergentFRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [instR: FRefinement AM M] (α) (β)
+  extends _Variant v (instM:=instM), ConcreteFRNDEventSpec AM M α β where
 
   convergence (m : M) (x : α):
     Machine.invariant m

@@ -22,9 +22,9 @@ open Refinement
 -/
 
 /-- Internal representation of proof obligations for anticipated events -/
-structure _AnticipatedREventPO (v) [Preorder v]  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+structure _AnticipatedREventPO (v) [Preorder v]  [Machine ACTX AM] [instM:Machine CTX M] [instR: Refinement AM M]
   (ev : _Event M α β) (kind : EventKind) (α') (β')
-          extends _Variant v, _REventPO (instR:=instR) ev kind α' β'  where
+          extends _Variant v (instM:=instM), _REventPO (instR:=instR) ev kind α' β'  where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -66,9 +66,9 @@ The input and output types can be lifted to the abstract, if needed,
 The added proof obligation, beyond `safety` , guard `strengthening`,
 abstract event `simulation`, is a `nonIncreasing` requirement.
  -/
-structure AnticipatedREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure AnticipatedREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
-  extends _Variant v, REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
+  extends _Variant v (instM:=instM), REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
   /-- Proof obligation: the variant does not increases. -/
   nonIncreasing (m : M) (x : α):
@@ -95,8 +95,8 @@ private def _newAnticipatedREvent [Preorder v] [Machine ACTX AM] [Machine CTX M]
   }
 
 /-- Smart constructor for anticipated refined event,
-with: `abs` the (ordinary) event to refine, and
-  `ev` the refined event specification, which must be ordinary
+with: `abs` the ordinary event to refine, and
+  `ev` the refined event specification
   (cf. `AnticipatedREventSpec`).
 -/
 @[simp]
@@ -105,8 +105,8 @@ def newAnticipatedREventfromOrdinary [Preorder v] [Machine ACTX AM] [Machine CTX
   _newAnticipatedREvent abs ev
 
 /-- Smart constructor for anticipated refined event,
-with: `abs` the (ordinary) event to refine, and
-  `ev` the refined event specification, which must be anticipated
+with: `abs` the anticipated event to refine, and
+  `ev` the refined event specification
   (cf. `AnticipatedREventSpec`).
 
 -/
@@ -116,9 +116,9 @@ def newAnticipatedREventfromAnticipated [Preorder v] [Machine ACTX AM] [Machine 
   _newAnticipatedREvent abs.toOrdinaryEvent ev
 
 /-- Variant of `AnticipatedREventSpec` with implicit `Unit` output type -/
-structure AnticipatedREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure AnticipatedREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   {α α'} (abs : OrdinaryEvent AM α' Unit)
-  extends _Variant v, REventSpec' AM M (α:=α) (α':=α') abs where
+  extends _Variant v (instM:=instM), REventSpec' AM M (α:=α) (α':=α') abs where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -153,9 +153,9 @@ def newAnticipatedREventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machine
   _newAnticipatedREvent' abs.toOrdinaryEvent ev
 
 /-- Variant of `AnticipatedREventSpec` with implicit `Unit` input and output types -/
-structure AnticipatedREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure AnticipatedREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM Unit Unit)
-  extends _Variant v, REventSpec'' AM M abs where
+  extends _Variant v (instM:=instM), REventSpec'' AM M abs where
 
   nonIncreasing (m : M):
     Machine.invariant m
@@ -236,9 +236,9 @@ The input and output types can be lifted to the abstract, if needed,
 The added proof obligation, beyond `safety` , guard `strengthening`,
 abstract event `simulation`, is a `convergence` requirement.
  -/
-structure ConvergentREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure ConvergentREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
-  extends _Variant v, REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
+  extends _Variant v (instM:=instM), REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
   /-- Proof obligation: the variant strictly decreases. -/
   convergence (m : M) (x : α):
@@ -275,9 +275,9 @@ def newConvergentREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machin
   }
 
 /-- Variant of `ConvergentREventSpec` with implicit `Unit` output type -/
-structure ConvergentREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure ConvergentREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   {α α'} (abs : OrdinaryEvent AM α' Unit)
-  extends _Variant v, REventSpec' AM M (α:=α) (α':=α') abs where
+  extends _Variant v (instM:=instM), REventSpec' AM M (α:=α) (α':=α') abs where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -301,9 +301,9 @@ def newConvergentREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machi
   newConvergentREvent abs ev.toConvergentREventSpec
 
 /-- Variant of `ConvergentREventSpec` with implicit `Unit` input and output types -/
-structure ConvergentREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure ConvergentREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM Unit Unit)
-  extends _Variant v, REventSpec'' AM M abs where
+  extends _Variant v (instM:=instM), REventSpec'' AM M abs where
 
   convergence (m : M):
     Machine.invariant m

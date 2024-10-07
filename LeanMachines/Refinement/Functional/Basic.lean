@@ -212,7 +212,7 @@ structure InitFREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FR
 @[simp]
 def InitFREventSpec.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
   {abs : InitEvent AM α' β'}
-  (ev : InitFREventSpec (instFR:=instFR) (α:=α) (β:=β) (α':=α') (β':=β') abs)
+  (ev : InitFREventSpec (AM:=AM) (M:=M) (instFR:=instFR) (α:=α) (β:=β) (α':=α') (β':=β') abs)
     : InitREventSpec (AM:=AM) (M:=M) (α:=α) (β:=β) (α':=α') (β':=β') abs :=
   {
     toInitEventSpec := ev.toInitEventSpec

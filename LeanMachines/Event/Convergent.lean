@@ -39,7 +39,7 @@ natural numbers (type `Nat`), or subset ordering for finite sets
 /-- The definition of a `variant` of type `v` obtained from
 a machine pre-state. The type `v` must be a preorder
 (i.e. an instance of the `Preorder` typeclass). -/
-structure _Variant (v) [Preorder v] [Machine CTX M] where
+structure _Variant (v) [Preorder v] [instM:Machine CTX M] where
   variant : M → v
 
 /-!
@@ -47,8 +47,8 @@ structure _Variant (v) [Preorder v] [Machine CTX M] where
 -/
 
 /-- The internal representation of proof obligations for anticipated events. -/
-structure _AnticipatedEventPO (v) [Preorder v] [Machine CTX M] (ev : _Event M α β) (kind : EventKind)
-          extends _Variant v, _EventPO ev kind  where
+structure _AnticipatedEventPO (v) [Preorder v] [instM: Machine CTX M] (ev : _Event M α β) (kind : EventKind)
+          extends _Variant v (instM:=instM), _EventPO ev kind  where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -99,8 +99,8 @@ with input type `α` and output type `β`. The non-increasing proof relies
 Note that the guard, action and safety PO of the event must be also
 specified, as in the ordinary case (cf. `OrdinaryEventSpec`).
   -/
-structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [Machine CTX M] (α) (β)
-  extends _Variant v, EventSpec M α β where
+structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [instM: Machine CTX M] (α) (β)
+  extends _Variant v (instM:=instM), EventSpec M α β where
   /-- Proof obligation: the variant is non-increasing. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -115,8 +115,8 @@ def newAnticipatedEvent {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEv
   AnticipatedEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.nonIncreasing
 
 /-- Variant of `AnticipatedEventSpec` with implicit `Unit` output type -/
-structure AnticipatedEventSpec' (v) [Preorder v] (M) [Machine CTX M] (α)
-  extends _Variant v, EventSpec' M α where
+structure AnticipatedEventSpec' (v) [Preorder v] (M) [instM:Machine CTX M] (α)
+  extends _Variant v (instM:=instM), EventSpec' M α where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -138,8 +138,8 @@ def newAnticipatedEvent' {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedE
   newAnticipatedEvent ev.toAnticipatedEventSpec
 
 /-- Variant of `AnticipatedEventSpec` with implicit `Unit` input and output types -/
-structure AnticipatedEventSpec'' (v) [Preorder v] (M) [Machine CTX M]
-  extends _Variant v, EventSpec'' M where
+structure AnticipatedEventSpec'' (v) [Preorder v] (M) [instM:Machine CTX M]
+  extends _Variant v (instM:=instM), EventSpec'' M where
 
   nonIncreasing (m : M):
     Machine.invariant m
@@ -237,8 +237,8 @@ with input type `α` and output type `β`. The convergence proof relies
 Note that the guard, action and safety PO of the event must be also
 specified, as in the ordinary case (cf. `OrdinaryEventSpec`).
   -/
-structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α) (β)
-  extends _Variant v, EventSpec M α β where
+structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M] (α) (β)
+  extends _Variant v (instM:=instM), EventSpec M α β where
   /-- Proof obligation: the variant is strictly decreasing. -/
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -271,8 +271,8 @@ private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {
   }
 
 /-- Variant of `ConvergentEventSpec` with implicit `Unit` output type -/
-structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α)
-  extends _Variant v, EventSpec' M α where
+structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M] (α)
+  extends _Variant v (instM:=instM), EventSpec' M α where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -294,8 +294,8 @@ def newConvergentEvent' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (
   newConvergentEvent ev.toConvergentEventSpec
 
 /-- Variant of `ConvergentEventSpec` with implicit `Unit` input and output types -/
-structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M]
-  extends _Variant v, EventSpec'' M where
+structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M]
+  extends _Variant v (instM:=instM), EventSpec'' M where
 
   convergence (m : M):
     Machine.invariant m

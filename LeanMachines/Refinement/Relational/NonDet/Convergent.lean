@@ -19,9 +19,9 @@ open Refinement
 -/
 
 /-- Internal representation of proof obligations for anticipated events -/
-structure _AnticipatedRNDEventPO (v) [Preorder v]  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+structure _AnticipatedRNDEventPO (v) [Preorder v]  [Machine ACTX AM] [instM:Machine CTX M] [instR: Refinement AM M]
   (ev : _NDEvent M α β) (kind : EventKind) (α') (β')
-          extends _Variant v, _RNDEventPO (instR:=instR) ev kind α' β'  where
+          extends _Variant v (instM:=instM), _RNDEventPO (instR:=instR) ev kind α' β'  where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -65,9 +65,9 @@ The input and output types can be lifted to the abstract, if needed,
 The added proof obligation, beyond `safety` , guard `strengthening`,
 abstract event `simulation`, is a `nonIncreasing` requirement.
  -/
-structure AnticipatedRNDEventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure AnticipatedRNDEventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : OrdinaryNDEvent AM α' β')
-  extends _Variant v, RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
+  extends _Variant v (instM:=instM), RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
   /-- Proof obligation: the variant does not increases. -/
   nonIncreasing (m : M) (x : α):
@@ -111,9 +111,9 @@ def newAnticipatedRNDEventfromAnticipated [Preorder v] [Machine ACTX AM] [Machin
   _newAnticipatedRNDEvent abs.toOrdinaryNDEvent ev
 
 /-- Variant of `AnticipatedRNDEventSpec` with implicit `Unit` output type -/
-structure AnticipatedRNDEventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure AnticipatedRNDEventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   {α α'} (abs : OrdinaryNDEvent AM α' Unit)
-  extends _Variant v, RNDEventSpec' AM M (α:=α) (α':=α') abs where
+  extends _Variant v (instM:=instM), RNDEventSpec' AM M (α:=α) (α':=α') abs where
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
@@ -144,9 +144,9 @@ def newAnticipatedRNDEventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machi
   _newAnticipatedRNDEvent abs.toOrdinaryNDEvent ev.toAnticipatedRNDEventSpec
 
 /-- Variant of `AnticipatedRNDEventSpec` with implicit `Unit` input and output types -/
-structure AnticipatedRNDEventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure AnticipatedRNDEventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit)
-  extends _Variant v, RNDEventSpec'' AM M abs where
+  extends _Variant v (instM:=instM), RNDEventSpec'' AM M abs where
 
   nonIncreasing (m : M):
     Machine.invariant m
@@ -181,9 +181,9 @@ def newAnticipatedRNDEventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Mach
 -/
 
 /-- Internal representation of proof obligations for convergent refined non-deterministic events -/
-structure _ConvergentRNDEventPO (v) [Preorder v] [WellFoundedLT v]  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+structure _ConvergentRNDEventPO (v) [Preorder v] [WellFoundedLT v]  [Machine ACTX AM] [instM:Machine CTX M] [instR: Refinement AM M]
   (ev : _NDEvent M α β) (kind : EventKind) (α') (β')
-          extends _Variant v, _AnticipatedRNDEventPO (instR:=instR) v ev kind α' β' where
+          extends _Variant v (instM:=instM), _AnticipatedRNDEventPO (instR:=instR) v ev kind α' β' where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -229,9 +229,9 @@ The input and output types can be lifted to the abstract, if needed,
 The added proof obligation, beyond `safety` , guard `strengthening`,
 abstract event `simulation`, is a `convergence` requirement.
  -/
-structure ConvergentRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure ConvergentRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : OrdinaryNDEvent AM α' β')
-  extends _Variant v, RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
+  extends _Variant v (instM:=instM), RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
   /-- Proof obligation: the variant strictly decreases. -/
   convergence (m : M) (x : α):
@@ -266,9 +266,9 @@ def newConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mach
   }
 
 /-- Variant of `ConvergentRNDEventSpec` with implicit `Unit` output type -/
-structure ConvergentRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure ConvergentRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   {α α'} (abs : OrdinaryNDEvent AM α' Unit)
-  extends _Variant v, RNDEventSpec' AM M (α:=α) (α':=α') abs where
+  extends _Variant v (instM:=instM), RNDEventSpec' AM M (α:=α) (α':=α') abs where
 
   convergence (m : M) (x : α):
     Machine.invariant m
@@ -293,9 +293,9 @@ def newConvergentRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mac
   newConvergentRNDEvent abs ev.toConvergentRNDEventSpec
 
 /-- Variant of `ConvergentRNDEventSpec` with implicit `Unit` input and output types -/
-structure ConvergentRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure ConvergentRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit)
-  extends _Variant v, RNDEventSpec'' AM M abs where
+  extends _Variant v (instM:=instM), RNDEventSpec'' AM M abs where
 
   convergence (m : M):
     Machine.invariant m
