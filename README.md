@@ -43,7 +43,7 @@ An example repository is available online:
 https://github.com/lean-machines-central/lean-machines-examples
 
 This provides a set of fully documented example specifications than 
-can be "played with". loning this repository is probably the best way to start experimenting with he LeanMachines framework.
+can be "played with". Cloning this repository is probably the best way to start experimenting with he LeanMachines framework.
 
 **As a library developer** :
 
