@@ -33,6 +33,7 @@ The simplest way to experiment with the LeanMachines framework is
 to add the dependency in an existing Lean4 project :
 
 ```lean
+-- in the build file: lakefile.lean
 require «lean-machines» from git
   "https://github.com/lean-machines-central/lean-machines.git" @ "main"
 ```
