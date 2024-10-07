@@ -27,7 +27,26 @@ The framework is in alpha stage of development and may be modified without prior
 
 ## Getting started
 
-To experiment with the framework, the first requirement is to install the Lean4 proof assistant and the Mathlib4 library, see: <https://leanprover-community.github.io/get_started.html>
+**As a user** :
+
+The simplest way to experiment with the LeanMachines framework is
+to add the dependency in an existing Lean4 project :
+
+```lean
+require «lean-machines» from git
+  "https://github.com/lean-machines-central/lean-machines.git" @ "main"
+```
+
+An example repository is available online:
+
+https://github.com/lean-machines-central/lean-machines-examples
+
+This provides a set of fully documented example specifications than 
+can be "played with". loning this repository is probably the best way to start experimenting with he LeanMachines framework.
+
+**As a library developer** :
+
+To experiment with the framework implementation, the first requirement is to install the Lean4 proof assistant and the Mathlib4 library, see: <https://leanprover-community.github.io/get_started.html>
 
 The framework can be compiled using the lake tool :
 
@@ -50,6 +69,9 @@ $ cp .lake/packages/mathlib/lean-toolchain .
 The recommended way to experiment with the framework is to use a
 lean4-enabled editor: either *vscode* or *emacs*
 (editor support for Lean4 is discussed in the Lean4 documentation).
+
+## Examples of use
+
 
 ## Repository structure
 
