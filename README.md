@@ -71,9 +71,6 @@ The recommended way to experiment with the framework is to use a
 lean4-enabled editor: either *vscode* or *emacs*
 (editor support for Lean4 is discussed in the Lean4 documentation).
 
-## Examples of use
-
-
 ## Repository structure
 
 The framework is decomposed into several modules, within the `LeanMachines` directory, structured as follows:
