@@ -300,33 +300,16 @@ instance [Machine CTX M]: LawfulApplicative (OrdinaryEvent M γ) where
   pure_seq := by intros α β g ev
                  cases ev
                  case mk ev po =>
-                   simp only [Seq.seq, applyEvent, pure, pureEvent, Functor.map, mapEvent]
-                   simp
-                   constructor
-                   · have Hps := pure_seq g ev
-                     simp [Seq.seq, pure, Functor.map] at Hps
-                     simp [Hps]
-                   apply cast_heq
-                   simp [map_Event, apply_Event]
+                   simp [Seq.seq, applyEvent, pure, pureEvent, Functor.map, mapEvent, apply_Event, map_Event]
 
   map_pure := by intros α β g x ; rfl
   seq_pure := by intros α β ev x
-                 simp [Seq.seq, pure, Functor.map]
-                 simp [applyEvent, mapEvent]
-                 constructor
-                 · have Hsp := seq_pure ev.to_Event x
-                   simp [Functor.map, Seq.seq, pure] at *
-                   simp [Hsp]
-                 apply cast_heq
-                 simp [Seq.seq, Functor.map, map_Event, apply_Event]
+                 simp [Seq.seq, pure, Functor.map, applyEvent, apply_Event, mapEvent, map_Event]
 
   seq_assoc := by intros α β γ' ev g h
                   simp [Seq.seq, Functor.map, mapEvent, applyEvent]
                   have Hsa := seq_assoc ev.to_Event g.to_Event h.to_Event
                   simp [Seq.seq, Functor.map] at Hsa
-                  constructor
-                  · simp [Hsa]
-                  apply cast_heq
                   simp [Hsa]
 
 def bindEvent [Machine CTX M] (ev : OrdinaryEvent M γ α) (f : α → OrdinaryEvent M γ β) : OrdinaryEvent M γ β :=
@@ -353,10 +336,7 @@ instance [Machine CTX M]: LawfulMonad (OrdinaryEvent M γ) where
                        simp [pure, Functor.map, pureEvent, mapEvent, bind, bindEvent]
                        have H := bind_pure_comp  f ev.to_Event
                        simp [bind, pure, Functor.map] at H
-                       constructor
-                       · simp [H]
-                       · apply cast_heq
-                         rw [H]
+                       simp [H]
 
   bind_map := by simp [bind] ; intros ; rfl
   pure_bind := by intros α β x f
@@ -369,20 +349,12 @@ instance [Machine CTX M]: LawfulMonad (OrdinaryEvent M γ) where
                   cases (f x)
                   case mk ev po =>
                     simp
-                    intro H
-                    constructor
-                    · assumption
-                    · apply cast_heq
-                      rw [←H]
 
   bind_assoc := by intros α β γ' ev f g
                    simp [bind, bindEvent]
                    have H := bind_assoc ev.to_Event (fun x => (f x).to_Event) (fun x => (g x).to_Event)
                    simp [bind] at H
-                   constructor
-                   · simp [H]
-                   apply cast_heq
-                   rw [H]
+                   simp [H]
 
 /- Category and Arrow -/
 
@@ -407,22 +379,17 @@ instance [Machine CTX M]: Category (OrdinaryEvent M) where
 instance [Machine CTX M]: LawfulCategory (OrdinaryEvent M) where
   id_right {α β} (ev : OrdinaryEvent M α β) := by cases ev
                                                   simp [Category.rcomp]
-                                                  apply cast_heq ; simp
 
   id_left {α β} (ev : OrdinaryEvent M α β) := by cases ev
                                                  simp [Category.rcomp]
-                                                 apply cast_heq ; simp
 
   id_assoc {α β γ δ} (ev₃ : OrdinaryEvent M γ δ) (ev₂ : OrdinaryEvent M β γ) (ev₁ : OrdinaryEvent M α β) := by
       cases ev₁
       cases ev₂
       cases ev₃
       simp [Category.rcomp]
-      constructor
-      · funext m x
-        simp [And_eq_assoc]
-      · apply cast_heq
-        simp [And_eq_assoc]
+      funext m x
+      simp [And_eq_assoc]
 
 @[simp]
 def OrdinaryEvent_Arrow_first [Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryEvent M (α × γ) (β × γ) :=
@@ -448,16 +415,11 @@ instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
 instance [Machine CTX M]: LawfulArrow (OrdinaryEvent M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext _ := by simp [Arrow.arrow, Arrow.first]
-                    apply cast_heq ; simp
   arrow_fun _ _ := by simp [Arrow.arrow, Arrow.first]
-                      apply cast_heq ; simp
   arrow_xcg _ _ := by simp [Arrow.arrow, Arrow.first]
-                      apply cast_heq ; simp
   arrow_unit _ := by simp [Arrow.arrow, Arrow.first]
-                     apply cast_heq ; simp
   arrow_assoc {α β γ δ} (f : OrdinaryEvent M α β) :=
     by simp [Arrow.arrow, Arrow.first]
-       apply cast_heq ; simp
 
 /- Contravariant functor -/
 
