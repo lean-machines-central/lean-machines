@@ -328,42 +328,14 @@ instance [Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
 instance [Machine CTX M] : LawfulFunctor (OrdinaryNDEvent M γ) where
   map_const := rfl
   id_map ev := by simp [Functor.map]
-                  cases ev
-                  case mk _ev _po =>
-                    simp
-                    apply cast_heq
-                    simp
 
   comp_map g h ev := by simp [Functor.map]
                         cases ev
                         case mk _ev _po =>
                           simp
-                          constructor
-                          case left =>
-                            have Hcm := LawfulFunctor.comp_map g h _ev
-                            simp [Functor.map] at Hcm
-                            assumption
-                          case right =>
-                            apply cast_heq
-                            congr
-                            funext m z (z', m')
-                            simp
-                            constructor
-                            case _ =>
-                              intro Hex
-                              obtain ⟨y, Hex⟩ := Hex
-                              obtain ⟨Hex, Hz'⟩ := Hex
-                              rw [Hz']
-                              obtain ⟨x, ⟨Heff, Hy⟩⟩ := Hex
-                              rw [Hy]
-                              exists x
-                            case _ =>
-                              intro Hex
-                              obtain ⟨x, ⟨Heff, Hz'⟩⟩ := Hex
-                              rw [Hz']
-                              exists (g x)
-                              simp
-                              exists x
+                          have Hcm := LawfulFunctor.comp_map g h _ev
+                          simp [Functor.map] at Hcm
+                          assumption
 
 /- XXX:
 --  The output contravariant functor not provable, because we would
@@ -451,9 +423,6 @@ instance [Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
                                  simp at *
                                  simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
                                  simp [*]
-                                 clear Hdc'
-                                 apply cast_heq
-                                 simp [*]
 
 instance [Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
   first' {α β γ} (event : OrdinaryNDEvent M α β): OrdinaryNDEvent M (α × γ) (β × γ) :=
@@ -524,25 +493,14 @@ instance [Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
                     cases ev
                     case mk _ po =>
                       simp [Hir]
-                      apply cast_heq
-                      simp [Hir]
 
   id_left ev := by simp
-                   have Hil:= LawfulCategory.id_left ev.to_NDEvent
-                   simp at Hil
-                   cases ev
-                   case mk _ po =>
-                     simp [Hil]
-                     apply cast_heq
-                     simp [Hil]
 
   id_assoc ev₁ ev₂ ev₃ := by have Hia := LawfulCategory.id_assoc ev₁.to_NDEvent ev₂.to_NDEvent ev₃.to_NDEvent
                              simp [*] at *
                              cases ev₁
                              cases ev₂
                              cases ev₃
-                             simp [Hia]
-                             apply cast_heq
                              simp [Hia]
 
 -- XXX: This axiom is required to obtain feasibility
@@ -631,13 +589,6 @@ instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) wh
 
   arrow_ext {α β γ } f :=
       by simp [Arrow.arrow, Arrow.first, Arrow.split]
-         constructor
-         · funext m (x₁, x₂) ((y₁, y₂), m')
-           simp
-           constructor <;> (intros ; simp [*])
-         -- next
-         apply cast_heq
-         congr
          funext m (x₁, x₂) ((y₁, y₂), m')
          simp
          constructor <;> (intros ; simp [*])
@@ -646,76 +597,34 @@ instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) wh
                       have Hfun := LawfulArrow.arrow_fun (arr := _NDEvent M) f g
                       simp [Arrow.arrow] at Hfun
                       simp [Hfun]
-                      apply cast_heq
-                      simp [Hfun]
 
   arrow_xcg ev g := by simp [Arrow.arrow, Arrow.first, Arrow.split]
-                       constructor
-                       · funext m (x₁,x₂) ((y₁, y₂), m')
-                         simp
-                         constructor
-                         · intro Hex
-                           obtain ⟨xx₁, gx₂, mm, Hex⟩ := Hex
-                           obtain ⟨⟨H₁,⟨H₂,H₃⟩⟩, ⟨m'₁, ⟨Heff₁, ⟨m'₂, Hex₂⟩⟩⟩⟩ := Hex
-                           exists y₁ ; exists x₂
-                           simp [*] at *
-                           assumption
-                         -- next
-                         intro Hex
-                         obtain ⟨yy₁, xx₂, ⟨⟨m'₁, ⟨Heff₁, ⟨mm, Hmm⟩⟩⟩, H⟩⟩ := Hex
-                         exists x₁ ; exists (g x₂) ; exists m
-                         simp [*]
-                       -- next
-                       apply cast_heq
-                       simp
-                       congr
-                       funext m (x₁,x₂) ((y₁,y₂),m')
+                       funext m (x₁,x₂) ((y₁, y₂), m')
                        simp
                        constructor
                        · intro Hex
-                         obtain ⟨yy₁, ⟨xx₂, ⟨⟨m'₁, ⟨Heff₁,⟨mm, Hmm⟩⟩⟩, H₂⟩⟩⟩ := Hex
+                         obtain ⟨xx₁, gx₂, mm, Hex⟩ := Hex
+                         obtain ⟨⟨H₁,⟨H₂,H₃⟩⟩, ⟨m'₁, ⟨Heff₁, ⟨m'₂, Hex₂⟩⟩⟩⟩ := Hex
+                         exists y₁ ; exists x₂
                          simp [*] at *
-                         exists x₁ ; exists (g x₂) ; exists m
+                         assumption
                        -- next
                        intro Hex
-                       obtain ⟨xx1, ⟨gx₂, ⟨mm, H₁, ⟨mm'₁, ⟨Heff₁, ⟨mmm, H₂⟩⟩⟩⟩⟩⟩ := Hex
-                       exists y₁ ; exists x₂
-                       simp [*] at *
-                       assumption
+                       obtain ⟨yy₁, xx₂, ⟨⟨m'₁, ⟨Heff₁, ⟨mm, Hmm⟩⟩⟩, H⟩⟩ := Hex
+                       exists x₁ ; exists (g x₂) ; exists m
+                       simp [*]
 
   arrow_unit ev := by simp [Arrow.arrow, Arrow.first, Arrow.split]
+                      funext m (x₁,x₂) (y,m')
+                      simp
                       constructor
-                      case left =>
-                        funext m (x₁,x₂) (y,m')
-                        simp
-                        constructor
-                        · intro Heff
-                          exists x₁ ; exists m
-                        -- next
-                        simp
-                      case right =>
-                        apply cast_heq
-                        congr
-                        · funext m (x₁,x₂)
-                          simp
-                        -- next
-                        funext m (x₁,x₂) (y,m')
-                        simp
-                        constructor
-                        · intro Hex
-                          obtain ⟨xx₁, mm, ⟨⟨H₁, H₂⟩, Heff⟩⟩ := Hex
-                          simp [*] at Heff
-                          assumption
-                        -- next
-                        intro Heff
+                      · intro Heff
                         exists x₁ ; exists m
+                      -- next
+                      simp
 
   arrow_assoc {α β γ δ} ev :=
       by simp [Arrow.arrow, Arrow.first]
          have Hasc := @LawfulArrow.arrow_assoc (arr:=_NDEvent M) _ _ α β γ δ ev.to_NDEvent
          simp [Arrow.arrow, Arrow.first] at Hasc
-         simp [Hasc]
-         apply cast_heq
-         congr
-         simp
          simp [Hasc]
