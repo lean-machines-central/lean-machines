@@ -99,11 +99,10 @@ structure _Event (M) [Machine CTX M] (α) (β : Type)
 
   action (m : M) (x : α): Option (β × M)
 
- -- Note : a possible alternative would be to require
-  --  the guard to hold, implicitly, something like:
-  -- `action (m : M) (x : α) {grd: guard m x}: (β × M)`
-  -- However, this does not work well in practice, at least
-  -- with this alternative.
+ -- Note : the Option is because internally there is no way to
+ --        make the action depending on the validity of the guard,
+ --        if only because we do not enforce decidability
+ --        We'll see that ordinary events do make this supposition
 
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
@@ -180,19 +179,22 @@ instance [Machine CTX M]: Functor (_Event M γ) where
   map := map_Event
 
 instance [Machine CTX M]: LawfulFunctor (_Event M γ) where
-  map_const := by intros α β
-                  simp [Functor.mapConst, Functor.map]
-  id_map := by intros α ev
-               simp [Functor.map, map_Event]
-               cases ev
-               case mk evr act =>
-                 simp
-                 funext m x
-                 cases (act m x) <;> simp
-  comp_map := by intros α _ γ g h ev
-                 simp [Functor.map, map_Event]
-                 funext m x
-                 split <;> rfl
+  map_const := by
+    intros α β
+    simp [Functor.mapConst, Functor.map]
+  id_map := by
+    intros α ev
+    simp [Functor.map, map_Event]
+    cases ev
+    case mk evr act =>
+      simp
+      funext m x
+      cases (act m x) <;> simp
+  comp_map := by
+    intros α _ γ g h ev
+    simp [Functor.map, map_Event]
+    funext m x
+    split <;> rfl
 
 /- Applicative Functor -/
 
@@ -226,18 +228,14 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   id_map := by intros ; simp
   seqLeft_eq := by intros ; rfl
   seqRight_eq := by intros ; rfl
-  pure_seq := by intros α β g x
-                 simp [Seq.seq, Functor.map, map_Event, pure, pure_Event, apply_Event]
+  pure_seq := by
+    intros α β g x
+    simp [Seq.seq, Functor.map, map_Event, pure, pure_Event, apply_Event]
   map_pure := by intros α β g x ; rfl
-  seq_pure := by intros α β ev x
-                 simp [Seq.seq, pure, Functor.map, map_Event, apply_Event]
-                 constructor
-                 case left =>
-                   funext m y
-                   cases ev.action m y <;> simp
-                 case right =>
-                   funext m y
-                   cases ev.action m y <;> rfl
+  seq_pure := by
+    intros α β ev x
+    simp [Seq.seq, pure, Functor.map, map_Event, apply_Event]
+    constructor <;> (funext m y ; cases ev.action m y <;> simp)
 
   seq_assoc := by intros α β γ' ev g h
                   simp [Seq.seq, Functor.map, map_Event, apply_Event]
@@ -251,7 +249,7 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
                       cases g.action res.snd y
                       · simp
                       · exact Iff.symm and_assoc
-                  case right =>
+                  case right => -- XXX: some redundancy here ...
                     funext m y
                     cases h.action m y
                     · simp
@@ -263,34 +261,57 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
                         rename_i res'
                         cases ev.action res'.snd y <;> simp
 
-/-
 
 /- Monad -/
 
 def bind_Event [Machine CTX M] (ev : _Event M γ α) (f : α → _Event M γ β) : _Event M γ β :=
   {
-    guard := fun m x => ev.guard m x ∧ let (y, m') := ev.action m x
-                                       let ev' := f y
-                                       ev'.guard m' x
-    action := fun m x => let (y, m') := ev.action m x
-                         let ev' := f y
-                         ev'.action m' x
+    guard := fun m x => ev.guard m x ∧ match ev.action m x with
+                                       | .none => True
+                                       | .some (y, m') =>
+                                           let ev' := f y
+                                           ev'.guard m' x
+    action := fun m x => match ev.action m x with
+                         | .none => none
+                         | .some (y, m') =>
+                             let ev' := f y
+                             ev'.action m' x
   }
-
 
 instance [Machine CTX M]: Monad (_Event M γ) where
   bind := bind_Event
 
 instance [Machine CTX M]: LawfulMonad (_Event M γ) where
-  bind_pure_comp := by intros α β f ev
-                       simp [pure, Functor.map, pure_Event, map_Event, bind, bind_Event]
-  bind_map := by simp [bind] ; intros ; rfl
+  bind_pure_comp := by
+    intros α β f ev
+    simp [pure, Functor.map, pure_Event, map_Event, bind, bind_Event]
+    funext m x
+    cases ev.action m x <;> simp
+  bind_map := by
+    intros α β evf ev
+    simp [bind, Seq.seq, Functor.map, bind_Event, map_Event, apply_Event]
+    constructor <;> (funext m x <;> cases evf.action m x <;> simp)
   pure_bind := by intros _ β x f
                   simp [pure, bind, bind_Event]
   bind_assoc := by intros β γ' x f g h
                    simp [bind, bind_Event]
-                   funext
-                   apply And_eq_assoc
+                   constructor
+                   case left =>
+                     funext m x
+                     cases f.action m x
+                     · simp
+                     case _ res =>
+                       simp
+                       cases (g res.fst).action res.snd x
+                       · simp
+                       case _ res' =>
+                         simp
+                         exact and_assoc
+                   case right =>
+                     funext m x
+                     cases f.action m x <;> simp
+
+/-
 
 /- arrows -/
 

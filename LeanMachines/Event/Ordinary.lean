@@ -345,6 +345,7 @@ instance [Machine CTX M]: LawfulApplicative (OrdinaryEvent M γ) where
     simp [Seq.seq, Functor.map, mapEvent, applyEvent]
     apply seq_assoc
 
+
 /- Monad -/
 
 def bindEvent [Machine CTX M] (ev : OrdinaryEvent M γ α) (f : α → OrdinaryEvent M γ β) : OrdinaryEvent M γ β :=
