@@ -138,7 +138,7 @@ Note that the output type must match the input type,
 @[simp]
 def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
 {
-  action := fun m x => (x, m)
+  action := fun m x => some (x, m)
 }
 
 /-- Any type-theoretic function can be lifted to the
@@ -146,14 +146,14 @@ status of a (non-guarded) event. -/
 @[simp]
 def fun_Event  (M) [Machine CTX M] (f : α → β) : _Event M α β :=
 {
-  action := fun m x => (f x, m)
+  action := fun m x => some (f x, m)
 }
 
 /-- This allows to lift a "stateful" function. -/
 @[simp]
 def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : _Event M α β :=
 {
-  action := fun m x => (xf m x, m)
+  action := fun m x => some (xf m x, m)
 }
 
 /-!
