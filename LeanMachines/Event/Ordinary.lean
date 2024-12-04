@@ -23,7 +23,9 @@ structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) wher
   safety (m : M) (x : α):
     Machine.invariant m
     → ev.guard m x
-    → Machine.invariant (ev.action m x).snd
+    → match ev.action m x with
+      | .none => True
+      | .some (_, m') => Machine.invariant m'
 
 /-- The type of deterministic events without convergence properties.
 It is an event for machine type `M` with input type `α` and output type `β` -/
@@ -43,15 +45,15 @@ structure EventSpec (M) [Machine CTX M] (α) (β) where
       is to be performed in proof obligations. However, this is not captured
       at the type level (a type-level guard-dependent variant is currently being
       investigated). -/
-  action (m : M) (x : α) : β × M
+  action (m : M) (x : α) (grd: guard m x) : β × M
 
   /-- The safety proof obligation. -/
-  safety (m : M) (x : α) :
+  safety (m : M) (x : α) (grd : guard m x):
     Machine.invariant m
     → guard m x
-    → Machine.invariant (action m x).2
+    → Machine.invariant (action m x grd).2
 
-@[simp]
+/- @[simp]
 def _Event.toEventSpec [Machine CTX M]
   (ev : _Event M α β)
   (Hsafe : (m : M) → (x : α) →  Machine.invariant m
@@ -61,11 +63,14 @@ def _Event.toEventSpec [Machine CTX M]
     action := ev.action
     safety := Hsafe
   }
+ -/
 
 @[simp]
 def EventSpec.to_Event [Machine CTX M] (ev : EventSpec M α β) : _Event M α β :=
   { guard := ev.guard
-    action := ev.action
+    action := fun m x => if grd: ev.guard m x
+                         then some (ev.action m x grd)
+                         else none
   }
 
 /-- Construction of an ordinary deterministic event from a

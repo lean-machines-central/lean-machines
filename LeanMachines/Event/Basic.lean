@@ -97,7 +97,7 @@ This extends `_EventRoot` with a notion of (deterministic/functional) action.
 structure _Event (M) [Machine CTX M] (α) (β : Type)
   extends _EventRoot M α where
 
-  action (m : M) (x : α): (β × M)
+  action (m : M) (x : α): Option (β × M)
 
  -- Note : a possible alternative would be to require
   --  the guard to hold, implicitly, something like:
@@ -111,7 +111,7 @@ with: `M` the machine type,
 .-/
 structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard : α → Prop
-  init: α → (β × M)
+  init: α → Option (β × M)
 
 @[simp]
 def _InitEvent.to_Event [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
@@ -171,8 +171,9 @@ This part is rather experimental and is thus not fully documented yet.
 
 def map_Event [Machine CTX M] (f : α → β) (ev : _Event M γ α)  : _Event M γ β :=
   { guard := ev.guard
-    action := fun m x => let (y, m') := (ev.action m x)
-                         (f y, m')
+    action := fun m x => match ev.action m x with
+                         | .none => .none
+                         | .some (y, m') => .some (f y, m')
    }
 
 instance [Machine CTX M]: Functor (_Event M γ) where
@@ -183,8 +184,15 @@ instance [Machine CTX M]: LawfulFunctor (_Event M γ) where
                   simp [Functor.mapConst, Functor.map]
   id_map := by intros α ev
                simp [Functor.map, map_Event]
-  comp_map := by intros α _ γ g h x
+               cases ev
+               case mk evr act =>
+                 simp
+                 funext m x
+                 cases (act m x) <;> simp
+  comp_map := by intros α _ γ g h ev
                  simp [Functor.map, map_Event]
+                 funext m x
+                 split <;> rfl
 
 /- Applicative Functor -/
 
@@ -197,21 +205,17 @@ def pure_Event [Machine CTX M] (y : α) : _Event M γ α :=
 instance [Machine CTX M]: Pure (_Event M γ) where
   pure := pure_Event
 
-/- XXX : this one does not respect seq_pure -/
-def apply_Event_bad [Machine CTX M] (ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
-  {
-    guard := fun m x => ef.guard m x ∧ ev.guard m x
-    action := fun m x => let (f, _) := ef.action m x
-                         let (y, m'') := ev.action m x
-                         (f y, m'')
-  }
-
 def apply_Event [Machine CTX M] ( ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
   {
-    guard := fun m x => ef.guard m x ∧ ev.guard (ef.action m x).snd x
-    action := fun m x => let (f, m') := ef.action m x
-                         let (y, m'') := ev.action m' x
-                         (f y, m'')
+    guard := fun m x => ef.guard m x ∧ match ef.action m x with
+                                       | .none => True
+                                       | .some (_, m') => ev.guard m' x
+    action := fun m x =>
+      match ef.action m x with
+      |.none => .none
+      | .some (f, m') => match ev.action m' x with
+                         | .none => none
+                         | .some (y, m'') => some (f y, m'')
   }
 
 instance [Machine CTX M]: Applicative (_Event M γ) where
@@ -219,7 +223,7 @@ instance [Machine CTX M]: Applicative (_Event M γ) where
 
 instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   map_const := by intros ; rfl
-  id_map := by intros ; rfl
+  id_map := by intros ; simp
   seqLeft_eq := by intros ; rfl
   seqRight_eq := by intros ; rfl
   pure_seq := by intros α β g x
@@ -227,10 +231,39 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   map_pure := by intros α β g x ; rfl
   seq_pure := by intros α β ev x
                  simp [Seq.seq, pure, Functor.map, map_Event, apply_Event]
+                 constructor
+                 case left =>
+                   funext m y
+                   cases ev.action m y <;> simp
+                 case right =>
+                   funext m y
+                   cases ev.action m y <;> rfl
+
   seq_assoc := by intros α β γ' ev g h
                   simp [Seq.seq, Functor.map, map_Event, apply_Event]
-                  funext m y
-                  rw [And_eq_assoc]
+                  constructor
+                  case left =>
+                    funext m y
+                    cases h.action m y
+                    · simp
+                    · simp
+                      rename_i res
+                      cases g.action res.snd y
+                      · simp
+                      · exact Iff.symm and_assoc
+                  case right =>
+                    funext m y
+                    cases h.action m y
+                    · simp
+                    · simp
+                      rename_i res
+                      cases g.action res.snd y
+                      · simp
+                      · simp
+                        rename_i res'
+                        cases ev.action res'.snd y <;> simp
+
+/-
 
 /- Monad -/
 
@@ -399,3 +432,4 @@ def altEvent [Machine CTX M] (evl : _Event M α α') (evr : _Event M β β')
                         | right r => let (y, m') := evr.action m r
                                     (right y, m')
   }
+ -/
