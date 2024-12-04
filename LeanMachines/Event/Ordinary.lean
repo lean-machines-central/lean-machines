@@ -23,7 +23,9 @@ structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) wher
   safety (m : M) (x : α):
     Machine.invariant m
     → ev.guard m x
-    → Machine.invariant (ev.action m x).snd
+    → match ev.action m x with
+      | .none => True
+      | .some (_, m') => Machine.invariant m'
 
 /-- The type of deterministic events without convergence properties.
 It is an event for machine type `M` with input type `α` and output type `β` -/
@@ -34,7 +36,7 @@ structure OrdinaryEvent (M) [Machine CTX M] (α) (β) extends _Event M α β whe
 with input type `α` and output type `β`. . -/
 structure EventSpec (M) [Machine CTX M] (α) (β) where
   /-- The guard property of the event, in machine state `m` with input `x`. -/
-  guard (m : M) (x : α) : Prop := True
+  guard (m : M) (x : α) : Bool := true
   /-- The (deterministic) action of the event, with
       previous machine state `m` and input `x`, building a pair
       `(y, m')` with `y` an output value and `m'` the next machine state.
@@ -43,15 +45,15 @@ structure EventSpec (M) [Machine CTX M] (α) (β) where
       is to be performed in proof obligations. However, this is not captured
       at the type level (a type-level guard-dependent variant is currently being
       investigated). -/
-  action (m : M) (x : α) : β × M
+  action (m : M) (x : α) (grd: guard m x) : β × M
 
   /-- The safety proof obligation. -/
-  safety (m : M) (x : α) :
+  safety (m : M) (x : α) (grd : guard m x):
     Machine.invariant m
     → guard m x
-    → Machine.invariant (action m x).2
+    → Machine.invariant (action m x grd).2
 
-@[simp]
+/- @[simp]
 def _Event.toEventSpec [Machine CTX M]
   (ev : _Event M α β)
   (Hsafe : (m : M) → (x : α) →  Machine.invariant m
@@ -61,11 +63,14 @@ def _Event.toEventSpec [Machine CTX M]
     action := ev.action
     safety := Hsafe
   }
+ -/
 
 @[simp]
 def EventSpec.to_Event [Machine CTX M] (ev : EventSpec M α β) : _Event M α β :=
-  { guard := ev.guard
-    action := ev.action
+  { guard m x := ev.guard m x
+    action := fun m x => if grd: ev.guard m x
+                         then some (ev.action m x grd)
+                         else none
   }
 
 /-- Construction of an ordinary deterministic event from a
@@ -77,11 +82,12 @@ def newEvent {M} [Machine CTX M] (ev : EventSpec M α β) : OrdinaryEvent M α �
       safety := fun m x => by
         simp
         intros Hinv Hgrd
-        apply ev.safety <;> assumption
+        simp [Hgrd]
+        apply ev.safety m x Hgrd Hinv Hgrd
     }
   }
 
-/-- Variant of `EventSpec` with implicit `Unit` output type -/
+/- /-- Variant of `EventSpec` with implicit `Unit` output type -/
 structure EventSpec' (M) [Machine CTX M] (α) where
   guard (m : M) (x : α) : Prop := True
   action (m : M) (x : α) : M
@@ -129,7 +135,7 @@ def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   newEvent ((skip_Event M α).toEventSpec
                                  (by intros ; simp [skip_Event] ; assumption))
 
-/-!
+/-! -/
 
 ## Initialization events (deterministic)
 
@@ -137,7 +143,7 @@ Initialization events, of the deterministic kind,
 are ordinary deterministic events with the *reset* state as a pre-state.
 
  -/
-
+/-
 /-- The internal representation of proof obligations for initialization events. -/
 structure _InitEventPO [Machine CTX M] (ev : _InitEvent M α β) (kind : EventKind) where
   safety (x : α):
@@ -225,7 +231,7 @@ def InitEventSpec''.toInitEventSpec [Machine CTX M] (ev : InitEventSpec'' M) : I
 @[simp]
 def newInitEvent'' {M} [Machine CTX M] (ev : InitEventSpec'' M) : InitEvent M Unit Unit :=
   newInitEvent ev.toInitEventSpec
-
+ -/
 /-!
 ## Algebraic properties of events
 
@@ -241,25 +247,42 @@ This part is rather experimental and is thus not fully documented yet.
 
 @[simp]
 def funEvent (M) [Machine CTX M] (f : α → β) : OrdinaryEvent M α β :=
-  newEvent ((fun_Event M f).toEventSpec
-                                 (fun m x Hinv _ => by simp [fun_Event] ; assumption))
+  {
+    to_Event := fun_Event M f
+    po := {
+      safety m x := by simp
+    }
+  }
 
 def mapEvent [Machine CTX M] (f : α → β) (ev : OrdinaryEvent M γ α) : OrdinaryEvent M γ β :=
   {
-    to_Event := Functor.map f ev.to_Event
-    po := { safety := fun m x => by intros Hinv Hgrd
-                                    simp [Functor.map, map_Event] at *
-                                    apply ev.po.safety m x Hinv Hgrd
+    to_Event := map_Event f ev.to_Event
+    po := {
+      safety m x := by
+        intros hinv hgrd
+        have hsafe := ev.po.safety m x hinv hgrd
+        simp [map_Event]
+        revert hsafe
+        cases ev.action m x <;> simp
+    }
   }
-}
 
 instance [Machine CTX M] : Functor (OrdinaryEvent M γ) where
   map := mapEvent
 
 instance [Machine CTX M] : LawfulFunctor (OrdinaryEvent M γ) where
   map_const := rfl
-  id_map := by intros ; rfl
-  comp_map := by intros ; rfl
+  id_map := by intros α ev
+               simp [Functor.map, mapEvent]
+               cases ev
+               case mk _ev po =>
+                 simp
+                 apply id_map
+
+  comp_map := by intros α β γ g f ev
+                 simp [Functor.map, mapEvent]
+                 apply comp_map
+
 
 /- Applicative Functor -/
 
@@ -276,16 +299,24 @@ instance [Machine CTX M]: Pure (OrdinaryEvent M γ) where
   pure := pureEvent
 
 def applyEvent [Machine CTX M] ( ef : OrdinaryEvent M γ (α → β)) (ev : OrdinaryEvent M γ α) : OrdinaryEvent M γ β :=
-  let event := ef.to_Event <*> ev.to_Event
   {
-    guard := event.guard
-    action := event.action
+    to_Event := ef.to_Event <*> ev.to_Event
     po := {
-      safety := fun m x => by simp [event, Seq.seq, apply_Event]
-                              intros Hinv Hgrd₁ Hgrd₂
-                              have Hsafe₁ := ef.po.safety m x Hinv Hgrd₁
-                              apply ev.po.safety (ef.to_Event.action m x).snd
-                              <;> assumption
+      safety m x := by
+        simp [Seq.seq, apply_Event]
+        intros hinv hgrd
+        have hsafe₁ := ef.po.safety m x hinv hgrd
+        revert hsafe₁
+        cases ef.action m x
+        case none => simp
+        case some res =>
+          cases res
+          case mk f m' =>
+            simp
+            intros hinv' hgrd'
+            have hsafe₂ := ev.po.safety m' x hinv' hgrd'
+            revert hsafe₂
+            cases ev.action m' x <;> simp
     }
   }
 
@@ -294,23 +325,28 @@ instance [Machine CTX M]: Applicative (OrdinaryEvent M γ) where
 
 instance [Machine CTX M]: LawfulApplicative (OrdinaryEvent M γ) where
   map_const := by intros ; rfl
-  id_map := by intros ; rfl
+  id_map := by intros ; simp
   seqLeft_eq := by intros ; rfl
   seqRight_eq := by intros ; rfl
-  pure_seq := by intros α β g ev
-                 cases ev
-                 case mk ev po =>
-                   simp [Seq.seq, applyEvent, pure, pureEvent, Functor.map, mapEvent, apply_Event, map_Event]
+  pure_seq := by
+    intros α β g ev
+    cases ev
+    case mk ev po =>
+    simp [Seq.seq, applyEvent, pure, pureEvent, Functor.map, mapEvent, apply_Event, map_Event]
 
   map_pure := by intros α β g x ; rfl
-  seq_pure := by intros α β ev x
-                 simp [Seq.seq, pure, Functor.map, applyEvent, apply_Event, mapEvent, map_Event]
+  seq_pure := by
+    intros α β ev x
+    simp [Seq.seq, pure, Functor.map, applyEvent, mapEvent]
+    apply seq_pure
 
-  seq_assoc := by intros α β γ' ev g h
-                  simp [Seq.seq, Functor.map, mapEvent, applyEvent]
-                  have Hsa := seq_assoc ev.to_Event g.to_Event h.to_Event
-                  simp [Seq.seq, Functor.map] at Hsa
-                  simp [Hsa]
+  seq_assoc := by
+    intros α β γ' ev g h
+    simp [Seq.seq, Functor.map, mapEvent, applyEvent]
+    apply seq_assoc
+
+
+/- Monad -/
 
 def bindEvent [Machine CTX M] (ev : OrdinaryEvent M γ α) (f : α → OrdinaryEvent M γ β) : OrdinaryEvent M γ β :=
   let event := ev.to_Event >>= (fun x => (f x).to_Event)
