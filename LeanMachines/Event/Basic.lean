@@ -386,7 +386,7 @@ instance [Machine CTX M]: LawfulCategory (_Event M) where
             cases act₃ m x <;> simp
 
 
-/- one possible definition : split from first
+/- one possible definition : split from first  (an old version with non-optional actions)
 
 @[simp]
 def _Event_Arrow_first [Machine CTX M] (ev : _Event M α β) : _Event M (α × γ) (β × γ) :=

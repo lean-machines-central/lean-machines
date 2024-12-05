@@ -412,29 +412,36 @@ instance [Machine CTX M]: Category (OrdinaryEvent M) where
       guard := event.guard
       action := event.action
       po := {
-        safety := fun m x => by simp [event]
-                                intros Hinv Hgrd₁ Hgrd₂
-                                have Hsafe₁ := ev₁.po.safety m x Hinv Hgrd₁
-                                let ev₁' := ev₁.to_Event.action m x
-                                have Hsafe₂ := ev₂.po.safety ev₁'.2 ev₁'.1
-                                exact Hsafe₂ Hsafe₁ Hgrd₂
+        safety := fun m x => by
+          simp [event]
+          intros Hinv₁ Hgrd₁
+          have Hsafe₁ := ev₁.po.safety m x Hinv₁ Hgrd₁
+          revert Hsafe₁
+          cases ev₁.action m x
+          · simp
+          · apply ev₂.po.safety
       }
     }
 
 instance [Machine CTX M]: LawfulCategory (OrdinaryEvent M) where
-  id_right {α β} (ev : OrdinaryEvent M α β) := by cases ev
-                                                  simp [Category.rcomp]
+  id_right {α β} (ev : OrdinaryEvent M α β) := by cases ev ; simp [Category.rcomp]
 
-  id_left {α β} (ev : OrdinaryEvent M α β) := by cases ev
-                                                 simp [Category.rcomp]
+  id_left {α β} (ev : OrdinaryEvent M α β) := by
+    cases ev
+    case mk ev po =>
+      simp [Category.rcomp]
+      apply LawfulCategory.id_left
 
   id_assoc {α β γ δ} (ev₃ : OrdinaryEvent M γ δ) (ev₂ : OrdinaryEvent M β γ) (ev₁ : OrdinaryEvent M α β) := by
       cases ev₁
-      cases ev₂
-      cases ev₃
-      simp [Category.rcomp]
-      funext m x
-      simp [And_eq_assoc]
+      case mk ev₁ po₁ =>
+        cases ev₂
+        case mk ev₂ po₂ =>
+        cases ev₃
+        case mk ev₃ po₃ =>
+          have hassoc := LawfulCategory.id_assoc ev₃ ev₂ ev₁
+          simp [Category.rcomp] at *
+          exact hassoc
 
 @[simp]
 def OrdinaryEvent_Arrow_first [Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryEvent M (α × γ) (β × γ) :=
@@ -443,12 +450,18 @@ def OrdinaryEvent_Arrow_first [Machine CTX M] (ev : OrdinaryEvent M α β) : Ord
     guard := event.guard
     action := event.action
     po := {
-      safety := fun m (x,_) => by simp [Arrow.first, event]
-                                  intros Hinv Hgrd
-                                  apply ev.po.safety m x Hinv Hgrd
+      safety := fun m (x,_) => by
+        simp [Arrow.first, event]
+        intros Hinv Hgrd
+        have Hsafe := ev.po.safety m x Hinv Hgrd
+        revert Hsafe
+        cases ev.action m x <;> simp
     }
   }
 
+/- The following definition uses the split_from_first approach,
+ but it is better to rely on the arrow construction from the
+ underlying _Event
 instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
   arrow {α β} (f : α → β) := funEvent M f
 
@@ -456,15 +469,63 @@ instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
     Arrow.split_from_first (funEvent M (fun (x, y) => (y, x)))
                            OrdinaryEvent_Arrow_first
                            ev₁ ev₂
+-/
+
+instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
+  arrow {α β} (f : α → β) := {
+    to_Event := Arrow.arrow f
+    po := {
+      safety m x := by simp [Arrow.arrow]
+    }
+  }
+
+  split ev₁ ev₂ := {
+    to_Event := Arrow.split ev₁.to_Event ev₂.to_Event
+    po := {
+      safety m := by
+        intro (x, y) Hinv
+        simp [Arrow.split]
+        intro Hgrd₁ Hgrd₂
+        have Hsafe₁ := ev₁.po.safety m x Hinv Hgrd₁
+        have Hsafe₂ := ev₂.po.safety m y Hinv Hgrd₂
+        revert Hsafe₂ Hsafe₁
+        cases ev₁.action m x
+        · simp
+        case some res =>
+          obtain ⟨x', m'⟩ := res
+          simp
+          intro Hinv'
+          cases ev₂.action m y
+          · simp
+          · simp ; intro ; assumption
+    }
+  }
+
 
 instance [Machine CTX M]: LawfulArrow (OrdinaryEvent M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext _ := by simp [Arrow.arrow, Arrow.first]
   arrow_fun _ _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_xcg _ _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_unit _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_assoc {α β γ δ} (f : OrdinaryEvent M α β) :=
-    by simp [Arrow.arrow, Arrow.first]
+  arrow_xcg ev f := by
+    cases ev
+    case mk ev po =>
+      have H := LawfulArrow.arrow_xcg ev f
+      simp at *
+      exact H
+
+  arrow_unit ev := by
+    cases ev
+    case mk ev po =>
+      have H := LawfulArrow.arrow_unit ev
+      simp at *
+      exact H
+
+  arrow_assoc {α β γ δ} (ev : OrdinaryEvent M α β) := by
+    cases ev
+    case mk ev po =>
+      have H := LawfulArrow.arrow_assoc (γ:=γ) (δ:=δ) ev
+      simp at *
+      exact H
 
 /- Contravariant functor -/
 
