@@ -97,6 +97,8 @@ This extends `_EventRoot` with a notion of (deterministic/functional) action.
 structure _Event (M) [Machine CTX M] (α) (β : Type)
   extends _EventRoot M α where
 
+  _guard_dec (m  : M) (x : α) : Decidable (guard m x)
+
   action (m : M) (x : α): Option (β × M)
 
  -- Note : the Option is because internally there is no way to
@@ -110,12 +112,14 @@ with: `M` the machine type,
 .-/
 structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard : α → Prop
+  _guard_dec (x : α) : Decidable (guard x)
   init: α → Option (β × M)
 
 @[simp]
 def _InitEvent.to_Event [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
   {
     guard := fun m x => m = Machine.reset ∧ ev.guard x
+    _guard_dec m x := by sorry
     action := fun _ x => ev.init x
   }
 

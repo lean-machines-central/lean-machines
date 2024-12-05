@@ -30,6 +30,7 @@ structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) wher
 /-- The type of deterministic events without convergence properties.
 It is an event for machine type `M` with input type `α` and output type `β` -/
 structure OrdinaryEvent (M) [Machine CTX M] (α) (β) extends _Event M α β where
+  decidable_guard : ∀ m x, Decidable (guard m x)
   po : _EventPO to_Event  (EventKind.TransDet Convergence.Ordinary)
 
 /-- The specification of a deterministic, ordinary event for machine `M`

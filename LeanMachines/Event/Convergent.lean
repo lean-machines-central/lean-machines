@@ -9,8 +9,7 @@ import LeanMachines.Event.Ordinary
 ## Convergent deterministic events
 
 This module defines the user-level API for constructing
-and manipulating **convergent** (and anticipated) deterministic events.
-
+and manipulating **convergent** (and anticipated) deterministic events.m'
 Convergent events cannot be enabled infinitely often in isolation.
 For this, a further convergence proof obligation is added to
 the "ordinary" POs. The ingredients we use are the same as in Event-B:
@@ -351,21 +350,34 @@ and convergent events (experimental, not documented).
 
 @[simp]
 def mapAnticipatedEvent [Preorder v] [Machine CTX M] (f : α → β) (ev : AnticipatedEvent v M γ α) : AnticipatedEvent v M γ β :=
-  newAnticipatedEvent {
-    guard := ev.guard
-    action := fun m x => let (y, m') := ev.action m x
-                         (f y, m')
-    safety :=  ev.po.safety
-    variant := ev.po.variant
-    nonIncreasing := ev.po.nonIncreasing
-  }
+  AnticipatedEvent_fromOrdinary (mapEvent f ev.toOrdinaryEvent)
+  ev.po.variant (fun m x Hinv => by
+     have Hni := ev.po.nonIncreasing m x Hinv
+     revert Hni
+     cases ev
+     case mk ev po =>
+       simp [mapEvent, map_Event]
+       cases ev.action m x <;> simp)
 
 instance [Preorder v] [Machine CTX M] : Functor (AnticipatedEvent v M γ) where
   map := mapAnticipatedEvent
 
 instance [Preorder v] [Machine CTX M] : LawfulFunctor (AnticipatedEvent v M γ) where
   map_const := rfl
-  id_map := by intros ; rfl
+  id_map := by
+    intros α ev
+    simp [Functor.map, map_Event]
+    cases ev
+    case mk evr act =>
+      simp
+      funext m x
+      cases (act m x) <;> simp
+
+
+
+
+
+
   comp_map := by intros ; rfl
 
 def mapConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (f : α → β) (ev : ConvergentEvent v M γ α) : ConvergentEvent v M γ β :=
