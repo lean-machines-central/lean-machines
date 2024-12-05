@@ -53,8 +53,9 @@ structure _AnticipatedEventPO (v) [Preorder v] [instM: Machine CTX M] (ev : _Eve
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
     → ev.guard m x
-    → let (_, m') := ev.action m x
-      variant m' ≤ variant m
+    → match ev.action m x with
+      | .none => True
+      | .some (_, m') => variant m' ≤ variant m
 
 /-- The type of deterministic anticipated events.
 It is an event for machine type `M` with input type `α` and output type `β`.
@@ -70,15 +71,20 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
   (Hnincr: ∀ (m : M) (x : α),
     Machine.invariant m
     → ev.guard m x
-    → let (_, m') := ev.action m x
-      variant m' ≤ variant m) : AnticipatedEvent v M α β :=
+    → match ev.action m x with
+      | .none => True
+      | .some (_, m') => variant m' ≤ variant m) : AnticipatedEvent v M α β :=
   {
     guard := ev.guard
     action := ev.action
     po := {
       safety := ev.po.safety
       variant := variant
-      nonIncreasing := Hnincr
+      nonIncreasing m x := by
+        intros Hinv Hgrd
+        have Hnincr' := Hnincr m x Hinv Hgrd ; clear Hnincr
+        revert Hnincr'
+        cases ev.action m x <;> simp
     }
   }
 
@@ -104,15 +110,18 @@ structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [instM: Machine CTX M]
   /-- Proof obligation: the variant is non-increasing. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
-      variant m' ≤ variant m
+    → (grd : guard m x)
+    → variant (action m x grd).2 ≤ variant m
 
 /-- Construction of an anticipated deterministic event from a
 `AnticipatedEventSpec` specification. -/
 @[simp]
 def newAnticipatedEvent {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec v M α β) : AnticipatedEvent v M α β :=
-  AnticipatedEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.nonIncreasing
+  AnticipatedEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant
+  (by simp
+      intros m x Hinv Hgrd
+      simp [Hgrd]
+      apply ev.nonIncreasing m x Hinv Hgrd)
 
 /-- Variant of `AnticipatedEventSpec` with implicit `Unit` output type -/
 structure AnticipatedEventSpec' (v) [Preorder v] (M) [instM:Machine CTX M] (α)
@@ -120,9 +129,8 @@ structure AnticipatedEventSpec' (v) [Preorder v] (M) [instM:Machine CTX M] (α)
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x)
-      variant m' ≤ variant m
+    → (grd : guard m x)
+    → variant (action m x grd) ≤ variant m
 
 @[simp]
 def AnticipatedEventSpec'.toAnticipatedEventSpec {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec' v M α) : AnticipatedEventSpec v M α Unit :=
@@ -143,9 +151,8 @@ structure AnticipatedEventSpec'' (v) [Preorder v] (M) [instM:Machine CTX M]
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := (action m)
-      variant m' ≤ variant m
+    → (grd : guard m)
+    → variant (action m grd) ≤ variant m
 
 @[simp]
 def AnticipatedEventSpec''.toAnticipatedEventSpec {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec'' v M) : AnticipatedEventSpec v M Unit Unit :=
@@ -172,8 +179,9 @@ structure _ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M] 
   convergence (m : M) (x : α):
     Machine.invariant m
     → ev.guard m x
-    → let (_, m') := ev.action m x
-      variant m' < variant m
+    → match ev.action m x with
+      | .none => True
+      | .some (_, m') => variant m' < variant m
 
 /-- The type of deterministic convergent events.
 It is an event for machine type `M` with input type `α` and output type `β`.
@@ -189,8 +197,9 @@ private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M}
   (Hconv: ∀ (m : M) (x : α),
     Machine.invariant m
     → ev.guard m x
-    → let m' := (ev.action m x).2
-      variant m' < variant m)
+    → match ev.action m x with
+      | .none => True
+      | .some (_, m') => variant m' < variant m)
  : ConvergentEvent v M α β :=
  {
   guard := ev.guard
@@ -198,12 +207,23 @@ private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M}
   po := {
     safety := ev.po.safety
     variant := variant
-    nonIncreasing := fun m x => by simp
-                                   intros Hinv Hgrd
-                                   have Hconv' := Hconv m x Hinv Hgrd
-                                   apply le_of_lt
-                                   exact Hconv'
-    convergence := Hconv
+    nonIncreasing m x := by
+      simp
+      intros Hinv Hgrd
+      have Hconv' := Hconv m x Hinv Hgrd ; clear Hconv
+      revert Hconv'
+      cases ev.action m x
+      · simp
+      case some res =>
+        simp
+        intro Hconv
+        apply le_of_lt Hconv
+    convergence m x := by
+      simp
+      intros Hinv Hgrd
+      have Hconv' := Hconv m x Hinv Hgrd ; clear Hconv
+      revert Hconv'
+      cases ev.action m x <;> simp
   }
  }
 
@@ -242,16 +262,22 @@ structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [instM:Mach
   /-- Proof obligation: the variant is strictly decreasing. -/
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
-      variant m' < variant m
+    → (grd : guard m x)
+    → variant (action m x grd).2 < variant m
 
 /-- Construction of a convergent deterministic event from a
 `ConvergentEventSpec` specification. -/
 @[simp]
 def newConvergentEvent {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec v M α β) : ConvergentEvent v M α β :=
-  ConvergentEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.convergence
+  ConvergentEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant
+  (by simp
+      intros m x Hinv Hgrd
+      simp [Hgrd]
+      apply ev.convergence
+      · assumption
+  )
 
+/- XXX: Nont needed ?  (otherwise must be updated)
 @[simp]
 private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : AnticipatedEvent v M α β)
     (hconv : (m : M) → (x : α)
@@ -269,6 +295,7 @@ private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {
       convergence := hconv
     }
   }
+-/
 
 /-- Variant of `ConvergentEventSpec` with implicit `Unit` output type -/
 structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M] (α)
@@ -276,9 +303,8 @@ structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Mac
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x)
-      variant m' < variant m
+    → (grd : guard m x)
+    → variant (action m x grd) < variant m
 
 @[simp]
 def ConvergentEventSpec'.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec' v M α) : ConvergentEventSpec v M α Unit :=
@@ -299,9 +325,8 @@ structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Ma
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := (action m)
-      variant m' < variant m
+    → (grd : guard m)
+    → variant (action m grd) < variant m
 
 @[simp]
 def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEventSpec v M Unit Unit :=
