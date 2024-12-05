@@ -441,7 +441,6 @@ instance [Machine CTX M]: LawfulArrow (_Event M) where
     simp [Arrow.arrow, Arrow.first]
     constructor <;> funext m ((x, y), z) <;> cases f.action m x <;> simp
 
-/-
 
 /- ContravariantFunctor functor -/
 
@@ -474,15 +473,28 @@ instance [Machine CTX M] : Profunctor (_Event M) where
     Functor.map g ev'
 
 instance [Machine CTX M] : LawfulProfunctor (_Event M) where
-  dimap_id := rfl
-  dimap_comp _ _ _ _ := rfl
+  dimap_id {α β} := by
+    simp [Profunctor.dimap, ContravariantFunctor.contramap]
+    funext ev
+    simp
+
+  dimap_comp f1 f2 f3 f4 := by
+    simp [Profunctor.dimap]
+    funext ev
+    simp
+    cases ev
+    case mk evr act =>
+      simp [Functor.map, map_Event, ContravariantFunctor.contramap]
+      funext m x
+      cases act m (f2 (f1 x)) <;> simp
 
 instance [Machine CTX M] : StrongProfunctor (_Event M) where
   first' {α β γ} (ev : _Event M α β): _Event M (α × γ) (β × γ) :=
     {
       guard := fun m (x, _) => ev.guard m x
-      action := fun m (x, y) => let (x', m') := ev.action m x
-                                ((x', y), m')
+      action := fun m (x, y) => match ev.action m x with
+                                | .none => none
+                                | .some (x', m') => some ((x', y), m')
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (_Event M) where
@@ -500,9 +512,10 @@ def altEvent [Machine CTX M] (evl : _Event M α α') (evr : _Event M β β')
                         | left l => evl.guard m l
                         | right r => evr.guard m r
     action := fun m x => match x with
-                        | left l => let (y, m') := evl.action m l
-                                    (left y, m')
-                        | right r => let (y, m') := evr.action m r
-                                    (right y, m')
+                        | left l => match evl.action m l with
+                                    | .none => none
+                                    | .some (y, m') => some (left y, m')
+                        | right r => match evr.action m r with
+                                     | .none => .none
+                                     | .some (y, m') => some (right y, m')
   }
- -/
