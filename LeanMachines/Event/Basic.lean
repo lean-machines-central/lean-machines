@@ -313,8 +313,6 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
       funext m x
       cases f.action m x <;> simp
 
-/-
-
 /- arrows -/
 
 abbrev _KEvent M [Machine CTX M] γ := Kleisli (_Event M γ)
@@ -338,16 +336,57 @@ instance [Machine CTX M]: Category (_Event M) where
   id := fun_Event M id
 
   comp {α β γ} (ev₂ : _Event M β γ) (ev₁ : _Event M α β) : _Event M α γ :=
-    { guard := fun m x => ev₁.guard m x ∧ let (y, m') := ev₁.action m x
-                                          ev₂.guard m' y
-      action := fun m x => let (y, m') := ev₁.action m x
-                           ev₂.action m' y
+    { guard := fun m x => ev₁.guard m x ∧ match ev₁.action m x with
+                                          | .none => True
+                                          | .some (y, m') => ev₂.guard m' y
+      action := fun m x => match ev₁.action m x with
+                                          | .none => none
+                                          | .some (y, m') => ev₂.action m' y
     }
 
 instance [Machine CTX M]: LawfulCategory (_Event M) where
   id_right _ := by simp
-  id_left _ := by simp
-  id_assoc _ _ _ := by simp ; funext m x ; apply And_eq_assoc
+  id_left ev := by
+    cases ev
+    case mk evr act =>
+      simp
+      constructor
+      case left =>
+        cases evr
+        case mk grd =>
+          simp
+          funext m x
+          cases act m x <;> simp
+      case right =>
+        funext m x
+        cases act m x <;> simp
+
+  id_assoc ev₁ ev₂ ev₃ := by
+    cases ev₁
+    case mk evr₁ act₁ =>
+      cases ev₂
+      case mk evr₂ act₂ =>
+        cases ev₃
+        case mk evr₃ act₃ =>
+          simp
+          constructor
+          case left =>
+            funext m x
+            cases act₃ m x
+            · simp
+            case _ res₃ =>
+              simp
+              cases act₂ res₃.snd res₃.fst
+              · simp
+              case _ res₂ =>
+                simp
+                exact and_assoc
+          case right =>
+            funext m x
+            cases act₃ m x <;> simp
+
+
+/- one possible definition : split from first
 
 @[simp]
 def _Event_Arrow_first [Machine CTX M] (ev : _Event M α β) : _Event M (α × γ) (β × γ) :=
@@ -356,7 +395,6 @@ def _Event_Arrow_first [Machine CTX M] (ev : _Event M α β) : _Event M (α × �
                               ((x',y), m')
   }
 
-/- one possible definition
 instance [Machine CTX M]: Arrow (_Event M) where
   arrow {α β} (f : α → β) := fun_Event M f
 
@@ -376,22 +414,34 @@ instance [Machine CTX M]: Arrow (_Event M) where
 
   split {α α' β β'} (ev₁ : _Event M α β)  (ev₂ : _Event M α' β') : _Event M (α × α') (β × β') := {
     guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
-    action := fun m (x, y) => let (x',m') := ev₁.action m x
-                              let (y', _) := ev₂.action m y
-                              -- note : we forget the second state change
-                              ((x', y'), m')
+    action := fun m (x, y) =>
+      match ev₁.action m x with
+      | .none => none
+      | .some (x',m') =>
+           match ev₂.action m y with
+           | .none => none
+           | .some (y', _) =>
+                -- note : we forget the second state change, like in the split-from-first case
+                -- implicitly this means that the state changes should be "compatibl"
+                -- a more interesting variant is possible with non-deterministic events
+                some ((x', y'), m')
   }
-
-
 
 instance [Machine CTX M]: LawfulArrow (_Event M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext _ := by simp [Arrow.arrow, Arrow.first]
   arrow_fun _ _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_xcg _ _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_unit _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_assoc {α β γ δ} (f : _Event M α β) :=
-    by simp [Arrow.arrow, Arrow.first]
+  arrow_xcg ev f := by
+    simp [Arrow.arrow, Arrow.first]
+    constructor <;> funext m (x, y) <;> cases ev.action m x <;> simp
+  arrow_unit ev := by
+    simp [Arrow.arrow, Arrow.first]
+    constructor <;> funext m (x, y) <;> cases ev.action m x <;> simp
+  arrow_assoc {α β γ δ} (f : _Event M α β) := by
+    simp [Arrow.arrow, Arrow.first]
+    constructor <;> funext m ((x, y), z) <;> cases f.action m x <;> simp
+
+/-
 
 /- ContravariantFunctor functor -/
 
