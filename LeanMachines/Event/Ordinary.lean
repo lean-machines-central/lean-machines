@@ -548,9 +548,10 @@ instance [Machine CTX M]: ContravariantFunctor (CoEvent M γ) where
     guard := event.guard
     action := event.action
     po := {
-      safety := fun m x => by simp [ContravariantFunctor.contramap]
-                              intros Hinv Hgrd
-                              exact ev.po.safety m (f x) Hinv Hgrd
+      safety := fun m x => by
+        simp [ContravariantFunctor.contramap]
+        intros Hinv Hgrd
+        exact ev.po.safety m (f x) Hinv Hgrd
     }
   }
 
@@ -567,20 +568,44 @@ instance [Machine CTX M] : Profunctor (OrdinaryEvent M) where
       guard := event.guard
       action := event.action
       po := {
-        safety := fun m x => by simp [Profunctor.dimap]
-                                intros Hinv Hgrd
-                                let ev' := OrdinaryEvent_from_CoEvent (ContravariantFunctor.contramap f (CoEvent_from_OrdinaryEvent ev))
-                                let ev'' := g <$> ev'
-                                have Hsafe := ev''.po.safety m x Hinv
-                                revert Hsafe ev' ev'' ; simp
-                                intro Hsafe
-                                exact Hsafe Hgrd
+        safety := fun m x => by
+          simp [Profunctor.dimap]
+          intros Hinv Hgrd
+          let ev' := OrdinaryEvent_from_CoEvent (ContravariantFunctor.contramap f (CoEvent_from_OrdinaryEvent ev))
+          let ev'' := g <$> ev'
+          have Hsafe := ev''.po.safety m x Hinv
+          revert Hsafe ev' ev'' ; simp
+          intro Hsafe
+          exact Hsafe Hgrd
       }
     }
 
 instance [Machine CTX M] : LawfulProfunctor (OrdinaryEvent M) where
-  dimap_id := rfl
-  dimap_comp _ _ _ _ := rfl
+  dimap_id {α β} := by
+    have H := LawfulProfunctor.dimap_id (instPF:=instProfunctor_Event (M:=M)) (α:=α) (β:=β)
+    revert H
+    simp [Profunctor.dimap]
+    intro H
+    funext ev
+    cases ev
+    case mk ev po =>
+      simp
+      rw [@funext_iff] at H
+      have Hev := H ev ; clear H
+      simp [Hev]
+
+  dimap_comp f₁ f₂ f₃ f₄ := by
+    have H := LawfulProfunctor.dimap_comp (instPF:=instProfunctor_Event (M:=M)) f₁ f₂ f₃ f₄
+    revert H
+    simp [Profunctor.dimap]
+    intro H
+    funext ev
+    cases ev
+    case mk ev po =>
+      rw [@funext_iff] at H
+      have Hev := H ev ; clear H
+      simp [Hev]
+
 
 instance [Machine CTX M] : StrongProfunctor (OrdinaryEvent M) where
   first' {α β γ} (ev : OrdinaryEvent M α β): OrdinaryEvent M (α × γ) (β × γ) :=
@@ -589,9 +614,16 @@ instance [Machine CTX M] : StrongProfunctor (OrdinaryEvent M) where
       guard := event.guard
       action := event.action
       po := {
-        safety := fun m x => by simp
-                                intros Hinv Hgrd
-                                apply ev.po.safety <;> assumption
+        safety m inp := by
+          obtain ⟨x, y⟩ := inp
+          cases ev
+          case mk _ev po =>
+            simp [event] ; clear event
+            simp [StrongProfunctor.first'] at *
+            intros Hinv Hgrd
+            have Hsafe := po.safety m x Hinv Hgrd
+            revert Hsafe
+            cases _ev.action m x <;> simp
       }
     }
 
