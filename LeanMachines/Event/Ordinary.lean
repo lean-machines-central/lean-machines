@@ -354,13 +354,16 @@ def bindEvent [Machine CTX M] (ev : OrdinaryEvent M γ α) (f : α → OrdinaryE
     guard := event.guard
     action := event.action
     po := {
-      safety := fun m x => by intros Hinv Hgrd
-                              simp [bind, bind_Event, event] at *
-                              have Hsafe₁ := ev.po.safety m x Hinv
-                              simp [Hgrd] at Hsafe₁
-                              have Hsafe₂ := (f (ev.to_Event.2 m x).fst).po.safety (ev.to_Event.2 m x).snd x Hsafe₁
-                              simp [Hgrd] at Hsafe₂
-                              assumption
+      safety := fun m x => by
+        simp [bind, bind_Event, event] at *
+        intros Hinv₁ Hgrd₁
+        have Hsafe₁ := ev.po.safety m x Hinv₁ Hgrd₁
+        revert Hsafe₁
+        cases ev.action m x
+        case none => simp
+        case some res =>
+          intro Hinv₂ Hgrd₂
+          exact (f res.fst).po.safety res.snd x Hinv₂ Hgrd₂
     }
   }
 
@@ -368,29 +371,35 @@ instance [Machine CTX M]: Monad (OrdinaryEvent M γ) where
   bind := bindEvent
 
 instance [Machine CTX M]: LawfulMonad (OrdinaryEvent M γ) where
-  bind_pure_comp := by intros α β f ev
-                       simp [pure, Functor.map, pureEvent, mapEvent, bind, bindEvent]
-                       have H := bind_pure_comp  f ev.to_Event
-                       simp [bind, pure, Functor.map] at H
-                       simp [H]
+  bind_pure_comp := by
+    intros α β f ev
+    simp [pure, Functor.map, pureEvent, mapEvent, bind, bindEvent]
+    have H := bind_pure_comp  f ev.to_Event
+    simp [bind, pure, Functor.map] at H
+    simp [H]
 
-  bind_map := by simp [bind] ; intros ; rfl
-  pure_bind := by intros α β x f
-                  simp only [pure]
-                  simp [bind, bindEvent]
-                  simp only [pure]
-                  have H := pure_bind x (fun x => (f x).to_Event)
-                  simp only [pure, bind] at H
-                  revert H
-                  cases (f x)
-                  case mk ev po =>
-                    simp
+  bind_map f x := by
+    simp [bind, bindEvent, Seq.seq, applyEvent]
+    exact bind_map f.to_Event x.to_Event
 
-  bind_assoc := by intros α β γ' ev f g
-                   simp [bind, bindEvent]
-                   have H := bind_assoc ev.to_Event (fun x => (f x).to_Event) (fun x => (g x).to_Event)
-                   simp [bind] at H
-                   simp [H]
+  pure_bind := by
+    intros α β x f
+    simp only [pure]
+    simp [bind, bindEvent]
+    simp only [pure]
+    have H := pure_bind x (fun x => (f x).to_Event)
+    simp only [pure, bind] at H
+    revert H
+    cases (f x)
+    case mk ev po =>
+      simp
+
+  bind_assoc := by
+    intros α β γ' ev f g
+    simp [bind, bindEvent]
+    have H := bind_assoc ev.to_Event (fun x => (f x).to_Event) (fun x => (g x).to_Event)
+    simp [bind] at H
+    simp [H]
 
 /- Category and Arrow -/
 

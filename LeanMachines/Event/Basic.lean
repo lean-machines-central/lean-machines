@@ -237,32 +237,33 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
     simp [Seq.seq, pure, Functor.map, map_Event, apply_Event]
     constructor <;> (funext m y ; cases ev.action m y <;> simp)
 
-  seq_assoc := by intros α β γ' ev g h
-                  simp [Seq.seq, Functor.map, map_Event, apply_Event]
-                  constructor
-                  case left =>
-                    funext m y
-                    cases h.action m y
-                    · simp
-                    · simp
-                      rename_i res
-                      cases g.action res.snd y
-                      · simp
-                      · exact Iff.symm and_assoc
-                  case right => -- XXX: some redundancy here ...
-                    funext m y
-                    cases h.action m y
-                    · simp
-                    · simp
-                      rename_i res
-                      cases g.action res.snd y
-                      · simp
-                      · simp
-                        rename_i res'
-                        cases ev.action res'.snd y <;> simp
+  seq_assoc := by
+    intros α β γ' ev g h
+    simp [Seq.seq, Functor.map, map_Event, apply_Event]
+    constructor
+    case left =>
+      funext m y
+      cases h.action m y
+      · simp
+      · simp
+        rename_i res
+        cases g.action res.snd y
+        · simp
+        · exact Iff.symm and_assoc
+    case right => -- XXX: some redundancy here ...
+      funext m y
+      cases h.action m y
+      · simp
+      case _ res =>
+        simp
+        cases g.action res.snd y
+        · simp
+        case _ res' =>
+          simp
+          cases ev.action res'.snd y <;> simp
 
 
-/- Monad -/
+/- Monads -/
 
 def bind_Event [Machine CTX M] (ev : _Event M γ α) (f : α → _Event M γ β) : _Event M γ β :=
   {
@@ -293,23 +294,24 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
     constructor <;> (funext m x <;> cases evf.action m x <;> simp)
   pure_bind := by intros _ β x f
                   simp [pure, bind, bind_Event]
-  bind_assoc := by intros β γ' x f g h
-                   simp [bind, bind_Event]
-                   constructor
-                   case left =>
-                     funext m x
-                     cases f.action m x
-                     · simp
-                     case _ res =>
-                       simp
-                       cases (g res.fst).action res.snd x
-                       · simp
-                       case _ res' =>
-                         simp
-                         exact and_assoc
-                   case right =>
-                     funext m x
-                     cases f.action m x <;> simp
+  bind_assoc := by
+    intros β γ' x f g h
+    simp [bind, bind_Event]
+    constructor
+    case left =>
+      funext m x
+      cases f.action m x
+      · simp
+      case _ res =>
+        simp
+        cases (g res.fst).action res.snd x
+        · simp
+        case _ res' =>
+          simp
+          exact and_assoc
+    case right =>
+      funext m x
+      cases f.action m x <;> simp
 
 /-
 
