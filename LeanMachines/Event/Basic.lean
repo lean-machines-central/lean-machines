@@ -41,8 +41,13 @@ This comprises:
  its initialization (very often, this is the default initialization state,
   but it can also be an unreachable "pre-init" state if required).
 
+Note : the machine state (type M) is assumed to have decidable equality
+ because states must be at times compared  (e.g. tracking the `reset` state).
+ For this reason the `invariant` is a separate component.
+
 -/
-class Machine (CTX : outParam (Type u)) (M) where
+
+class Machine (CTX : outParam Type) (M : Type) [DecidableEq M] where
   /-- The context (i.e. parameters) of the machine. -/
   context : CTX
   /-- The invariant property that must be satisfied
@@ -70,21 +75,6 @@ inductive EventKind where
 
 open EventKind
 
-/-- The common root of all event representations.
-This simply defines the notion of a guard. -/
-structure _EventRoot (M) [Machine CTX M] (α : Type) where
-  guard : M → α → Prop := fun _ _ => True
-
-theorem ext_EventRoot [Machine CTX M] (ev1 ev2 : _EventRoot M α):
-  ev1.guard = ev2.guard
-  → ev1 = ev2 :=
-by
-  intro H
-  cases ev1
-  cases ev2
-  simp [*] at *
-  simp [*]
-
 /-!
 ## Deterministic events (internal representation)
 -/
@@ -94,52 +84,39 @@ with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 This extends `_EventRoot` with a notion of (deterministic/functional) action.
 .-/
-structure _Event (M) [Machine CTX M] (α) (β : Type)
-  extends _EventRoot M α where
-
-  _guard_dec (m  : M) (x : α) : Decidable (guard m x)
-
+@[ext]
+structure _Event (M) [DecidableEq M] [Machine CTX M] (α : Type) (β : Type) where
+  /-- Boolean guard of the action -/
+  guard : M → α → Bool := fun _ _ => true
+  /-- Internal representation of the event action as a function -/
   action (m : M) (x : α): Option (β × M)
 
  -- Note : the Option is because internally there is no way to
- --        make the action depending on the validity of the guard,
- --        if only because we do not enforce decidability
- --        We'll see that ordinary events do make this supposition
+ --        make the internal action depending on the validity of the guard
 
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
-.-/
-structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
-  guard : α → Prop
-  _guard_dec (x : α) : Decidable (guard x)
+-/
+
+@[ext]
+structure _InitEvent (M) [DecidableEq M] [Machine CTX M] (α) (β : Type) where
+  guard : α → Bool
   init: α → Option (β × M)
 
 @[simp]
-def _InitEvent.to_Event [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
+def _InitEvent.to_Event [DecidableEq M] [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
   {
-    guard := fun m x => m = Machine.reset ∧ ev.guard x
-    _guard_dec m x := by sorry
+    guard := fun m x => m == Machine.reset && ev.guard x
     action := fun _ x => ev.init x
   }
-
-theorem ext_Event [Machine CTX M] (ev1 ev2 : _Event M α β):
-  ev1.guard = ev2.guard → ev1.action = ev2.action
-  → ev1 = ev2 :=
-by
-  intro H₁ H₂
-  have Hr := ext_EventRoot ev1.to_EventRoot ev2.to_EventRoot H₁
-  cases ev1
-  cases ev2
-  simp [*] at *
-  simp [*]
 
 /-- The deterministic skip event, that does nothing.
 Note that the output type must match the input type,
  hence a non-deterministic notion of skip event is
  best in most situations (cf. `_NDEvent` in the `NonDet` module). -/
 @[simp]
-def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
+def skip_Event (M) [DecidableEq M] [Machine CTX M] (α) : _Event M α α :=
 {
   action := fun m x => some (x, m)
 }
@@ -147,14 +124,14 @@ def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
 /-- Any type-theoretic function can be lifted to the
 status of a (non-guarded) event. -/
 @[simp]
-def fun_Event  (M) [Machine CTX M] (f : α → β) : _Event M α β :=
+def fun_Event (M) [DecidableEq M] [Machine CTX M] (f : α → β) : _Event M α β :=
 {
   action := fun m x => some (f x, m)
 }
 
 /-- This allows to lift a "stateful" function. -/
 @[simp]
-def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : _Event M α β :=
+def funskip_Event (M) [DecidableEq M] [Machine CTX M] (xf : M → α → β) : _Event M α β :=
 {
   action := fun m x => some (xf m x, m)
 }
@@ -172,17 +149,17 @@ This part is rather experimental and is thus not fully documented yet.
 
 /- Functor -/
 
-def map_Event [Machine CTX M] (f : α → β) (ev : _Event M γ α)  : _Event M γ β :=
+def map_Event [DecidableEq M] [Machine CTX M] (f : α → β) (ev : _Event M γ α)  : _Event M γ β :=
   { guard := ev.guard
     action := fun m x => match ev.action m x with
                          | .none => .none
                          | .some (y, m') => .some (f y, m')
    }
 
-instance [Machine CTX M]: Functor (_Event M γ) where
+instance [DecidableEq M] [Machine CTX M]: Functor (_Event M γ) where
   map := map_Event
 
-instance [Machine CTX M]: LawfulFunctor (_Event M γ) where
+instance [DecidableEq M] [Machine CTX M]: LawfulFunctor (_Event M γ) where
   map_const := by
     intros α β
     simp [Functor.mapConst, Functor.map]
@@ -203,18 +180,18 @@ instance [Machine CTX M]: LawfulFunctor (_Event M γ) where
 /- Applicative Functor -/
 
 @[simp]
-def pure_Event [Machine CTX M] (y : α) : _Event M γ α :=
+def pure_Event [DecidableEq M] [Machine CTX M] (y : α) : _Event M γ α :=
   {
     action := fun m _ => (y, m)
   }
 
-instance [Machine CTX M]: Pure (_Event M γ) where
+instance [DecidableEq M] [Machine CTX M]: Pure (_Event M γ) where
   pure := pure_Event
 
-def apply_Event [Machine CTX M] ( ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
+def apply_Event [DecidableEq M] [Machine CTX M] ( ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
   {
-    guard := fun m x => ef.guard m x ∧ match ef.action m x with
-                                       | .none => True
+    guard := fun m x => ef.guard m x && match ef.action m x with
+                                       | .none => true
                                        | .some (_, m') => ev.guard m' x
     action := fun m x =>
       match ef.action m x with
@@ -224,10 +201,10 @@ def apply_Event [Machine CTX M] ( ef : _Event M γ (α → β)) (ev : _Event M �
                          | .some (y, m'') => some (f y, m'')
   }
 
-instance [Machine CTX M]: Applicative (_Event M γ) where
+instance [DecidableEq M] [Machine CTX M]: Applicative (_Event M γ) where
   seq ef ev := apply_Event ef (ev ())
 
-instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
+instance [DecidableEq M] [Machine CTX M]: LawfulApplicative (_Event M γ) where
   map_const := by intros ; rfl
   id_map := by intros ; simp
   seqLeft_eq := by intros ; rfl
@@ -253,7 +230,9 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
         rename_i res
         cases g.action res.snd y
         · simp
-        · exact Iff.symm and_assoc
+        case _ res' =>
+          simp
+          exact Eq.symm (Bool.and_assoc (h.guard m y) (g.guard res.snd y) (ev.guard res'.snd y))
     case right => -- XXX: some redundancy here ...
       funext m y
       cases h.action m y
