@@ -47,7 +47,7 @@ Note : the machine state (type M) is assumed to have decidable equality
 
 -/
 
-class Machine (CTX : outParam Type) (M : Type) [DecidableEq M] where
+class Machine (CTX : outParam Type) (M : Type) where
   /-- The context (i.e. parameters) of the machine. -/
   context : CTX
   /-- The invariant property that must be satisfied
@@ -85,7 +85,7 @@ with: `M` the machine type,
 This extends `_EventRoot` with a notion of (deterministic/functional) action.
 .-/
 @[ext]
-structure _Event (M) [DecidableEq M] [Machine CTX M] (α : Type) (β : Type) where
+structure _Event (M) [Machine CTX M] (α : Type) (β : Type) where
   /-- Boolean guard of the action -/
   guard : M → α → Bool := fun _ _ => true
   /-- Internal representation of the event action as a function -/
@@ -100,7 +100,7 @@ with: `M` the machine type,
 -/
 
 @[ext]
-structure _InitEvent (M) [DecidableEq M] [Machine CTX M] (α) (β : Type) where
+structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard : α → Bool
   init: α → Option (β × M)
 
@@ -116,7 +116,7 @@ Note that the output type must match the input type,
  hence a non-deterministic notion of skip event is
  best in most situations (cf. `_NDEvent` in the `NonDet` module). -/
 @[simp]
-def skip_Event (M) [DecidableEq M] [Machine CTX M] (α) : _Event M α α :=
+def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
 {
   action := fun m x => some (x, m)
 }
@@ -124,14 +124,14 @@ def skip_Event (M) [DecidableEq M] [Machine CTX M] (α) : _Event M α α :=
 /-- Any type-theoretic function can be lifted to the
 status of a (non-guarded) event. -/
 @[simp]
-def fun_Event (M) [DecidableEq M] [Machine CTX M] (f : α → β) : _Event M α β :=
+def fun_Event (M) [Machine CTX M] (f : α → β) : _Event M α β :=
 {
   action := fun m x => some (f x, m)
 }
 
 /-- This allows to lift a "stateful" function. -/
 @[simp]
-def funskip_Event (M) [DecidableEq M] [Machine CTX M] (xf : M → α → β) : _Event M α β :=
+def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : _Event M α β :=
 {
   action := fun m x => some (xf m x, m)
 }
@@ -149,17 +149,17 @@ This part is rather experimental and is thus not fully documented yet.
 
 /- Functor -/
 
-def map_Event [DecidableEq M] [Machine CTX M] (f : α → β) (ev : _Event M γ α)  : _Event M γ β :=
+def map_Event [Machine CTX M] (f : α → β) (ev : _Event M γ α)  : _Event M γ β :=
   { guard := ev.guard
     action := fun m x => match ev.action m x with
                          | .none => .none
                          | .some (y, m') => .some (f y, m')
    }
 
-instance [DecidableEq M] [Machine CTX M]: Functor (_Event M γ) where
+instance [Machine CTX M]: Functor (_Event M γ) where
   map := map_Event
 
-instance [DecidableEq M] [Machine CTX M]: LawfulFunctor (_Event M γ) where
+instance [Machine CTX M]: LawfulFunctor (_Event M γ) where
   map_const := by
     intros α β
     simp [Functor.mapConst, Functor.map]
@@ -180,15 +180,15 @@ instance [DecidableEq M] [Machine CTX M]: LawfulFunctor (_Event M γ) where
 /- Applicative Functor -/
 
 @[simp]
-def pure_Event [DecidableEq M] [Machine CTX M] (y : α) : _Event M γ α :=
+def pure_Event [Machine CTX M] (y : α) : _Event M γ α :=
   {
     action := fun m _ => (y, m)
   }
 
-instance [DecidableEq M] [Machine CTX M]: Pure (_Event M γ) where
+instance [Machine CTX M]: Pure (_Event M γ) where
   pure := pure_Event
 
-def apply_Event [DecidableEq M] [Machine CTX M] ( ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
+def apply_Event [Machine CTX M] ( ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
   {
     guard := fun m x => ef.guard m x && match ef.action m x with
                                        | .none => true
@@ -201,10 +201,10 @@ def apply_Event [DecidableEq M] [Machine CTX M] ( ef : _Event M γ (α → β)) 
                          | .some (y, m'') => some (f y, m'')
   }
 
-instance [DecidableEq M] [Machine CTX M]: Applicative (_Event M γ) where
+instance [Machine CTX M]: Applicative (_Event M γ) where
   seq ef ev := apply_Event ef (ev ())
 
-instance [DecidableEq M] [Machine CTX M]: LawfulApplicative (_Event M γ) where
+instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   map_const := by intros ; rfl
   id_map := by intros ; simp
   seqLeft_eq := by intros ; rfl
@@ -250,7 +250,7 @@ instance [DecidableEq M] [Machine CTX M]: LawfulApplicative (_Event M γ) where
 
 def bind_Event [Machine CTX M] (ev : _Event M γ α) (f : α → _Event M γ β) : _Event M γ β :=
   {
-    guard := fun m x => ev.guard m x ∧ match ev.action m x with
+    guard := fun m x => ev.guard m x && match ev.action m x with
                                        | .none => True
                                        | .some (y, m') =>
                                            let ev' := f y
@@ -290,8 +290,8 @@ instance [Machine CTX M]: LawfulMonad (_Event M γ) where
         cases (g res.fst).action res.snd x
         · simp
         case _ res' =>
-          simp
-          exact and_assoc
+          simp [Bool.and_assoc]
+
     case right =>
       funext m x
       cases f.action m x <;> simp
@@ -319,7 +319,7 @@ instance [Machine CTX M]: Category (_Event M) where
   id := fun_Event M id
 
   comp {α β γ} (ev₂ : _Event M β γ) (ev₁ : _Event M α β) : _Event M α γ :=
-    { guard := fun m x => ev₁.guard m x ∧ match ev₁.action m x with
+    { guard := fun m x => ev₁.guard m x && match ev₁.action m x with
                                           | .none => True
                                           | .some (y, m') => ev₂.guard m' y
       action := fun m x => match ev₁.action m x with
@@ -331,26 +331,25 @@ instance [Machine CTX M]: LawfulCategory (_Event M) where
   id_right _ := by simp
   id_left ev := by
     cases ev
-    case mk evr act =>
+    case mk grd act =>
       simp
       constructor
       case left =>
-        cases evr
-        case mk grd =>
-          simp
-          funext m x
-          cases act m x <;> simp
+        funext m x
+        simp
+        intro Hgrd
+        cases act m x <;> simp
       case right =>
         funext m x
         cases act m x <;> simp
 
   id_assoc ev₁ ev₂ ev₃ := by
     cases ev₁
-    case mk evr₁ act₁ =>
+    case mk grd₁ act₁ =>
       cases ev₂
-      case mk evr₂ act₂ =>
+      case mk grd₂ act₂ =>
         cases ev₃
-        case mk evr₃ act₃ =>
+        case mk grd₃ act₃ =>
           simp
           constructor
           case left =>
@@ -362,8 +361,8 @@ instance [Machine CTX M]: LawfulCategory (_Event M) where
               cases act₂ res₃.snd res₃.fst
               · simp
               case _ res₂ =>
-                simp
-                exact and_assoc
+                simp [Bool.and_assoc]
+
           case right =>
             funext m x
             cases act₃ m x <;> simp
