@@ -81,8 +81,53 @@ This extends `_EventRoot` with a notion of (deterministic/functional) action.
 .-/
 @[ext]
 structure _Event (M) [Machine CTX M] (α : Type) (β : Type) where
-  guard (m : M) (x : α) : Bool := true
+  guard (m : M) (x : α) : Prop := True
   action (m : M) (x : α) (grd : guard m x): (β × M)
+
+
+theorem _Guard_ext [Machine CTX M] (guard₁ : M → α → Prop) (guard₂ : M → α → Prop):
+  (∀ m x, guard₁ m x = guard₂ m x)
+  → guard₁ = guard₂ :=
+by
+  intro H
+  funext m x
+  exact H m x
+
+theorem _Guard_coext [Machine CTX M] (guard₁ : M → α → Prop) (guard₂ : M → α → Prop):
+  guard₁ = guard₂
+  → ∀ m x, guard₁ m x = guard₂ m x
+ :=
+by
+  intro H
+  intros m x
+  exact congrFun (congrFun H m) x
+
+theorem _Action.ext [Machine CTX M] (α : Type) (β : Type)
+  (grd₁ : M → α → Prop) (grd₂ : M → α → Prop)
+  (act₁ : (m : M) → (x : α) → grd₁ m x → β → M)
+  (act₂ : (m : M) → (x : α) → grd₂ m x →  β → M):
+  (∀ m x, grd₁ m x = grd₂ m x) → HEq act₁ act₂ :=
+by
+  intros Hg
+  /-
+  theorem heq_of_eqRec_eq {α β : Sort u} {a : α} {b : β} (h₁ : α = β) (h₂ : h₁ ▸ a = b) :
+    HEq a b
+  -/
+  have h0 :  ((m : M) → (x : α) → grd₁ m x → β → M)
+             =  ((m : M) → (x : α) → grd₂ m x → β → M) := by
+
+    refine pi_congr ?_
+    intro m
+    refine pi_congr ?_
+    intro x
+    rw [Hg]
+  apply heq_of_eqRec_eq (h₁:=h0)
+  refine funext ?_
+  intro m
+  refine funext ?_
+  intro x
+  have Hgmx := Hg m x
+  sorry -- is is possible to conclude ?
 
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
@@ -90,13 +135,13 @@ with: `M` the machine type,
 .-/
 @[ext]
 structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
-  guard (x : α) : Bool := true
+  guard (x : α) : Prop := True
   init (x : α) (grd : guard x) : (β × M)
 
 @[simp]
 def _InitEvent.to_Event [DecidableEq M] [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
   {
-    guard := fun m x => m == Machine.reset && ev.guard x
+    guard := fun m x => m == Machine.reset ∧ ev.guard x
     action := fun m x grd => ev.init x (by simp at grd ; apply grd.2)
   }
 
@@ -180,19 +225,23 @@ instance [Machine CTX M]: Applicative (_Event M γ) where
 theorem Pure_seq_aux [Machine CTX M] (g : α → β) (ev : _Event M γ α):
   apply_Event (pure g) ev = map_Event g ev :=
 by
-  simp [map_Event, pure, apply_Event]
-
+  cases ev
+  case mk grd act =>
+    simp [apply_Event, map_Event]
+    constructor
+    case left => simp [pure]
+    case right =>
+      simp [pure]
+      sorry
 
 instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   map_const := by intros ; rfl
   id_map := by intros ; rfl
   seqLeft_eq := by intros ; rfl
   seqRight_eq := by intros ; rfl
-  pure_seq := by intros α β g x
-                 simp [Seq.seq, Functor.map]
-                 have hh : (fun m x_1 grd => (g (x.2 m x_1 ⋯).fst, (x.2 m x_1 ⋯).snd)) fun m x_1 grd =>
-  (g (x.2 m x_1 grd).fst, (x.2 m x_1 grd).snd) := by
-
+  pure_seq := by intros α β g ev
+                 simp [pure, Seq.seq, Functor.map]
+                 apply Pure_seq_aux
 
   map_pure := by intros α β g x ; rfl
   seq_pure := by intros α β ev x
