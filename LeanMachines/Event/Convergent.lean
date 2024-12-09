@@ -366,12 +366,15 @@ instance [Preorder v] [Machine CTX M] : LawfulFunctor (AnticipatedEvent v M γ) 
   map_const := rfl
   id_map := by
     intros α ev
-    simp [Functor.map, map_Event]
+    have Hidm := LawfulFunctor.id_map (α:=α) (x:=ev.toOrdinaryEvent)
+    simp [Functor.map, mapEvent, map_Event] at *
     cases ev
-    case mk evr act =>
-      simp
-      funext m x
-      cases (act m x) <;> simp
+    case mk ev po =>
+      simp at *
+      simp [Hidm]
+      cases po
+      case mk vr epo hni =>
+        simp [AnticipatedEvent_fromOrdinary]
 
 
 
