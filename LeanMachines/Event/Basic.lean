@@ -101,13 +101,19 @@ by
   exact congrFun (congrFun H m) x
 
 /- XXX : does this axiom breaks something ?
-         (I don't think it's provable becayse of HEq) -/
-theorem _Action.ext {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _Event M α β):
+         (I don't think it's provable because of HEq) -/
+axiom _Action_ext_ax {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _Event M α β):
+   (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
+   → HEq ev₁.action ev₂.action
+
+theorem _Event.ext {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _Event M α β):
   (∀ m x, ev₁.guard m x = ev₂.guard m x
           ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
   → ev₁ = ev₂ :=
 by
   intros H
+  have Hax := _Action_ext_ax ev₁ ev₂
   cases ev₁
   case mk g₁ act₁ =>
     cases ev₂
@@ -120,8 +126,7 @@ by
         have Hg := (H m x).1
         exact propext Hg
       case right =>
-        sorry
-
+        exact Hax H
 
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
@@ -219,15 +224,9 @@ instance [Machine CTX M]: Applicative (_Event M γ) where
 theorem Pure_seq_aux [Machine CTX M] (g : α → β) (ev : _Event M γ α):
   apply_Event (pure g) ev = map_Event g ev :=
 by
-  apply Action_ext
-  cases ev
-  case mk grd act =>
-    simp [apply_Event, map_Event]
-    constructor
-    case left => simp [pure]
-    case right =>
-      simp [pure]
-      sorry
+  apply _Event.ext
+  intros m x
+  simp [apply_Event, pure, map_Event]
 
 instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   map_const := by intros ; rfl
@@ -240,11 +239,11 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
 
   map_pure := by intros α β g x ; rfl
   seq_pure := by intros α β ev x
-                 simp [Seq.seq, pure, Functor.map, map_Event, apply_Event]
+                 simp [Seq.seq, Functor.map]
+                 sorry
   seq_assoc := by intros α β γ' ev g h
                   simp [Seq.seq, Functor.map, map_Event, apply_Event]
-                  funext m y
-                  rw [And_eq_assoc]
+                  sorry
 
 /- Monad -/
 
