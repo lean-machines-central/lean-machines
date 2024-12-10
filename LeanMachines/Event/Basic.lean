@@ -79,6 +79,7 @@ with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 This extends `_EventRoot` with a notion of (deterministic/functional) action.
 .-/
+@[ext]
 structure _Event (M) [Machine CTX M] (α : Type) (β : Type) where
   guard (m : M) (x : α) : Prop := True
   action (m : M) (x : α) (grd : guard m x): (β × M)
@@ -107,7 +108,7 @@ axiom _Action_ext_ax {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _Event M α
           ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
    → HEq ev₁.action ev₂.action
 
-theorem _Event.ext {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _Event M α β):
+theorem _Event.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _Event M α β):
   (∀ m x, ev₁.guard m x = ev₂.guard m x
           ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
   → ev₁ = ev₂ :=
@@ -224,9 +225,10 @@ instance [Machine CTX M]: Applicative (_Event M γ) where
 theorem Pure_seq_aux [Machine CTX M] (g : α → β) (ev : _Event M γ α):
   apply_Event (pure g) ev = map_Event g ev :=
 by
-  apply _Event.ext
+  apply _Event.ext'
   intros m x
   simp [apply_Event, pure, map_Event]
+
 
 instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   map_const := by intros ; rfl
@@ -239,11 +241,23 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
 
   map_pure := by intros α β g x ; rfl
   seq_pure := by intros α β ev x
-                 simp [Seq.seq, Functor.map]
-                 sorry
+                 simp [Seq.seq, Functor.map, pure]
+                 apply _Event.ext'
+                 simp [apply_Event, map_Event]
+
   seq_assoc := by intros α β γ' ev g h
-                  simp [Seq.seq, Functor.map, map_Event, apply_Event]
-                  sorry
+                  simp [Functor.map, Seq.seq]
+                  apply _Event.ext
+                  case guard =>
+                    simp [apply_Event, map_Event]
+                    funext m x
+                    refine propext ?_
+                    constructor <;> intro H <;> simp [H]
+                  case action =>
+                    apply _Action_ext_ax
+                    intros m x
+                    simp [apply_Event, map_Event]
+                    constructor <;> intro H <;> simp [H]
 
 /- Monad -/
 
