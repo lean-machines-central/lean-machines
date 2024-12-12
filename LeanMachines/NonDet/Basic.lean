@@ -19,29 +19,16 @@ with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 This extends `_EventRoot` with a notion of (non-deterministic/relational) effect.
 .-/
-structure _NDEvent (M) [Machine CTX M] (α) (β : Type)
-  extends _EventRoot M α where
-
-  effect: M → α → (β × M) → Prop
-
-theorem _NDEvent.ext [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β):
-  ev₁.to_EventRoot = ev₂.to_EventRoot
-  → ev₁.effect = ev₂.effect
-  → ev₁ = ev₂ :=
-by
-  intros H₁ H₂
-  cases ev₁
-  case mk _evr₁ _eff₁ =>
-    cases ev₂
-    case mk _evr₃ _eff₂ =>
-      simp [*] at *
-      simp [H₁, H₂]
+@[ext]
+structure _NDEvent (M) [Machine CTX M] (α β : Type) where
+  guard (m : M) (x : α) : Prop := True
+  effect (m : M) (x : α) (grd : guard m x) (eff : β × M): Prop
 
 @[simp]
 def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :=
 {
   guard := ev.guard
-  effect := fun m x (x'', m'') => let (x', m') := ev.action m x
+  effect := fun m x grd (x'', m'') => let (x', m') := ev.action m x grd
                                   m'' = m' ∧ x'' = x'
 }
 
@@ -51,27 +38,27 @@ with: `M` the machine type,
 .-/
 structure _InitNDEvent (M) [Machine CTX M] (α) (β : Type) where
   guard: α → Prop
-  init: α → (β × M) → Prop
+  init (x : α) (grd : guard x) (eff: β × M) : Prop
 
 @[simp]
 def _InitEvent.to_InitNDEvent [Machine CTX M] (ev : _InitEvent M α β) : _InitNDEvent M α β :=
 {
   guard := ev.guard
-  init := fun x (x'', m'') => let (x', m') := ev.init x
-                              m'' = m' ∧ x'' = x'
+  init := fun x grd (x'', m'') => let (x', m') := ev.init x grd
+                                  m'' = m' ∧ x'' = x'
 }
 
 @[simp]
 def _InitNDEvent.to_NDEvent [Machine CTX M] (ev : _InitNDEvent M α β) : _NDEvent M α β :=
 {
   guard := fun m x => m = Machine.reset ∧ ev.guard x
-  effect := fun _ x (y, m') => ev.init x (y, m')
+  effect := fun _ x grd (y, m') => ev.init x grd.2 (y, m')
 }
 
 @[simp]
 def skip_NDEvent [Machine CTX M] : _NDEvent M α β :=
   {
-    effect := fun m _ (_, m') => m' = m
+    effect := fun m _ _ (_, m') => m' = m
   }
 
 
@@ -86,32 +73,33 @@ instance [Machine CTX M] : Functor (_NDEvent M γ) where
   map f ev :=
   {
     guard := ev.guard
-    effect := fun m x (y, m') => ∃ z, ∃ m'', ev.effect m x (z, m'')
-                                             ∧ y = f z ∧ m' = m''
+    effect := fun m x grd (y, m') => ∃ z, ∃ m'', ev.effect m x grd (z, m'')
+                                                 ∧ y = f z ∧ m' = m''
   }
 
 instance [Machine CTX M] : LawfulFunctor (_NDEvent M γ) where
   map_const := rfl
   id_map ev := by simp [Functor.map]
 
-  comp_map g h ev := by simp [Functor.map]
-                        funext m x (y,m')
-                        apply propext
-                        constructor
-                        · intro Hz
-                          cases Hz
-                          case _ z H =>
-                            simp at H
-                            simp
-                            exists (g z)
-                            constructor
-                            · exists z
-                              simp [H]
-                            simp [H]
-                        simp
-                        intros z t Heff Heq₁ Heq₂
-                        exists t
-                        simp [Heff, Heq₁, Heq₂]
+  comp_map g h ev := by
+    simp [Functor.map]
+    funext m x grd (y,m')
+    apply propext
+    constructor
+    · intro Hz
+      cases Hz
+      case _ z H =>
+        simp at H
+        simp
+        exists (g z)
+        constructor
+        · exists z
+          simp [H]
+        simp [H]
+    simp
+    intros z t Heff Heq₁ Heq₂
+    exists t
+    simp [Heff, Heq₁, Heq₂]
 
 
 -- There are two possible, distinct ContravariantFunctor functors
@@ -123,7 +111,7 @@ instance [Machine CTX M] : ContravariantFunctor (_NDEvent M γ) where
   contramap f ev :=
   {
     guard := ev.guard
-    effect := fun m x (y, m') => ev.effect m x ((f y), m')
+    effect := fun m x grd (y, m') => ev.effect m x grd ((f y), m')
   }
 
 instance [Machine CTX M] : LawfullContravariantFunctor (_NDEvent M β) where
@@ -146,7 +134,7 @@ instance [Machine CTX M] : ContravariantFunctor (_CoNDEvent M γ) where
   contramap f ev :=
   {
      guard := fun m x => ev.guard m (f x)
-     effect := fun m x (y, m')  => ev.effect m (f x) (y, m')
+     effect := fun m x grd (y, m')  => ev.effect m (f x) grd (y, m')
   }
 
 instance [Machine CTX M] : LawfullContravariantFunctor (_CoNDEvent M γ) where
@@ -162,35 +150,36 @@ instance [Machine CTX M] : Profunctor (_NDEvent M) where
 instance [Machine CTX M] : LawfulProfunctor (_NDEvent M) where
   dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
-  dimap_comp f f' g g' := by simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map]
-                             funext ev
-                             simp
-                             funext m x (y,m')
-                             simp
-                             constructor
-                             · intro Heff
-                               cases Heff
-                               case _ u Heff =>
-                                 exists (g' u)
-                                 simp [Heff]
-                                 exists u
-                                 simp [Heff]
-                             intro Heff
-                             cases Heff
-                             case _ t Heff =>
-                               simp at Heff
-                               cases Heff
-                               case _ Heff Hy =>
-                                 cases Heff
-                                 case _ u Heff =>
-                                   exists u
-                                   simp [Heff, Hy]
+  dimap_comp f f' g g' := by
+    simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map]
+    funext ev
+    simp
+    funext m x grd (y,m')
+    simp
+    constructor
+    · intro Heff
+      cases Heff
+      case _ u Heff =>
+        exists (g' u)
+        simp [Heff]
+        exists u
+        simp [Heff]
+    intro Heff
+    cases Heff
+    case _ t Heff =>
+      simp at Heff
+      cases Heff
+      case _ Heff Hy =>
+        cases Heff
+        case _ u Heff =>
+          exists u
+          simp [Heff, Hy]
 
 instance [Machine CTX M] : StrongProfunctor (_NDEvent M) where
   first' {α β γ} (ev : _NDEvent M α β): _NDEvent M (α × γ) (β × γ) :=
     {
       guard := fun m (x, _) => ev.guard m x
-      effect := fun m (x,u) ((y, v), m') => v = u ∧ ev.effect m x (y, m')
+      effect := fun m (x,u) grd ((y, v), m') => v = u ∧ ev.effect m x grd (y, m')
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (_NDEvent M) where
@@ -198,13 +187,18 @@ instance [Machine CTX M] : LawfulStrongProfunctor (_NDEvent M) where
 
 instance [Machine CTX M]: Category (_NDEvent M) where
   id := {
-    effect := fun m x (y, m') => y = x ∧ m' = m
+    effect := fun m x grd (y, m') => y = x ∧ m' = m
   }
 
   comp {α β γ} (ev₂ : _NDEvent M β γ) (ev₁ : _NDEvent M α β) : _NDEvent M α γ :=
-    { guard := fun m x => ev₁.guard m x ∧ (∀ y, ∀ m', ev₁.effect m x (y, m')
-                                           → ev₂.guard m' y)
-      effect := fun m x (z, m'') => ∃ y, ∃ m', ev₁.effect m x (y, m') ∧ ev₂.effect m' y (z, m'')
+    { guard := fun m x => ev₁.guard m x
+                          ∧ ((grd : ev₁.guard m x)
+                             → (∀ y, ∀ m', ev₁.effect m x grd (y, m')
+                                → ev₂.guard m' y))
+      effect := fun m x grd (z, m'') =>
+        ∃ y, ∃ m', ev₁.effect m x grd.1 (y, m')
+                   ∧ ((eff₁ : ev₁.effect m x grd.1 (y, m'))
+                     → ev₂.effect m' y (grd.2 grd.1 y m' eff₁) (z, m''))
     }
 
 instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
