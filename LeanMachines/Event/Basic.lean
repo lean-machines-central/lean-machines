@@ -336,21 +336,40 @@ instance [Machine CTX M]: Category (_Event M) where
   id := fun_Event M id
 
   comp {α β γ} (ev₂ : _Event M β γ) (ev₁ : _Event M α β) : _Event M α γ :=
-    { guard := fun m x => ev₁.guard m x ∧ let (y, m') := ev₁.action m x
-                                          ev₂.guard m' y
-      action := fun m x => let (y, m') := ev₁.action m x
-                           ev₂.action m' y
+    { guard := fun m x => ev₁.guard m x ∧
+                          ((grd : ev₁.guard m x) →  let (y, m') := ev₁.action m x grd
+                                          ev₂.guard m' y)
+      action := fun m x grd => ev₂.action (ev₁.action m x grd.1).2 (ev₁.action m x grd.1).1 (grd.2 grd.1)
     }
 
 instance [Machine CTX M]: LawfulCategory (_Event M) where
-  id_right _ := by simp
-  id_left _ := by simp
-  id_assoc _ _ _ := by simp ; funext m x ; apply And_eq_assoc
+  id_right ev := by
+    apply _Event.ext
+    case guard => simp
+    case action => apply _Action_ext_ax ; intros ; simp
+
+  id_left ev := by
+    apply _Event.ext
+    case guard => simp
+    case action => apply _Action_ext_ax ; intros ; simp
+
+  id_assoc ev₁ ev₂ ev₃ := by
+    apply _Event.ext
+    case guard =>
+      simp
+      funext m x
+      simp
+      constructor <;> intro H <;> simp [H]
+    case action =>
+      apply _Action_ext_ax
+      intros m x
+      simp
+      constructor <;> intro H <;> simp [H]
 
 @[simp]
 def _Event_Arrow_first [Machine CTX M] (ev : _Event M α β) : _Event M (α × γ) (β × γ) :=
   { guard := fun m (x, _) => ev.guard m x
-    action := fun m (x, y) => let (x', m') := ev.action m x
+    action := fun m (x, y) grd => let (x', m') := ev.action m x grd
                               ((x',y), m')
   }
 
@@ -369,13 +388,13 @@ instance [Machine CTX M]: Arrow (_Event M) where
 instance [Machine CTX M]: Arrow (_Event M) where
   arrow {α β} (f : α → β) := {
     guard := fun _ _ => True
-    action := fun m x => (f x, m)
+    action := fun m x _ => (f x, m)
   }
 
   split {α α' β β'} (ev₁ : _Event M α β)  (ev₂ : _Event M α' β') : _Event M (α × α') (β × β') := {
     guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
-    action := fun m (x, y) => let (x',m') := ev₁.action m x
-                              let (y', _) := ev₂.action m y
+    action := fun m (x, y) grd => let (x',m') := ev₁.action m x grd.1
+                              let (y', _) := ev₂.action m y grd.2
                               -- note : we forget the second state change
                               ((x', y'), m')
   }
@@ -384,12 +403,21 @@ instance [Machine CTX M]: Arrow (_Event M) where
 
 instance [Machine CTX M]: LawfulArrow (_Event M) where
   arrow_id := by simp [Arrow.arrow]
-  arrow_ext _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_fun _ _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_xcg _ _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_unit _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_assoc {α β γ δ} (f : _Event M α β) :=
-    by simp [Arrow.arrow, Arrow.first]
+  arrow_ext _ := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_fun _ _ := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_xcg _ _ := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_unit _ := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_assoc {α β γ δ} (f : _Event M α β) := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
 
 /- ContravariantFunctor functor -/
 
