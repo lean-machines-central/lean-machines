@@ -32,6 +32,34 @@ def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :
                                   m'' = m' ∧ x'' = x'
 }
 
+/- XXX : does this axiom breaks something ?
+         (I don't think it's provable because of HEq) -/
+axiom _Effect_ext_ax {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _NDEvent M α β):
+   (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ grd₁ grd₂ y m', ev₁.effect m x grd₁ (y, m') ∧ ev₂.effect m x grd₂ (y, m'))
+   → HEq ev₁.effect ev₂.effect
+
+theorem _NDEvent.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _NDEvent M α β):
+  (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ grd₁ grd₂ y m', ev₁.effect m x grd₁ (y, m') ∧ ev₂.effect m x grd₂ (y, m'))
+  → ev₁ = ev₂ :=
+by
+  intros H
+  have Hax := _Effect_ext_ax ev₁ ev₂
+  cases ev₁
+  case mk g₁ act₁ =>
+    cases ev₂
+    case mk g₂ act₂ =>
+      simp at*
+      constructor
+      case left =>
+        apply _Guard_ext
+        intros m x
+        have Hg := (H m x).1
+        exact propext Hg
+      case right =>
+        exact Hax H
+
 /-- The internal representation of *non-deterministic* initialization events
 with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
@@ -187,7 +215,7 @@ instance [Machine CTX M] : LawfulStrongProfunctor (_NDEvent M) where
 
 instance [Machine CTX M]: Category (_NDEvent M) where
   id := {
-    effect := fun m x grd (y, m') => y = x ∧ m' = m
+    effect := fun m x _ (y, m') => y = x ∧ m' = m
   }
 
   comp {α β γ} (ev₂ : _NDEvent M β γ) (ev₁ : _NDEvent M α β) : _NDEvent M α γ :=
@@ -196,30 +224,24 @@ instance [Machine CTX M]: Category (_NDEvent M) where
                              → (∀ y, ∀ m', ev₁.effect m x grd (y, m')
                                 → ev₂.guard m' y))
       effect := fun m x grd (z, m'') =>
-        ∃ y, ∃ m', ev₁.effect m x grd.1 (y, m')
-                   ∧ ((eff₁ : ev₁.effect m x grd.1 (y, m'))
-                     → ev₂.effect m' y (grd.2 grd.1 y m' eff₁) (z, m''))
+        ∀ y, ∀ m', ((eff₁ : ev₁.effect m x grd.1 (y, m'))
+                    → ev₂.effect m' y (grd.2 grd.1 y m' eff₁) (z, m''))
     }
 
 instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
-  id_right ev := by cases ev
-                    case mk evr eff =>
-                      simp
-                      funext m x (z, m'')
-                      simp
-                      constructor
-                      · intros Heff
-                        cases Heff
-                        case _ y Heff =>
-                          cases Heff
-                          case _ m' Heff =>
-                            cases Heff
-                            case _ Heq Heff =>
-                              simp [Heq] at Heff
-                              assumption
-                      intro Heff
-                      exists x
-                      exists m
+  id_right ev := by
+    simp
+    apply _NDEvent.ext
+    case guard => simp
+    case effect =>
+      apply _Effect_ext_ax
+      intros m x
+      simp
+      intros grd₁ grd₂ y m'
+      constructor
+      · sorry
+      · sorry
+
 
   id_left ev := by cases ev
                    case mk evr eff =>
