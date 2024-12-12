@@ -193,12 +193,15 @@ instance [Machine CTX M]: Functor (_Event M γ) where
   map := map_Event
 
 instance [Machine CTX M]: LawfulFunctor (_Event M γ) where
-  map_const := by intros α β
-                  simp [Functor.mapConst, Functor.map]
-  id_map := by intros α ev
-               simp [Functor.map, map_Event]
-  comp_map := by intros α _ γ g h x
-                 simp [Functor.map, map_Event]
+  map_const := by
+    intros α β
+    simp [Functor.mapConst, Functor.map]
+  id_map := by
+    intros α ev
+    simp [Functor.map, map_Event]
+  comp_map := by
+    intros α _ γ g h x
+    simp [Functor.map, map_Event]
 
 /- Applicative Functor -/
 
@@ -235,40 +238,44 @@ instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   id_map := by intros ; rfl
   seqLeft_eq := by intros ; rfl
   seqRight_eq := by intros ; rfl
-  pure_seq := by intros α β g ev
-                 simp [pure, Seq.seq, Functor.map]
-                 apply Pure_seq_aux
+  pure_seq := by
+    intros α β g ev
+    simp [pure, Seq.seq, Functor.map]
+    apply Pure_seq_aux
 
   map_pure := by intros α β g x ; rfl
-  seq_pure := by intros α β ev x
-                 simp [Seq.seq, Functor.map, pure]
-                 apply _Event.ext'
-                 simp [apply_Event, map_Event]
+  seq_pure := by
+    intros α β ev x
+    simp [Seq.seq, Functor.map, pure]
+    apply _Event.ext'
+    simp [apply_Event, map_Event]
 
-  seq_assoc := by intros α β γ' ev g h
-                  simp [Functor.map, Seq.seq]
-                  apply _Event.ext
-                  case guard =>
-                    simp [apply_Event, map_Event]
-                    funext m x
-                    refine propext ?_
-                    constructor <;> intro H <;> simp [H]
-                  case action =>
-                    apply _Action_ext_ax
-                    intros m x
-                    simp [apply_Event, map_Event]
-                    constructor <;> intro H <;> simp [H]
+  seq_assoc := by
+    intros α β γ' ev g h
+    simp [Functor.map, Seq.seq]
+    apply _Event.ext
+    case guard =>
+      simp [apply_Event, map_Event]
+      funext m x
+      refine propext ?_
+      constructor <;> intro H <;> simp [H]
+    case action =>
+      apply _Action_ext_ax
+      intros m x
+      simp [apply_Event, map_Event]
+      constructor <;> intro H <;> simp [H]
 
 /- Monad -/
 
 def bind_Event [Machine CTX M] (ev : _Event M γ α) (f : α → _Event M γ β) : _Event M γ β :=
   {
-    guard := fun m x => ev.guard m x ∧ let (y, m') := ev.action m x
-                                       let ev' := f y
-                                       ev'.guard m' x
-    action := fun m x => let (y, m') := ev.action m x
-                         let ev' := f y
-                         ev'.action m' x
+    guard := fun m x => ev.guard m x ∧
+                        ((grd : ev.guard m x) →
+                          (f (ev.action m x grd).1).guard (ev.action m x grd).2 x)
+
+    action := fun m x grd =>
+      (f (ev.action m x grd.1).1).action (ev.action m x grd.1).2 x (grd.2 grd.1)
+
   }
 
 
@@ -276,15 +283,35 @@ instance [Machine CTX M]: Monad (_Event M γ) where
   bind := bind_Event
 
 instance [Machine CTX M]: LawfulMonad (_Event M γ) where
-  bind_pure_comp := by intros α β f ev
-                       simp [pure, Functor.map, pure_Event, map_Event, bind, bind_Event]
+  bind_pure_comp := by
+    intros α β f ev
+    simp [pure, Functor.map, bind]
+    apply _Event.ext'
+    intros m x
+    simp [bind_Event, map_Event]
+
   bind_map := by simp [bind] ; intros ; rfl
-  pure_bind := by intros _ β x f
-                  simp [pure, bind, bind_Event]
-  bind_assoc := by intros β γ' x f g h
-                   simp [bind, bind_Event]
-                   funext
-                   apply And_eq_assoc
+
+  pure_bind := by
+    intros α β x f
+    simp [pure, bind]
+    apply _Event.ext'
+    intros m y
+    simp [bind_Event]
+
+  bind_assoc := by
+    intros β γ' x f g h
+    simp [bind]
+    apply _Event.ext
+    case guard =>
+      funext m x
+      simp [bind_Event]
+      constructor <;> intro H <;> simp [H]
+    case action =>
+      apply _Action_ext_ax
+      intros m x
+      simp [bind_Event]
+      constructor <;> intro H <;> simp [H]
 
 /- arrows -/
 
