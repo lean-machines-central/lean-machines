@@ -457,8 +457,8 @@ instance [Machine CTX M] : StrongProfunctor (_Event M) where
   first' {α β γ} (ev : _Event M α β): _Event M (α × γ) (β × γ) :=
     {
       guard := fun m (x, _) => ev.guard m x
-      action := fun m (x, y) => let (x', m') := ev.action m x
-                                ((x', y), m')
+      action := fun m (x, y) grd => let (x', m') := ev.action m x grd
+                                    ((x', y), m')
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (_Event M) where
@@ -475,9 +475,9 @@ def altEvent [Machine CTX M] (evl : _Event M α α') (evr : _Event M β β')
     guard := fun m x => match x with
                         | left l => evl.guard m l
                         | right r => evr.guard m r
-    action := fun m x => match x with
-                        | left l => let (y, m') := evl.action m l
+    action := fun m x grd => match x with
+                        | left l => let (y, m') := evl.action m l grd
                                     (left y, m')
-                        | right r => let (y, m') := evr.action m r
+                        | right r => let (y, m') := evr.action m r grd
                                     (right y, m')
   }
