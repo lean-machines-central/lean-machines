@@ -36,12 +36,13 @@ def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :
          (I don't think it's provable because of HEq) -/
 axiom _Effect_ext_ax {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _NDEvent M α β):
    (∀ m x, ev₁.guard m x = ev₂.guard m x
-          ∧ ∀ grd₁ grd₂ y m', ev₁.effect m x grd₁ (y, m') ∧ ev₂.effect m x grd₂ (y, m'))
+          ∧ ∀ y m' grd₁ grd₂,
+             ev₁.effect m x grd₁ (y, m') ↔ ev₂.effect m x grd₂ (y, m'))
    → HEq ev₁.effect ev₂.effect
 
 theorem _NDEvent.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _NDEvent M α β):
   (∀ m x, ev₁.guard m x = ev₂.guard m x
-          ∧ ∀ grd₁ grd₂ y m', ev₁.effect m x grd₁ (y, m') ∧ ev₂.effect m x grd₂ (y, m'))
+          ∧ ∀ y m' grd₁ grd₂, ev₁.effect m x grd₁ (y, m') ↔ ev₂.effect m x grd₂ (y, m'))
   → ev₁ = ev₂ :=
 by
   intros H
@@ -224,121 +225,45 @@ instance [Machine CTX M]: Category (_NDEvent M) where
                              → (∀ y, ∀ m', ev₁.effect m x grd (y, m')
                                 → ev₂.guard m' y))
       effect := fun m x grd (z, m'') =>
-        ∀ y, ∀ m', ((eff₁ : ev₁.effect m x grd.1 (y, m'))
-                    → ev₂.effect m' y (grd.2 grd.1 y m' eff₁) (z, m''))
+        ∃ y m',  ev₁.effect m x grd.1 (y, m') ∧
+                 ((eff₁ : ev₁.effect m x grd.1 (y, m')) →
+                  ev₂.effect m' y (grd.2 grd.1 y m' eff₁) (z, m''))
     }
 
 instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
   id_right ev := by
+    apply _NDEvent.ext'
     simp
-    apply _NDEvent.ext
-    case guard => simp
-    case effect =>
-      apply _Effect_ext_ax
-      intros m x
-      simp
-      intros grd₁ grd₂ y m'
-      constructor
-      · sorry
-      · sorry
+    intros m x y m' grd₁ grd₂
+    constructor
+    · simp
+    · intros Heff
+      exists x
+      exists m
+      simp [Heff]
 
-
-  id_left ev := by cases ev
-                   case mk evr eff =>
-                     simp
-
+  id_left ev := by
+    apply _NDEvent.ext'
+    simp
+    intros m x y m' grd₁ grd₂
+    constructor
+    · intro ⟨yy,⟨mm',H₁,H₂'⟩⟩
+      have H₂ := H₂' H₁
+      simp [H₁,H₂]
+    · intro Heff₁
+      exists y
+      exists m'
+      simp [Heff₁]
 
   id_assoc ev₁ ev₂ ev₃ := by
-    cases ev₁
-    case mk evr₁ eff₁ =>
-      cases ev₂
-      case mk evr₂ eff₂ =>
-        cases ev₃
-        case mk evr₃ eff₃ =>
-          simp
-          constructor
-          case left =>
-            funext m x
-            case h.h =>
-              simp
-              constructor
-              case mpr =>
-                intros H₁
-                cases H₁
-                case intro Hgrd₃ H₁ =>
-                  constructor
-                  case left =>
-                    simp [Hgrd₃]
-                    intros y m' Heff₃
-                    apply (H₁ y m' Heff₃).left
-                  case right =>
-                    intros z m'' y m' Heff₃ Heff₂
-                    have H₁' := H₁ y m' Heff₃  ; clear H₁
-                    cases H₁'
-                    case intro Hgrd₂ Hgrd₁ =>
-                      apply Hgrd₁ z m''
-                      assumption
-              case mp =>
-                  simp
-                  intros Hgrd₃ Hgrd₂ Hgrd₁
-                  constructor
-                  case left =>
-                    assumption
-                  case right =>
-                    intros y m' Heff₃
-                    constructor
-                    case left =>
-                      apply Hgrd₂
-                      assumption
-                    case right =>
-                      intros z m'' Heff₂
-                      apply Hgrd₁ z m'' <;> assumption
-          case right =>
-            funext m x (t, m₃)
-            case h.h.h =>
-              simp
-              constructor
-              case mp =>
-                intro Hex
-                cases Hex
-                case intro z Hex =>
-                  cases Hex
-                  case intro m'' Hex =>
-                  cases Hex
-                  case intro Hex Heff₁ =>
-                    cases Hex
-                    case intro y Hex =>
-                      cases Hex
-                      case intro m' Heff =>
-                        exists y
-                        exists m'
-                        simp [Heff]
-                        exists z
-                        exists m''
-                        simp [Heff₁, Heff]
-              case mpr =>
-                intro Hex
-                cases Hex
-                case intro y Hex =>
-                  cases Hex
-                  case intro m' Hex =>
-                    cases Hex
-                    case intro Heff₃ Hex =>
-                      cases Hex
-                      case intro z Hex =>
-                        cases Hex
-                        case intro m'' Heff =>
-                          exists z
-                          exists m''
-                          constructor
-                          case left =>
-                            exists y
-                            exists m'
-                            simp [Heff₃, Heff]
-                          case right =>
-                            simp [Heff]
-
-
+    apply _NDEvent.ext
+    case guard =>
+      simp
+      funext m x
+      sorry
+    case effect =>
+      apply _Effect_ext_ax
+      sorry
 
 
 @[simp]
