@@ -38,14 +38,14 @@ structure AbstractFREventSpec (AM) [Machine ACTX AM]
 
   step_ref (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → let (_, am') := abstract.action (lift m) x
+    → (agrd : abstract.guard (lift m) x)
+    → let (_, am') := abstract.action (lift m) x agrd
       refine am' (unlift (lift m) am' m x)
 
   step_safe (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → let (_, am') := abstract.action (lift m) x
+    → (agrd : abstract.guard (lift m) x)
+    → let (_, am') := abstract.action (lift m) x agrd
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift (lift m) am' m x)
 
@@ -89,14 +89,14 @@ structure AbstractFREventSpec'' (AM) [Machine ACTX AM]
 
   step_ref (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → let (_, am') := abstract.action (lift m) ()
+    → (agrd : abstract.guard (lift m) ())
+    → let (_, am') := abstract.action (lift m) () agrd
       refine am' (unlift (lift m) am' m)
 
   step_safe (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → let (_, am') := abstract.action (lift m) ()
+    → (agrd : abstract.guard (lift m) ())
+    → let (_, am') := abstract.action (lift m) () agrd
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift (lift m) am' m)
 
@@ -121,13 +121,13 @@ structure AbstractInitFREventSpec (AM) [Machine ACTX AM]
           extends _AbstractFREventSpec AM M α where
 
   step_ref (x : α):
-    abstract.guard x
-    → let (_, am') := abstract.init x
+    (agrd : abstract.guard x)
+    → let (_, am') := abstract.init x agrd
       refine am' (unlift Machine.reset am' Machine.reset x)
 
   step_safe (x : α):
-    abstract.guard x
-    → let (_, am') := abstract.init x
+    (agrd : abstract.guard x)
+    → let (_, am') := abstract.init x agrd
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
@@ -157,13 +157,13 @@ structure AbstractInitFREventSpec'' (AM) [Machine ACTX AM]
           extends _AbstractFREventSpec'' AM M where
 
   step_ref:
-    abstract.guard ()
-    → let (_, am') := abstract.init ()
+    (agrd : abstract.guard ())
+    → let (_, am') := abstract.init () agrd
       refine am' (unlift Machine.reset am' Machine.reset)
 
   step_safe:
-    abstract.guard ()
-    → let (_, am') := abstract.init ()
+    (agrd : abstract.guard ())
+    → let (_, am') := abstract.init () agrd
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift Machine.reset am' Machine.reset)
 
@@ -191,8 +191,8 @@ structure AbstractAnticipatedFREventSpec
 
   step_variant (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → let (_, am') := abstract.action (lift m) x
+    → (agrd : abstract.guard (lift m) x)
+    → let (_, am') := abstract.action (lift m) x agrd
       Machine.invariant am' -- redundant but useful
       → abstract.po.variant (lift (unlift (lift m) am' m x))
       = abstract.po.variant am'
@@ -227,8 +227,8 @@ structure AbstractAnticipatedFREventSpec''
 
   step_variant (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → let (_, am') := abstract.action (lift m) ()
+    → (agrd : abstract.guard (lift m) ())
+    → let (_, am') := abstract.action (lift m) () agrd
       Machine.invariant am' -- redundant but useful
       → abstract.po.variant (lift (unlift (lift m) am' m))
       = abstract.po.variant am'

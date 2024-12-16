@@ -10,8 +10,8 @@ structure ConcreteFREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR
 
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let (_, m') := action m x
+    → (grd : guard m x)
+    → let (_, m') := action m x grd
       lift m = lift (self:=instFR)  m'
 
 @[simp]
@@ -38,8 +38,8 @@ structure ConcreteFREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instF
 
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       lift m = lift (self:=instFR)  m'
 
 @[simp]
@@ -60,8 +60,8 @@ structure ConcreteFREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [inst
 
   simulation (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       lift m = lift (self:=instFR)  m'
 
 @[simp]
@@ -84,8 +84,8 @@ structure ConcreteAnticipatedFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM)
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let (_, m') := action m x
+    → (grd : guard m x)
+    → let (_, m') := action m x grd
       variant m' ≤ variant m
 
 @[simp]
@@ -109,8 +109,8 @@ structure ConcreteAnticipatedFREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       variant m' ≤ variant m
 
 @[simp]
@@ -134,8 +134,8 @@ structure ConcreteAnticipatedFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (A
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' ≤ variant m
 
 @[simp]
@@ -161,8 +161,8 @@ structure ConcreteConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) 
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let (_, m') := action m x
+    → (grd : guard m x)
+    → let (_, m') := action m x grd
       variant m' < variant m
 
 @[simp]
@@ -186,8 +186,8 @@ structure ConcreteConvergentFREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM)
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       variant m' < variant m
 
 @[simp]
@@ -211,8 +211,8 @@ structure ConcreteConvergentFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' < variant m
 
 @[simp]

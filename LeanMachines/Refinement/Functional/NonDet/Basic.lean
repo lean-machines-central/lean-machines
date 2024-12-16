@@ -22,10 +22,12 @@ structure FRNDEventSpec (AM) [Machine ACTX AM]
     → abstract.guard (lift m) (lift_in x)
 
   simulation (m : M) (x : α):
-    Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
-      → abstract.effect (lift m) (lift_in x) (lift_out y, (lift m'))
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m x)
+    → ∀ y, ∀ m', effect m x Hgrd (y, m')
+      → abstract.effect (lift m) (lift_in x)
+          (strengthening m x Hinv Hgrd)
+          (lift_out y, (lift m'))
 
 @[simp]
 def FRNDEventSpec.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
@@ -72,10 +74,12 @@ structure FRNDEventSpec' (AM) [Machine ACTX AM]
     → abstract.guard (lift m) (lift_in x)
 
   simulation (m : M) (x : α):
-    Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
-      → abstract.effect (lift m) (lift_in x) ((), (lift m'))
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m x)
+    → ∀ m', effect m x Hgrd m'
+      → abstract.effect (lift m) (lift_in x)
+          (strengthening m x Hinv Hgrd)
+          ((), (lift m'))
 
 @[simp]
 def FRNDEventSpec'.toFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
@@ -109,10 +113,10 @@ structure FRNDEventSpec'' (AM) [Machine ACTX AM]
     → abstract.guard (lift m) ()
 
   simulation (m : M):
-    Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
-      → abstract.effect (lift m) () ((), (lift m'))
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m)
+    → ∀ m', effect m Hgrd m'
+      → abstract.effect (lift m) () (strengthening m Hinv Hgrd) ((), (lift m'))
 
 @[simp]
 def FRNDEventSpec''.toFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
@@ -150,9 +154,9 @@ structure InitFRNDEventSpec (AM) [Machine ACTX AM]
     → abstract.guard (lift_in x)
 
   simulation (x : α):
-    guard x
-    → ∀ y, ∀ m', init x (y, m')
-      → abstract.init (lift_in x) (lift_out y, (lift m'))
+    (Hgrd : guard x)
+    → ∀ y, ∀ m', init x Hgrd (y, m')
+      → abstract.init (lift_in x) (strengthening x Hgrd) (lift_out y, (lift m'))
 
 @[simp]
 def InitFRNDEventSpec.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
@@ -188,9 +192,9 @@ structure InitFRNDEventSpec' (AM) [Machine ACTX AM]
     → abstract.guard (lift_in x)
 
   simulation (x : α):
-    guard x
-    → ∀ m', init x m'
-      → abstract.init (lift_in x) ((), (lift m'))
+    (Hgrd : guard x)
+    → ∀ m', init x Hgrd m'
+      → abstract.init (lift_in x) (strengthening x Hgrd) ((), (lift m'))
 
 @[simp]
 def InitFRNDEventSpec'.toInitFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
@@ -224,9 +228,9 @@ structure InitFRNDEventSpec'' (AM) [Machine ACTX AM]
     → abstract.guard ()
 
   simulation:
-    guard
-    → ∀ m', init m'
-      → abstract.init () ((), (lift m'))
+    (Hgrd : guard)
+    → ∀ m', init Hgrd m'
+      → abstract.init () (strengthening Hgrd) ((), (lift m'))
 
 @[simp]
 def InitFRNDEventSpec''.toInitFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
