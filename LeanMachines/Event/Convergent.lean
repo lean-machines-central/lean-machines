@@ -382,13 +382,16 @@ instance [Preorder v] [Machine CTX M]: ContravariantFunctor (CoAnticipatedEvent 
     guard := event.guard
     action := event.action
     po := {
-      safety := fun m x => by simp [ContravariantFunctor.contramap]
-                              intros Hinv Hgrd
-                              exact ev.po.safety m (f x) Hinv Hgrd
+      safety := fun m x => by
+        simp [ContravariantFunctor.contramap]
+        intros Hinv Hgrd
+        exact ev.po.safety m (f x) Hinv Hgrd
       variant := ev.po.variant
-      nonIncreasing := fun m x => by simp
-                                     intros Hinv Hgrd
-                                     apply ev.po.nonIncreasing <;> assumption
+      nonIncreasing := fun m x => by
+        simp
+        intros Hinv Hgrd
+        apply ev.po.nonIncreasing
+        assumption
     }
   }
 
