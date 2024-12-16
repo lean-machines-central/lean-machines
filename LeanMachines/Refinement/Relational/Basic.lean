@@ -74,15 +74,15 @@ structure _REventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
       → abstract.guard am (lift_in x)
 
   simulation (m : M) (x : α):
-    Machine.invariant m
-    → ev.guard m x
-    → ∀ am, refine am m
+    (Hinv : Machine.invariant m)
+    → (Hgrd : ev.guard m x)
+    → ∀ am, (Href: refine am m)
       -- XXX : some constraint on output ?
       --       (maybe a post_weakening requirement ?)
       --       for now, let's go with equality because its transparent for the Event-B
       --       refinement model
-      → let (y, m') := ev.action m x
-        let (z, am') := abstract.action am (lift_in x)
+      → let (y, m') := ev.action m x Hgrd
+        let (z, am') := abstract.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
         lift_out y = z ∧ refine am' m'
 
 /-- The representation of ordinary refined events
@@ -141,11 +141,11 @@ structure REventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refineme
 
   /-- Proof obligation: action simulation. -/
   simulation (m : M) (x : α):
-    Machine.invariant m
-    → guard m x
-    → ∀ am, refine am m
-      → let (y, m') := action m x
-        let (z, am') := abs.action am (lift_in x)
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m x)
+    → ∀ am, (Href : refine am m)
+      → let (y, m') := action m x Hgrd
+        let (z, am') := abs.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
         lift_out y = z ∧ refine am' m'
 
 
@@ -180,11 +180,11 @@ structure REventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinem
       → abstract.guard am (lift_in x)
 
   simulation (m : M) (x : α):
-    Machine.invariant m
-    → guard m x
-    → ∀ am, refine am m
-      → let m' := action m x
-        let ((), am') := abstract.action am (lift_in x)
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m x)
+    → ∀ am, (Href : refine am m)
+      → let m' := action m x Hgrd
+        let ((), am') := abstract.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
         refine am' m'
 
 @[simp]
@@ -216,11 +216,11 @@ structure REventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refine
       → abstract.guard am ()
 
   simulation (m : M):
-    Machine.invariant m
-    → guard m
-    → ∀ am, refine am m
-      → let m' := action m
-        let ((), am') := abstract.action am ()
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m)
+    → ∀ am, (Href : refine am m)
+      → let m' := action m Hgrd
+        let ((), am') := abstract.action am () (strengthening m Hinv Hgrd am Href)
         refine am' m'
 
 @[simp]
@@ -259,9 +259,9 @@ structure _InitREventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM
     → abstract.guard (lift_in x)
 
   simulation (x : α):
-     ev.guard x
-    → let (y, m') := ev.init x
-      let (z, am') := abstract.init (lift_in x)
+      (Hgrd : ev.guard x)
+    → let (y, m') := ev.init x Hgrd
+      let (z, am') := abstract.init (lift_in x) (strengthening x Hgrd)
       lift_out y = z ∧ refine am' m'
 
 /-- The (internal) type of ordinary refined initialization events
@@ -299,9 +299,9 @@ structure InitREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refi
     → abstract.guard (lift_in x)
 
   simulation (x : α):
-    guard x
-    → let (y, m') := init x
-      let (z, am') := abstract.init (lift_in x)
+    (Hgrd : guard x)
+    → let (y, m') := init x Hgrd
+      let (z, am') := abstract.init (lift_in x) (strengthening x Hgrd)
       lift_out y = z ∧ refine am' m'
 
 /-- Smart constructor for ordinary refined initialization event,
@@ -347,9 +347,9 @@ structure InitREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Ref
     → abstract.guard (lift_in x)
 
   simulation (x : α):
-    guard x
-    → let m' := init x
-      let ((), am') := abstract.init (lift_in x)
+    (Hgrd : guard x)
+    → let m' := init x Hgrd
+      let ((), am') := abstract.init (lift_in x) (strengthening x Hgrd)
       refine am' m'
 
 @[simp]
@@ -380,9 +380,9 @@ structure InitREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Re
     → abstract.guard ()
 
   simulation:
-    guard
-    → let m' := init
-      let ((), am') := abstract.init ()
+    (Hgrd : guard)
+    → let m' := init grd
+      let ((), am') := abstract.init () (strengthening Hgrd)
       refine am' m'
 
 @[simp]
@@ -393,7 +393,7 @@ def InitREventSpec''.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refinem
     lift_in := id
     lift_out := id
     strengthening := fun () => by simp ; apply ev.strengthening
-    simulation := fun () => by simp ; apply ev.simulation
+    simulation := fun () Hgrd => by simp ; apply ev.simulation Hgrd
   }
 
 /-- Variant of `newREvent` with implicit `Unit` input and output types -/
