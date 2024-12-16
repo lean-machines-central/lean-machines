@@ -24,8 +24,8 @@ structure _AnticipatedNDEventPO (v) [Preorder v] [instM:Machine CTX M] (ev : _ND
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → ∀ y, ∀ m',  ev.effect m x (y, m')
+    → (grd : ev.guard m x)
+    → ∀ y, ∀ m',  ev.effect m x grd (y, m')
                    → variant m' ≤ variant m
 
 /-- The type of non-deterministic anticipated events.
@@ -53,8 +53,8 @@ private def AnticipatedNDEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M]
   (variant : M → v)
   (Hnincr: ∀ (m : M) (x : α),
     Machine.invariant m
-    → ev.guard m x
-    → ∀ y, ∀ m',  ev.effect m x (y, m')
+    → (grd : ev.guard m x)
+    → ∀ y, ∀ m',  ev.effect m x grd (y, m')
                    → variant m' ≤ variant m) : AnticipatedNDEvent v M α β :=
   {
     guard := ev.guard
@@ -78,8 +78,8 @@ structure AnticipatedNDEventSpec (v) [Preorder v] {CTX} (M) [instM:Machine CTX M
   /-- Proof obligation: the variant is non-increasing. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m',  effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m',  effect m x grd (y, m')
                    → variant m' ≤ variant m
 
 /-- Construction of an anticipated non-deterministic event from a
@@ -94,8 +94,8 @@ structure AnticipatedNDEventSpec' (v) [Preorder v] {CTX} (M) [instM:Machine CTX 
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m',  effect m x m'
+    → (grd : guard m x)
+    → ∀ m',  effect m x grd m'
              → variant m' ≤ variant m
 
 @[simp]
@@ -120,8 +120,8 @@ structure AnticipatedNDEventSpec'' (v) [Preorder v] {CTX} (M) [instM:Machine CTX
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m',  effect m m'
+    → (grd : guard m)
+    → ∀ m',  effect m grd m'
              → variant m' ≤ variant m
 
 @[simp]
@@ -150,8 +150,8 @@ structure _ConvergentNDEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → ∀ y, ∀ m',  ev.effect m x (y, m')
+    → (grd : ev.guard m x)
+    → ∀ y, ∀ m',  ev.effect m x grd (y, m')
                    → variant m' < variant m
 
 /-- The type of non-deterministic convergent events.
@@ -181,8 +181,8 @@ private def ConvergentNDEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {
   (variant : M → v)
   (Hconv: ∀ (m : M) (x : α),
     Machine.invariant m
-    → ev.guard m x
-    → ∀ y, ∀ m',  ev.effect m x (y, m')
+    → (grd : ev.guard m x)
+    → ∀ y, ∀ m',  ev.effect m x grd (y, m')
                    → variant m' < variant m)
  : ConvergentNDEvent v M α β :=
  {
@@ -214,8 +214,8 @@ structure ConvergentNDEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [instM:Ma
   /-- Proof obligation: the variant is strictly decreasing. -/
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m',  effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m',  effect m x grd (y, m')
                    → variant m' < variant m
 
 /-- Construction of a convergent non-deterministic event from a
@@ -228,8 +228,8 @@ def newConvergentNDEvent {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] 
 private def ConvergentNDEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : AnticipatedNDEvent v M α β)
     (hconv : (m : M) → (x : α)
     → Machine.invariant m
-    → ev.guard m x
-    → ∀ y, ∀ m',  ev.effect m x (y, m')
+    → (grd : ev.guard m x)
+    → ∀ y, ∀ m',  ev.effect m x grd (y, m')
                    → ev.po.variant m' < ev.po.variant m) : ConvergentNDEvent v M α β :=
   {
     guard := ev.guard
@@ -249,8 +249,8 @@ structure ConvergentNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:M
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m',  effect m x m'
+    → (grd : guard m x)
+    → ∀ m',  effect m x grd m'
              → variant m' < variant m
 
 @[simp]
@@ -275,8 +275,8 @@ structure ConvergentNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [instM:
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m',  effect m m'
+    → (grd : guard m)
+    → ∀ m',  effect m grd m'
              → variant m' < variant m
 
 @[simp]
@@ -307,22 +307,25 @@ instance [Preorder v] [Machine CTX M] : Functor (AnticipatedNDEvent v M γ) wher
   map f ev := {
     to_NDEvent := f <$> ev.to_NDEvent
     po := {
-      safety := fun m x => by simp [Functor.map]
-                              intros Hinv Hgrd _ m' x' Heff _
-                              apply ev.po.safety m x Hinv Hgrd x' m' Heff
+      safety := fun m x => by
+        simp [Functor.map]
+        intros Hinv Hgrd _ m' x' Heff _
+        apply ev.po.safety m x Hinv Hgrd x' m' Heff
 
-      feasibility := fun m x => by simp [Functor.map]
-                                   intros Hinv Hgrd
-                                   have Hfeas := ev.po.feasibility m x Hinv Hgrd
-                                   obtain ⟨y, m', Heff⟩ := Hfeas
-                                   exists (f y) ; exists m' ; exists y
+      feasibility := fun m x => by
+        simp [Functor.map]
+        intros Hinv Hgrd
+        have Hfeas := ev.po.feasibility m x Hinv Hgrd
+        obtain ⟨y, m', Heff⟩ := Hfeas
+        exists (f y) ; exists m' ; exists y
 
       variant := ev.po.variant
 
-      nonIncreasing := fun m x => by simp [Functor.map]
-                                     intros Hinv Hgrd _ m' x' Heff _
-                                     have Hni := ev.po.nonIncreasing m x Hinv Hgrd x' m'
-                                     apply Hni ; assumption
+      nonIncreasing := fun m x => by
+        simp [Functor.map]
+        intros Hinv Hgrd _ m' x' Heff _
+        have Hni := ev.po.nonIncreasing m x Hinv Hgrd x' m'
+        apply Hni ; assumption
 
     }
   }
@@ -354,27 +357,31 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Functor (ConvergentNDE
   map f ev := {
     to_NDEvent := f <$> ev.to_NDEvent
     po := {
-      safety := fun m x => by simp [Functor.map]
-                              intros Hinv Hgrd _ m' x' Heff _
-                              apply ev.po.safety m x Hinv Hgrd x' m' Heff
+      safety := fun m x => by
+        simp [Functor.map]
+        intros Hinv Hgrd _ m' x' Heff _
+        apply ev.po.safety m x Hinv Hgrd x' m' Heff
 
-      feasibility := fun m x => by simp [Functor.map]
-                                   intros Hinv Hgrd
-                                   have Hfeas := ev.po.feasibility m x Hinv Hgrd
-                                   obtain ⟨y, m', Heff⟩ := Hfeas
-                                   exists (f y) ; exists m' ; exists y
+      feasibility := fun m x => by
+        simp [Functor.map]
+        intros Hinv Hgrd
+        have Hfeas := ev.po.feasibility m x Hinv Hgrd
+        obtain ⟨y, m', Heff⟩ := Hfeas
+        exists (f y) ; exists m' ; exists y
 
       variant := ev.po.variant
 
-      nonIncreasing := fun m x => by simp [Functor.map]
-                                     intros Hinv Hgrd _ m' x' Heff _
-                                     have Hni := ev.po.nonIncreasing m x Hinv Hgrd x' m'
-                                     apply Hni ; assumption
+      nonIncreasing := fun m x => by
+        simp [Functor.map]
+        intros Hinv Hgrd _ m' x' Heff _
+        have Hni := ev.po.nonIncreasing m x Hinv Hgrd x' m'
+        apply Hni ; assumption
 
-      convergence := fun m x => by simp [Functor.map]
-                                   intros Hinv Hgrd _ m' x' Heff _
-                                   have Hcv := ev.po.convergence m x Hinv Hgrd x' m'
-                                   apply Hcv ; assumption
+      convergence := fun m x => by
+        simp [Functor.map]
+        intros Hinv Hgrd _ m' x' Heff _
+        have Hcv := ev.po.convergence m x Hinv Hgrd x' m'
+        apply Hcv ; assumption
 
     }
   }
@@ -411,31 +418,34 @@ instance [Preorder v] [Machine CTX M] : ContravariantFunctor (CoAnticipatedNDEve
   {
      to_NDEvent := ev
      po := {
-      safety := fun m x => by revert ev
-                              cases event
-                              case mk _ev po =>
-                                simp [ContravariantFunctor.contramap]
-                                intros Hinv Hgrd y m' Heff
-                                apply po.safety m (f x) Hinv Hgrd y m' Heff
-      feasibility := fun m x => by intro Hinv
-                                   revert ev
-                                   cases event
-                                   case mk _ev po =>
-                                     simp [ContravariantFunctor.contramap]
-                                     apply po.feasibility m (f x) Hinv
+      safety := fun m x => by
+        revert ev
+        cases event
+        case mk _ev po =>
+          simp [ContravariantFunctor.contramap]
+          intros Hinv Hgrd y m' Heff
+          apply po.safety m (f x) Hinv Hgrd y m' Heff
+
+      feasibility := fun m x => by
+        intro Hinv
+        revert ev
+        cases event
+        case mk _ev po =>
+          simp [ContravariantFunctor.contramap]
+          apply po.feasibility m (f x) Hinv
 
       variant := event.po.variant
 
-      nonIncreasing := fun m x => by simp
-                                     intro Hinv
-                                     revert ev
-                                     cases event
-                                     case mk _ev po =>
-                                       simp [ContravariantFunctor.contramap]
-                                       intros Hgrd z m' Heff
-                                       have Hni := po.nonIncreasing m (f x) Hinv Hgrd z m'
-                                       apply Hni ; assumption
-
+      nonIncreasing := fun m x => by
+        simp
+        intro Hinv
+        revert ev
+        cases event
+        case mk _ev po =>
+          simp [ContravariantFunctor.contramap]
+          intros Hgrd z m' Heff
+          have Hni := po.nonIncreasing m (f x) Hinv Hgrd z m'
+          apply Hni ; assumption
      }
   }
 
@@ -459,40 +469,45 @@ instance [Preorder v] [WellFoundedLT v]  [Machine CTX M] : ContravariantFunctor 
   {
      to_NDEvent := ev
      po := {
-      safety := fun m x => by revert ev
-                              cases event
-                              case mk _ev po =>
-                                simp [ContravariantFunctor.contramap]
-                                intros Hinv Hgrd y m' Heff
-                                apply po.safety m (f x) Hinv Hgrd y m' Heff
-      feasibility := fun m x => by intro Hinv
-                                   revert ev
-                                   cases event
-                                   case mk _ev po =>
-                                     simp [ContravariantFunctor.contramap]
-                                     apply po.feasibility m (f x) Hinv
+      safety := fun m x => by
+        revert ev
+        cases event
+        case mk _ev po =>
+          simp [ContravariantFunctor.contramap]
+          intros Hinv Hgrd y m' Heff
+          apply po.safety m (f x) Hinv Hgrd y m' Heff
+
+      feasibility := fun m x => by
+        intro Hinv
+        revert ev
+        cases event
+        case mk _ev po =>
+          simp [ContravariantFunctor.contramap]
+          apply po.feasibility m (f x) Hinv
 
       variant := event.po.variant
 
-      nonIncreasing := fun m x => by simp
-                                     intro Hinv
-                                     revert ev
-                                     cases event
-                                     case mk _ev po =>
-                                       simp [ContravariantFunctor.contramap]
-                                       intros Hgrd z m' Heff
-                                       have Hni := po.nonIncreasing m (f x) Hinv Hgrd z m'
-                                       apply Hni ; assumption
+      nonIncreasing := fun m x => by
+        simp
+        intro Hinv
+        revert ev
+        cases event
+        case mk _ev po =>
+          simp [ContravariantFunctor.contramap]
+          intros Hgrd z m' Heff
+          have Hni := po.nonIncreasing m (f x) Hinv Hgrd z m'
+          apply Hni ; assumption
 
-      convergence := fun m x => by simp
-                                   intro Hinv
-                                   revert ev
-                                   cases event
-                                   case mk _ev po =>
-                                     simp [ContravariantFunctor.contramap]
-                                     intros Hgrd z m' Heff
-                                     have Hcv := po.convergence m (f x) Hinv Hgrd z m'
-                                     apply Hcv ; assumption
+      convergence := fun m x => by
+        simp
+        intro Hinv
+        revert ev
+        cases event
+        case mk _ev po =>
+          simp [ContravariantFunctor.contramap]
+          intros Hgrd z m' Heff
+          have Hcv := po.convergence m (f x) Hinv Hgrd z m'
+          apply Hcv ; assumption
 
      }
   }
@@ -536,27 +551,30 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M
       guard := ev.guard
       effect := ev.effect
       po := {
-        safety := fun m (x, z) => by simp [ev, StrongProfunctor.first']
-                                     intros Hinv Hgrd
-                                     have Hsafe := event.po.safety m x Hinv Hgrd
-                                     intros y _ m' _ Heff
-                                     apply Hsafe y m' Heff
+        safety := fun m (x, z) => by
+          simp [ev, StrongProfunctor.first']
+          intros Hinv Hgrd
+          have Hsafe := event.po.safety m x Hinv Hgrd
+          intros y _ m' _ Heff
+          apply Hsafe y m' Heff
 
-        feasibility := fun m (x, z) => by simp [ev, StrongProfunctor.first']
-                                          intro Hinv Hgrd
-                                          have Hfeas := event.po.feasibility m x Hinv Hgrd
-                                          obtain ⟨y, m', Hfeas⟩ := Hfeas
-                                          exists y
-                                          exists m'
+        feasibility := fun m (x, z) => by
+          simp [ev, StrongProfunctor.first']
+          intro Hinv Hgrd
+          have Hfeas := event.po.feasibility m x Hinv Hgrd
+          obtain ⟨y, m', Hfeas⟩ := Hfeas
+          exists y
+          exists m'
 
         variant := event.po.variant
 
-        nonIncreasing := fun m (x, z) => by simp [ev, StrongProfunctor.first']
-                                            intros Hinv Hgrd
-                                            intros y _ m' _ Heff
-                                            have Hni := event.po.nonIncreasing m x Hinv Hgrd y m'
-                                            apply Hni
-                                            assumption
+        nonIncreasing := fun m (x, z) => by
+          simp [ev, StrongProfunctor.first']
+          intros Hinv Hgrd
+          intros y _ m' _ Heff
+          have Hni := event.po.nonIncreasing m x Hinv Hgrd y m'
+          apply Hni
+          assumption
 
       }
     }
@@ -597,34 +615,38 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
       guard := ev.guard
       effect := ev.effect
       po := {
-        safety := fun m (x, z) => by simp [ev, StrongProfunctor.first']
-                                     intros Hinv Hgrd
-                                     have Hsafe := event.po.safety m x Hinv Hgrd
-                                     intros y _ m' _ Heff
-                                     apply Hsafe y m' Heff
+        safety := fun m (x, z) => by
+          simp [ev, StrongProfunctor.first']
+          intros Hinv Hgrd
+          have Hsafe := event.po.safety m x Hinv Hgrd
+          intros y _ m' _ Heff
+          apply Hsafe y m' Heff
 
-        feasibility := fun m (x, z) => by simp [ev, StrongProfunctor.first']
-                                          intro Hinv Hgrd
-                                          have Hfeas := event.po.feasibility m x Hinv Hgrd
-                                          obtain ⟨y, m', Hfeas⟩ := Hfeas
-                                          exists y
-                                          exists m'
+        feasibility := fun m (x, z) => by
+          simp [ev, StrongProfunctor.first']
+          intro Hinv Hgrd
+          have Hfeas := event.po.feasibility m x Hinv Hgrd
+          obtain ⟨y, m', Hfeas⟩ := Hfeas
+          exists y
+          exists m'
 
         variant := event.po.variant
 
-        nonIncreasing := fun m (x, z) => by simp [ev, StrongProfunctor.first']
-                                            intros Hinv Hgrd
-                                            intros y _ m' _ Heff
-                                            have Hni := event.po.nonIncreasing m x Hinv Hgrd y m'
-                                            apply Hni
-                                            assumption
+        nonIncreasing := fun m (x, z) => by
+          simp [ev, StrongProfunctor.first']
+          intros Hinv Hgrd
+          intros y _ m' _ Heff
+          have Hni := event.po.nonIncreasing m x Hinv Hgrd y m'
+          apply Hni
+          assumption
 
-        convergence := fun m (x, z) => by simp [ev, StrongProfunctor.first']
-                                          intros Hinv Hgrd
-                                          intros y _ m' _ Heff
-                                          have Hcv := event.po.convergence m x Hinv Hgrd y m'
-                                          apply Hcv
-                                          assumption
+        convergence := fun m (x, z) => by
+          simp [ev, StrongProfunctor.first']
+          intros Hinv Hgrd
+          intros y _ m' _ Heff
+          have Hcv := event.po.convergence m x Hinv Hgrd y m'
+          apply Hcv
+          assumption
 
       }
     }
