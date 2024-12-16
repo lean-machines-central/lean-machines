@@ -52,15 +52,15 @@ structure AbstractRNDEventSpec (AM) [Machine ACTX AM]
   /-- Proof obligation: lifting, then unlifting is safe wrt. the `refine` invariant. -/
   step_ref (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ y, ∀ am', abstract.effect (lift m) x (y, am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ y, ∀ am', abstract.effect (lift m) x agrd (y, am')
                   → refine am' (unlift (lift m) am' m x)
 
   /-- Proof obligation: invariant preservation of the abstract event. -/
   step_safe (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ y, ∀ am', abstract.effect (lift m) x (y, am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ y, ∀ am', abstract.effect (lift m) x agrd (y, am')
                   → Machine.invariant (unlift (lift m) am' m x)
 
 /-- The construction of a reused non-deterministic abstract event (ordinary case).
@@ -71,8 +71,8 @@ def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M
   (abs : OrdinaryNDEvent AM α β) (ev : AbstractRNDEventSpec AM M abs) : OrdinaryRNDEvent AM M α β :=
   {
     guard := fun m x => abs.guard (ev.lift m) x
-    effect := fun m x (y, m') => abs.effect (ev.lift m) x (y, ev.lift m')
-                                 ∧ m' = ev.unlift (ev.lift m) (ev.lift m') m x
+    effect := fun m x grd (y, m') => abs.effect (ev.lift m) x grd (y, ev.lift m')
+                                     ∧ m' = ev.unlift (ev.lift m) (ev.lift m') m x
     po := {
       lift_in := id
       lift_out := id
@@ -114,7 +114,7 @@ def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M
         exists (ev.lift m')
         constructor
         · have Huniq := ev.refine_uniq am (ev.lift m) m Hinv Href Href'
-          rw [Huniq]
+          simp [Huniq]
           exact Heff
         -- and
         rw [Hm']
@@ -136,14 +136,14 @@ structure AbstractRNDEventSpec' (AM) [Machine ACTX AM]
 
   step_ref (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ am', abstract.effect (lift m) x ((), am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ am', abstract.effect (lift m) x agrd ((), am')
              → refine am' (unlift (lift m) am' m x)
 
   step_safe (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ am', abstract.effect (lift m) x ((), am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ am', abstract.effect (lift m) x agrd ((), am')
              → Machine.invariant (unlift (lift m) am' m x)
 
 @[simp]
@@ -185,14 +185,14 @@ structure AbstractRNDEventSpec'' (AM) [Machine ACTX AM]
 
   step_ref (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → ∀ am', abstract.effect (lift m) () ((), am')
+    → (agrd : abstract.guard (lift m) ())
+    → ∀ am', abstract.effect (lift m) () agrd ((), am')
              → refine am' (unlift (lift m) am' m)
 
   step_safe (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → ∀ am', abstract.effect (lift m) () ((), am')
+    → (agrd : abstract.guard (lift m) ())
+    → ∀ am', abstract.effect (lift m) () agrd ((), am')
              → Machine.invariant (unlift (lift m) am' m)
 
 @[simp]
@@ -238,14 +238,14 @@ structure AbstractInitRNDEventSpec (AM) [Machine ACTX AM]
 
   /-- Proof obligation: unlifting abstract state change is safe wrt. the `refine` invariant. -/
   step_ref (x : α):
-    abstract.guard x
-    → ∀ y, ∀ am', abstract.init x (y, am')
+    (agrd : abstract.guard x)
+    → ∀ y, ∀ am', abstract.init x agrd (y, am')
                   → refine am' (unlift Machine.reset am' Machine.reset x)
 
   /-- Proof obligation: invariant preservation of the abstract event. -/
   step_safe (x : α):
-    abstract.guard x
-    → ∀ y, ∀ am', abstract.init x (y, am')
+    (agrd : abstract.guard x)
+    → ∀ y, ∀ am', abstract.init x agrd (y, am')
                   → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
 @[simp]
@@ -253,8 +253,8 @@ def AbstractInitRNDEventSpec.to_InitNDEvent  [Machine ACTX AM] [Machine CTX M] [
   (abs : InitNDEvent AM α β) (ev : AbstractInitRNDEventSpec AM M abs) : _InitNDEvent M α β  :=
   {
     guard := abs.guard
-    init := fun x (y, m') => ∃ am', abs.init x (y, am')
-                             ∧ m' =  ev.unlift Machine.reset am' Machine.reset x
+    init := fun x grd (y, m') => ∃ am', abs.init x grd (y, am')
+                                 ∧ m' =  ev.unlift Machine.reset am' Machine.reset x
   }
 
 /-- The construction of a reused non-deterministic abstract initialization event.
@@ -326,13 +326,13 @@ structure AbstractInitRNDEventSpec' (AM) [Machine ACTX AM]
     → lift (unlift Machine.reset am' Machine.reset x) = am'
 
   step_ref (x : α):
-    abstract.guard x
-    → ∀ am', abstract.init x ((), am')
+    (agrd : abstract.guard x)
+    → ∀ am', abstract.init x agrd ((), am')
              → refine am' (unlift Machine.reset am' Machine.reset x)
 
   step_safe (x : α):
-    abstract.guard x
-    → ∀ am', abstract.init x ((), am')
+    (agrd : abstract.guard x)
+    → ∀ am', abstract.init x agrd ((), am')
              → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
 /-- Variant of `AbstractInitRNDEventSpec` with implicit `Unit` output type -/
@@ -369,13 +369,13 @@ structure AbstractInitRNDEventSpec'' (AM) [Machine ACTX AM]
     → lift (unlift Machine.reset am' Machine.reset) = am'
 
   step_ref:
-    abstract.guard ()
-    → ∀ am', abstract.init () ((), am')
+    (agrd : abstract.guard ())
+    → ∀ am', abstract.init () agrd ((), am')
              → refine am' (unlift Machine.reset am' Machine.reset)
 
   step_safe:
-    abstract.guard ()
-    → ∀ am', abstract.init () ((), am')
+    (agrd : abstract.guard ())
+    → ∀ am', abstract.init () agrd ((), am')
              → Machine.invariant (unlift Machine.reset am' Machine.reset)
 
 @[simp]

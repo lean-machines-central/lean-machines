@@ -33,8 +33,8 @@ structure ConcreteRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR
    (no state change at the abstract level). -/
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m', effect m x grd (y, m')
                    → ∀ am, refine am m
                            → refine (self:=instR) am m'
 
@@ -62,8 +62,8 @@ structure ConcreteRNDEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [inst
 
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
+    → (grd : guard m x)
+    → ∀ m', effect m x grd m'
             → ∀ am, refine am m
                     → refine (self:=instR) am m'
 
@@ -87,8 +87,8 @@ structure ConcreteRNDEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [ins
 
   simulation (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
+    → (grd : guard m)
+    → ∀ m', effect m grd m'
             → ∀ am, refine am m
                     → refine (self:=instR) am m'
 
@@ -97,7 +97,7 @@ def ConcreteRNDEventSpec''.toConcreteRNDEventSpec [Machine ACTX AM] [Machine CTX
   (ev : ConcreteRNDEventSpec'' AM M) : ConcreteRNDEventSpec AM M Unit Unit :=
   {
     toNDEventSpec := ev.toNDEventSpec
-    simulation := fun m => by simp ; apply ev.simulation
+    simulation := fun m grd => by simp ; apply ev.simulation
   }
 
 /-- Variant of `newConcreteRNDEvent` with implicit `Unit` input and output types -/
@@ -121,8 +121,8 @@ structure ConcreteAnticipatedRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM
   /-- Proof obligation: the concrete variant does not increases. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m', effect m x grd (y, m')
                  → variant m' ≤ variant m
 
 /-- The construction of a concrete non-deterministic anticipated event
@@ -154,8 +154,8 @@ structure ConcreteAnticipatedRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (A
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
+    → (grd : guard m x)
+    → ∀ m', effect m x grd m'
             → variant m' ≤ variant m
 
 @[simp]
@@ -180,8 +180,8 @@ structure ConcreteAnticipatedRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
+    → (grd : guard m)
+    → ∀ m', effect m grd m'
             → variant m' ≤ variant m
 
 @[simp]
@@ -190,8 +190,8 @@ def ConcreteAnticipatedRNDEventSpec''.toConcreteAnticipatedRNDEventSpec [Preorde
   {
     toNDEventSpec := ev.toNDEventSpec
     variant := ev.variant
-    simulation := fun m => by simp ; apply ev.simulation
-    nonIncreasing := fun m => by simp ; apply ev.nonIncreasing
+    simulation := fun m grd => by simp ; apply ev.simulation
+    nonIncreasing := fun m grd => by simp ; apply ev.nonIncreasing
   }
 
 /-- Variant of `newConcreteAnticipatedRNDEvent` with implicit `Unit` input and output types -/
@@ -212,8 +212,8 @@ structure ConcreteConvergentRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM)
   /-- Proof obligation: the variant strictly decrases. -/
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m', effect m x grd (y, m')
                  → variant m' < variant m
 
 /-- The construction of a concrete non-deterministic convergent event
@@ -246,8 +246,8 @@ structure ConcreteConvergentRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
+    → (grd : guard m x)
+    → ∀ m', effect m x grd m'
             → variant m' < variant m
 
 @[simp]
@@ -272,8 +272,8 @@ structure ConcreteConvergentRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (A
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
+    → (grd : guard m)
+    → ∀ m', effect m grd m'
             → variant m' < variant m
 
 @[simp]
@@ -282,8 +282,8 @@ def ConcreteConvergentRNDEventSpec''.toConcreteConvergentRNDEventSpec [Preorder 
   {
     toNDEventSpec := ev.toNDEventSpec
     variant := ev.variant
-    simulation := fun m => by simp ; apply ev.simulation
-    convergence := fun m => by simp ; apply ev.convergence
+    simulation := fun m grd => by simp ; apply ev.simulation
+    convergence := fun m grd => by simp ; apply ev.convergence
   }
 
 /-- Variant of `newConcreteConvergentRNDEvent` with implicit `Unit` input and output types -/

@@ -27,8 +27,8 @@ structure _AnticipatedRDetEventPO (v) [Preorder v]  [Machine ACTX AM] [instM:Mac
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → let (_, m') := ev.action m x
+    → (grd : ev.guard m x)
+    → let (_, m') := ev.action m x grd
       variant m' ≤ variant m
 
 /-- The representation of anticipated deterministic refined events, constructed
@@ -60,8 +60,8 @@ structure AnticipatedRDetEventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let (_, m') := action m x
+    → (grd : guard m x)
+    → let (_, m') := action m x grd
       variant m' ≤ variant m
 
 @[simp]
@@ -108,8 +108,8 @@ structure AnticipatedRDetEventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) 
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       variant m' ≤ variant m
 
 @[simp]
@@ -141,8 +141,8 @@ structure AnticipatedRDetEventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M)
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' ≤ variant m
 
 @[simp]
@@ -178,8 +178,8 @@ structure _ConvergentRDetEventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACT
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → let (_, m') := ev.action m x
+    → (grd : ev.guard m x)
+    → let (_, m') := ev.action m x grd
       variant m' < variant m
 
 /-- The representation of convergent deterministic refined events, constructed
@@ -222,8 +222,8 @@ structure ConvergentRDetEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machi
   /-- Proof obligation: the variant strictly decreases. -/
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let (_, m') := action m x
+    → (grd : guard m x)
+    → let (_, m') := action m x grd
       variant m' < variant m
 
 /-- Smart constructor for convergent deterministic refined event,
@@ -258,8 +258,8 @@ structure ConvergentRDetEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Mach
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       variant m' < variant m
 
 @[simp]
@@ -285,8 +285,8 @@ structure ConvergentRDetEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Mac
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' < variant m
 
 @[simp]
