@@ -106,7 +106,7 @@ def AbstractInitSREventSpec.toAbstractInitFREventSpec [Machine ACTX AM] [Machine
       have Hainv := abstract.po.safety x Hgrd
       have Hsi := ev.step_inv x Hgrd
       have Href := lift_ref (AM:=AM) (unlift default (abstract.init x Hgrd).2) Hsi
-      have Hlu := lu_reset (self:=instSR) (abstract.init x Hgrd).2 Hainv
+      have Hlu := lu_default (self:=instSR) (abstract.init x Hgrd).2 Hainv
       rw [Hlu] at Href
       assumption
 

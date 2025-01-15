@@ -129,7 +129,7 @@ def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Ma
       have Hainv := abstract.po.safety x Hgrd y am' Heff
       have Hsi := ev.step_inv x Hgrd y am' Heff
       have Href := lift_ref (AM:=AM) (unlift default am') Hsi
-      have Hlu := lu_reset (self:=instSR) am' Hainv
+      have Hlu := lu_default (self:=instSR) am' Hainv
       rw [Hlu] at Href
       assumption
 
@@ -140,7 +140,7 @@ def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Ma
 
     lift_unlift := fun am am' x => by
       simp
-      apply lu_reset
+      apply lu_default
       assumption
   }
 

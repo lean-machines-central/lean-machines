@@ -37,7 +37,7 @@ This comprises:
  - an `invariant` property defining the overall safety requirements of
  the machine states.
 
- - a `reset` state, that defines the (unique) state of the machine before
+ - a `default` state, that defines the (unique) state of the machine before
  its initialization (very often, this is the default initialization state,
   but it can also be an unreachable "pre-init" state if required).
 
