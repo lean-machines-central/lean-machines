@@ -15,8 +15,8 @@ structure ConcreteFRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [inst
 
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m', effect m x grd (y, m')
                    → (lift m') = (lift (AM:=AM) m)
 
 @[simp]
@@ -42,8 +42,8 @@ structure ConcreteFRNDEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRe
 
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
+    → (grd : guard m x)
+    → ∀ m', effect m x grd m'
             → (lift m') = (lift (AM:=AM) m)
 
 @[simp]
@@ -64,8 +64,8 @@ structure ConcreteFRNDEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [in
 
   simulation (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
+    → (grd : guard m)
+    → ∀ m', effect m grd m'
             → (lift m') = (lift (AM:=AM) m)
 
 @[simp]
@@ -88,8 +88,8 @@ structure ConcreteAnticipatedFRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (A
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m', effect m x grd (y, m')
                  → variant m' ≤ variant m
 
 @[simp]
@@ -119,8 +119,8 @@ structure ConcreteAnticipatedFRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
+    → (grd : guard m x)
+    → ∀ m', effect m x grd m'
             → variant m' ≤ variant m
 
 @[simp]
@@ -143,8 +143,8 @@ structure ConcreteAnticipatedFRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] 
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
+    → (grd : guard m)
+    → ∀ m', effect m grd m'
             → variant m' ≤ variant m
 
 @[simp]
@@ -169,8 +169,8 @@ structure ConcreteConvergentFRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m', effect m x grd (y, m')
                  → variant m' < variant m
 
 @[simp]
@@ -200,8 +200,8 @@ structure ConcreteConvergentFRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (A
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
+    → (grd : guard m x)
+    → ∀ m', effect m x grd m'
             → variant m' < variant m
 
 @[simp]
@@ -224,8 +224,8 @@ structure ConcreteConvergentFRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
+    → (grd : guard m)
+    → ∀ m', effect m grd m'
             → variant m' < variant m
 
 @[simp]

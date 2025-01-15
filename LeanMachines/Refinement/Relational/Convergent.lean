@@ -28,8 +28,8 @@ structure _AnticipatedREventPO (v) [Preorder v]  [Machine ACTX AM] [instM:Machin
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → let (_, m') := ev.action m x
+    → (grd : ev.guard m x)
+    → let (_, m') := ev.action m x grd
       variant m' ≤ variant m
 
 /-- The representation of anticipated refined events, constructed
@@ -73,8 +73,8 @@ structure AnticipatedREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [ins
   /-- Proof obligation: the variant does not increases. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
+    → (grd : guard m x)
+    → let m' := (action m x grd).2
       variant m' ≤ variant m
 
 @[simp]
@@ -122,8 +122,8 @@ structure AnticipatedREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [in
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       variant m' ≤ variant m
 
 @[simp]
@@ -159,8 +159,8 @@ structure AnticipatedREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [i
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' ≤ variant m
 
 @[simp]
@@ -169,7 +169,7 @@ def AnticipatedREventSpec''.toAnticipatedREventSpec [Preorder v] [Machine ACTX A
   {
     toREventSpec := ev.toREventSpec abs
     variant := ev.variant
-    nonIncreasing := fun m => by simp ; apply ev.nonIncreasing
+    nonIncreasing := fun m grd => by simp ; apply ev.nonIncreasing
   }
 
 @[simp]
@@ -200,8 +200,8 @@ structure _ConvergentREventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACTX A
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → let (_, m') := ev.action m x
+    → (grd : ev.guard m x)
+    → let (_, m') := ev.action m x grd
       variant m' < variant m
 
 /-- The representation of convergent refined events, constructed
@@ -243,8 +243,8 @@ structure ConvergentREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine 
   /-- Proof obligation: the variant strictly decreases. -/
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
+    → (grd : guard m x)
+    → let m' := (action m x grd).2
       variant m' < variant m
 
 /-- Smart constructor for convergent refined event,
@@ -265,11 +265,12 @@ def newConvergentREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machin
       strengthening := ev.strengthening
       simulation := ev.simulation
       variant := ev.variant
-      nonIncreasing := fun m x => by simp
-                                     intros Hinv Hgrd
-                                     have Hcnv := ev.convergence m x Hinv Hgrd
-                                     simp at Hcnv
-                                     apply le_of_lt ; assumption
+      nonIncreasing := fun m x => by
+        simp
+        intros Hinv Hgrd
+        have Hcnv := ev.convergence m x Hinv Hgrd
+        simp at Hcnv
+        apply le_of_lt ; assumption
       convergence := ev.convergence
     }
   }
@@ -281,8 +282,8 @@ structure ConvergentREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       variant m' < variant m
 
 @[simp]
@@ -307,8 +308,8 @@ structure ConvergentREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machin
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' < variant m
 
 @[simp]

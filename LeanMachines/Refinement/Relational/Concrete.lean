@@ -49,9 +49,9 @@ structure ConcreteREventSpec (AM) [instAM: Machine ACTX AM]
    (no state change at the abstract level). -/
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
+    → (grd : guard m x)
     → ∀ am, refine (self:=instR) am m
-      →  refine (self:=instR) am (action m x).2
+      →  refine (self:=instR) am (action m x grd).2
 
 /-- The construction of a concrete (ordinary) event from a `ConcreteREventSpec` specification. -/
 @[simp]
@@ -81,9 +81,9 @@ structure ConcreteREventSpec' (AM) [instAM: Machine ACTX AM]
 
   simulation (m : M) (x : α):
     Machine.invariant m
-    → guard m x
+    → (grd : guard m x)
     → ∀ am, refine (self:=instR) am m
-      →  refine (self:=instR) am (action m x)
+      →  refine (self:=instR) am (action m x grd)
 
 /-- Variant of `newConcreteREvent` with implicit `Unit` output type -/
 @[simp]
@@ -109,9 +109,9 @@ structure ConcreteREventSpec'' (AM) [instAM: Machine ACTX AM]
 
   simulation (m : M):
     Machine.invariant m
-    → guard m
+    → (grd : guard m)
     → ∀ am, refine (self:=instR) am m
-      →  refine (self:=instR) am (action m)
+      →  refine (self:=instR) am (action m grd)
 
 /-- Variant of `newConcreteREvent` with implicit `Unit` input and output types -/
 @[simp]
@@ -171,8 +171,8 @@ structure ConcreteAnticipatedREventSpec (v) [Preorder v] [WellFoundedLT v]
   /-- Proof obligation: the concrete variant does not increases. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
+    → (grd : guard m x)
+    → let m' := (action m x grd).2
       variant m' ≤ variant m
 
 /-- The construction of a concrete anticipated event from a `ConcreteAnticipatedREventSpec` specification. -/
@@ -206,8 +206,8 @@ structure ConcreteAnticipatedREventSpec' (v) [Preorder v] [WellFoundedLT v]
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x)
+    → (grd : guard m x)
+    → let m' := (action m x grd)
       variant m' ≤ variant m
 
 /-- Variant of `newConcreteAnticipatedREvent` with implicit `Unit` output type -/
@@ -241,8 +241,8 @@ structure ConcreteAnticipatedREventSpec'' (v) [Preorder v] [WellFoundedLT v]
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' ≤ variant m
 
 /-- Variant of `newConcreteAnticipatedREvent` with implicit `Unit` input and output types -/
@@ -282,8 +282,8 @@ structure ConcreteConvergentREventSpec (v) [Preorder v] [WellFoundedLT v]
   /-- Proof obligation: the variant strictly decrases. -/
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
+    → (grd : guard m x)
+    → let m' := (action m x grd).2
       variant m' < variant m
 
 /-- The construction of a concrete convergent event from a `ConcreteConvergentREventSpec` specification. -/
@@ -320,8 +320,8 @@ structure ConcreteConvergentREventSpec' (v) [Preorder v] [WellFoundedLT v]
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x)
+    → (grd : guard m x)
+    → let m' := (action m x grd)
       variant m' < variant m
 
 /-- Variant of `newConcreteConvergentREvent` with implicit `Unit` output type -/
@@ -357,8 +357,8 @@ structure ConcreteConvergentREventSpec'' (v) [Preorder v] [WellFoundedLT v]
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' < variant m
 
 /-- Variant of `newConcreteConvergentREvent` with implicit `Unit` input and output types -/

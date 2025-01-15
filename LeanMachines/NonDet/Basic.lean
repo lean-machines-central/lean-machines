@@ -19,31 +19,47 @@ with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 This extends `_EventRoot` with a notion of (non-deterministic/relational) effect.
 .-/
-structure _NDEvent (M) [Machine CTX M] (α) (β : Type)
-  extends _EventRoot M α where
-
-  effect: M → α → (β × M) → Prop
-
-theorem _NDEvent.ext [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β):
-  ev₁.to_EventRoot = ev₂.to_EventRoot
-  → ev₁.effect = ev₂.effect
-  → ev₁ = ev₂ :=
-by
-  intros H₁ H₂
-  cases ev₁
-  case mk _evr₁ _eff₁ =>
-    cases ev₂
-    case mk _evr₃ _eff₂ =>
-      simp [*] at *
-      simp [H₁, H₂]
+@[ext]
+structure _NDEvent (M) [Machine CTX M] (α β : Type) where
+  guard (m : M) (x : α) : Prop := True
+  effect (m : M) (x : α) (grd : guard m x) (eff : β × M): Prop
 
 @[simp]
 def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :=
 {
   guard := ev.guard
-  effect := fun m x (x'', m'') => let (x', m') := ev.action m x
+  effect := fun m x grd (x'', m'') => let (x', m') := ev.action m x grd
                                   m'' = m' ∧ x'' = x'
 }
+
+/- XXX : does this axiom breaks something ?
+         (I don't think it's provable because of HEq) -/
+axiom _Effect_ext_ax {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _NDEvent M α β):
+   (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ y m' grd₁ grd₂,
+             ev₁.effect m x grd₁ (y, m') ↔ ev₂.effect m x grd₂ (y, m'))
+   → HEq ev₁.effect ev₂.effect
+
+theorem _NDEvent.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _NDEvent M α β):
+  (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ y m' grd₁ grd₂, ev₁.effect m x grd₁ (y, m') ↔ ev₂.effect m x grd₂ (y, m'))
+  → ev₁ = ev₂ :=
+by
+  intros H
+  have Hax := _Effect_ext_ax ev₁ ev₂
+  cases ev₁
+  case mk g₁ act₁ =>
+    cases ev₂
+    case mk g₂ act₂ =>
+      simp at*
+      constructor
+      case left =>
+        apply _Guard_ext
+        intros m x
+        have Hg := (H m x).1
+        exact propext Hg
+      case right =>
+        exact Hax H
 
 /-- The internal representation of *non-deterministic* initialization events
 with: `M` the machine type,
@@ -51,27 +67,27 @@ with: `M` the machine type,
 .-/
 structure _InitNDEvent (M) [Machine CTX M] (α) (β : Type) where
   guard: α → Prop
-  init: α → (β × M) → Prop
+  init (x : α) (grd : guard x) (eff: β × M) : Prop
 
 @[simp]
 def _InitEvent.to_InitNDEvent [Machine CTX M] (ev : _InitEvent M α β) : _InitNDEvent M α β :=
 {
   guard := ev.guard
-  init := fun x (x'', m'') => let (x', m') := ev.init x
-                              m'' = m' ∧ x'' = x'
+  init := fun x grd (x'', m'') => let (x', m') := ev.init x grd
+                                  m'' = m' ∧ x'' = x'
 }
 
 @[simp]
 def _InitNDEvent.to_NDEvent [Machine CTX M] (ev : _InitNDEvent M α β) : _NDEvent M α β :=
 {
   guard := fun m x => m = Machine.reset ∧ ev.guard x
-  effect := fun _ x (y, m') => ev.init x (y, m')
+  effect := fun _ x grd (y, m') => ev.init x grd.2 (y, m')
 }
 
 @[simp]
 def skip_NDEvent [Machine CTX M] : _NDEvent M α β :=
   {
-    effect := fun m _ (_, m') => m' = m
+    effect := fun m _ _ (_, m') => m' = m
   }
 
 
@@ -86,32 +102,33 @@ instance [Machine CTX M] : Functor (_NDEvent M γ) where
   map f ev :=
   {
     guard := ev.guard
-    effect := fun m x (y, m') => ∃ z, ∃ m'', ev.effect m x (z, m'')
-                                             ∧ y = f z ∧ m' = m''
+    effect := fun m x grd (y, m') => ∃ z, ∃ m'', ev.effect m x grd (z, m'')
+                                                 ∧ y = f z ∧ m' = m''
   }
 
 instance [Machine CTX M] : LawfulFunctor (_NDEvent M γ) where
   map_const := rfl
   id_map ev := by simp [Functor.map]
 
-  comp_map g h ev := by simp [Functor.map]
-                        funext m x (y,m')
-                        apply propext
-                        constructor
-                        · intro Hz
-                          cases Hz
-                          case _ z H =>
-                            simp at H
-                            simp
-                            exists (g z)
-                            constructor
-                            · exists z
-                              simp [H]
-                            simp [H]
-                        simp
-                        intros z t Heff Heq₁ Heq₂
-                        exists t
-                        simp [Heff, Heq₁, Heq₂]
+  comp_map g h ev := by
+    simp [Functor.map]
+    funext m x grd (y,m')
+    apply propext
+    constructor
+    · intro Hz
+      cases Hz
+      case _ z H =>
+        simp at H
+        simp
+        exists (g z)
+        constructor
+        · exists z
+          simp [H]
+        simp [H]
+    simp
+    intros z t Heff Heq₁ Heq₂
+    exists t
+    simp [Heff, Heq₁, Heq₂]
 
 
 -- There are two possible, distinct ContravariantFunctor functors
@@ -123,7 +140,7 @@ instance [Machine CTX M] : ContravariantFunctor (_NDEvent M γ) where
   contramap f ev :=
   {
     guard := ev.guard
-    effect := fun m x (y, m') => ev.effect m x ((f y), m')
+    effect := fun m x grd (y, m') => ev.effect m x grd ((f y), m')
   }
 
 instance [Machine CTX M] : LawfullContravariantFunctor (_NDEvent M β) where
@@ -146,7 +163,7 @@ instance [Machine CTX M] : ContravariantFunctor (_CoNDEvent M γ) where
   contramap f ev :=
   {
      guard := fun m x => ev.guard m (f x)
-     effect := fun m x (y, m')  => ev.effect m (f x) (y, m')
+     effect := fun m x grd (y, m')  => ev.effect m (f x) grd (y, m')
   }
 
 instance [Machine CTX M] : LawfullContravariantFunctor (_CoNDEvent M γ) where
@@ -162,35 +179,36 @@ instance [Machine CTX M] : Profunctor (_NDEvent M) where
 instance [Machine CTX M] : LawfulProfunctor (_NDEvent M) where
   dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
-  dimap_comp f f' g g' := by simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map]
-                             funext ev
-                             simp
-                             funext m x (y,m')
-                             simp
-                             constructor
-                             · intro Heff
-                               cases Heff
-                               case _ u Heff =>
-                                 exists (g' u)
-                                 simp [Heff]
-                                 exists u
-                                 simp [Heff]
-                             intro Heff
-                             cases Heff
-                             case _ t Heff =>
-                               simp at Heff
-                               cases Heff
-                               case _ Heff Hy =>
-                                 cases Heff
-                                 case _ u Heff =>
-                                   exists u
-                                   simp [Heff, Hy]
+  dimap_comp f f' g g' := by
+    simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map]
+    funext ev
+    simp
+    funext m x grd (y,m')
+    simp
+    constructor
+    · intro Heff
+      cases Heff
+      case _ u Heff =>
+        exists (g' u)
+        simp [Heff]
+        exists u
+        simp [Heff]
+    intro Heff
+    cases Heff
+    case _ t Heff =>
+      simp at Heff
+      cases Heff
+      case _ Heff Hy =>
+        cases Heff
+        case _ u Heff =>
+          exists u
+          simp [Heff, Hy]
 
 instance [Machine CTX M] : StrongProfunctor (_NDEvent M) where
   first' {α β γ} (ev : _NDEvent M α β): _NDEvent M (α × γ) (β × γ) :=
     {
       guard := fun m (x, _) => ev.guard m x
-      effect := fun m (x,u) ((y, v), m') => v = u ∧ ev.effect m x (y, m')
+      effect := fun m (x,u) grd ((y, v), m') => v = u ∧ ev.effect m x grd (y, m')
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (_NDEvent M) where
@@ -198,137 +216,127 @@ instance [Machine CTX M] : LawfulStrongProfunctor (_NDEvent M) where
 
 instance [Machine CTX M]: Category (_NDEvent M) where
   id := {
-    effect := fun m x (y, m') => y = x ∧ m' = m
+    effect := fun m x _ (y, m') => y = x ∧ m' = m
   }
 
   comp {α β γ} (ev₂ : _NDEvent M β γ) (ev₁ : _NDEvent M α β) : _NDEvent M α γ :=
-    { guard := fun m x => ev₁.guard m x ∧ (∀ y, ∀ m', ev₁.effect m x (y, m')
-                                           → ev₂.guard m' y)
-      effect := fun m x (z, m'') => ∃ y, ∃ m', ev₁.effect m x (y, m') ∧ ev₂.effect m' y (z, m'')
+    { guard := fun m x => ev₁.guard m x
+                          ∧ ((grd : ev₁.guard m x)
+                             → (∀ y, ∀ m', ev₁.effect m x grd (y, m')
+                                → ev₂.guard m' y))
+      effect := fun m x grd (z, m'') =>
+        ∃ y m',  ev₁.effect m x grd.1 (y, m') ∧
+                 ((eff₁ : ev₁.effect m x grd.1 (y, m')) →
+                  ev₂.effect m' y (grd.2 grd.1 y m' eff₁) (z, m''))
     }
 
+theorem LawfulCategory_assoc_guard [Machine CTX M] (ev₁ : _NDEvent M γ δ) (ev₂ : _NDEvent M β γ) (ev₃ : _NDEvent M α β):
+  (ev₁ (<<<) ev₂ (<<<) ev₃).guard = ((ev₁ (<<<) ev₂) (<<<) ev₃).guard :=
+by
+  simp
+  funext m x
+  simp
+  constructor
+  · simp
+    intro Hgrd₃
+    intro Hgrd₂''
+    have Hgrd₂' := Hgrd₂'' Hgrd₃ ; clear Hgrd₂''
+    intro H'
+    simp [Hgrd₃] at *
+    intros y m' Heff₃
+    have H := H' Hgrd₂' ; clear H'
+    have Hgrd₂ := Hgrd₂' y m' Heff₃
+    simp [Hgrd₂]
+    intros z mm'
+    intro Heff₂
+    have Hgrd₁'' := H z mm' y m' Heff₃
+    apply Hgrd₁''
+    intro Heff₃'
+    assumption
+  · simp
+    intro Hgrd₃
+    intro Hgrd₁'''
+    have Hgrd₁'' := Hgrd₁''' Hgrd₃ ; clear Hgrd₁'''
+    simp [Hgrd₃]
+    constructor
+    · intros y m' Heff₃
+      obtain ⟨Hgrd₂, Hgrd₁'⟩ := Hgrd₁'' y m' Heff₃ ; clear Hgrd₁''
+      assumption
+    · intros H z mm' y m' Heff₃ Heff₂'
+      have Hgrd₁' := Hgrd₁'' y m' Heff₃ ; clear Hgrd₁''
+      have Heff₂ := Heff₂' Heff₃ ; clear Heff₂'
+      have Hgrd₂ := H y m' Heff₃
+      simp [Hgrd₂] at Hgrd₁'
+      exact Hgrd₁' z mm' Heff₂
+
+set_option maxHeartbeats 300000
+
 instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
-  id_right ev := by cases ev
-                    case mk evr eff =>
-                      simp
-                      funext m x (z, m'')
-                      simp
-                      constructor
-                      · intros Heff
-                        cases Heff
-                        case _ y Heff =>
-                          cases Heff
-                          case _ m' Heff =>
-                            cases Heff
-                            case _ Heq Heff =>
-                              simp [Heq] at Heff
-                              assumption
-                      intro Heff
-                      exists x
-                      exists m
+  id_right ev := by
+    apply _NDEvent.ext'
+    simp
+    intros m x y m' grd₁ grd₂
+    constructor
+    · simp
+    · intros Heff
+      exists x
+      exists m
+      simp [Heff]
 
-  id_left ev := by cases ev
-                   case mk evr eff =>
-                     simp
-
+  id_left ev := by
+    apply _NDEvent.ext'
+    simp
+    intros m x y m' grd₁ grd₂
+    constructor
+    · intro ⟨yy,⟨mm',H₁,H₂'⟩⟩
+      have H₂ := H₂' H₁
+      simp [H₁,H₂]
+    · intro Heff₁
+      exists y
+      exists m'
+      simp [Heff₁]
 
   id_assoc ev₁ ev₂ ev₃ := by
-    cases ev₁
-    case mk evr₁ eff₁ =>
-      cases ev₂
-      case mk evr₂ eff₂ =>
-        cases ev₃
-        case mk evr₃ eff₃ =>
-          simp
+    apply _NDEvent.ext
+    case guard =>
+      exact LawfulCategory_assoc_guard ev₁ ev₂ ev₃
+
+    case effect =>
+      apply _Effect_ext_ax
+      intros m x
+      constructor
+      · rw [@LawfulCategory_assoc_guard]
+      · intros y m' grd₁ grd₂
+        simp
+        constructor
+        · intro H
+          obtain ⟨z, m'', ⟨⟨yy, mm', ⟨Heff₃, H₁⟩⟩, H₂⟩⟩ := H
+          have Heff₂ := H₁ Heff₃
+          exists yy ; exists mm'
+          simp [Heff₃] at *
+          exists z ; exists m''
+          simp [Heff₂]
+          have Heff₁' := H₂ yy mm'
+          apply Heff₁'
           constructor
-          case left =>
-            funext m x
-            case h.h =>
-              simp
-              constructor
-              case mpr =>
-                intros H₁
-                cases H₁
-                case intro Hgrd₃ H₁ =>
-                  constructor
-                  case left =>
-                    simp [Hgrd₃]
-                    intros y m' Heff₃
-                    apply (H₁ y m' Heff₃).left
-                  case right =>
-                    intros z m'' y m' Heff₃ Heff₂
-                    have H₁' := H₁ y m' Heff₃  ; clear H₁
-                    cases H₁'
-                    case intro Hgrd₂ Hgrd₁ =>
-                      apply Hgrd₁ z m''
-                      assumption
-              case mp =>
-                  simp
-                  intros Hgrd₃ Hgrd₂ Hgrd₁
-                  constructor
-                  case left =>
-                    assumption
-                  case right =>
-                    intros y m' Heff₃
-                    constructor
-                    case left =>
-                      apply Hgrd₂
-                      assumption
-                    case right =>
-                      intros z m'' Heff₂
-                      apply Hgrd₁ z m'' <;> assumption
-          case right =>
-            funext m x (t, m₃)
-            case h.h.h =>
-              simp
-              constructor
-              case mp =>
-                intro Hex
-                cases Hex
-                case intro z Hex =>
-                  cases Hex
-                  case intro m'' Hex =>
-                  cases Hex
-                  case intro Hex Heff₁ =>
-                    cases Hex
-                    case intro y Hex =>
-                      cases Hex
-                      case intro m' Heff =>
-                        exists y
-                        exists m'
-                        simp [Heff]
-                        exists z
-                        exists m''
-                        simp [Heff₁, Heff]
-              case mpr =>
-                intro Hex
-                cases Hex
-                case intro y Hex =>
-                  cases Hex
-                  case intro m' Hex =>
-                    cases Hex
-                    case intro Heff₃ Hex =>
-                      cases Hex
-                      case intro z Hex =>
-                        cases Hex
-                        case intro m'' Heff =>
-                          exists z
-                          exists m''
-                          constructor
-                          case left =>
-                            exists y
-                            exists m'
-                            simp [Heff₃, Heff]
-                          case right =>
-                            simp [Heff]
-
-
+          · assumption
+          · intro Heff₃_bis
+            assumption
+        · intro ⟨yy, mm', ⟨Heff₃,H⟩⟩
+          obtain ⟨z, m'', ⟨Heff₂, Heff₁'⟩⟩ := H Heff₃
+          exists z ; exists m''
+          constructor
+          · exists yy ; exists mm'
+            simp [Heff₂, Heff₃]
+          · intros yyy mmm' H
+            exact Heff₁' Heff₂
+    -- QED  (a big one!)
 
 
 @[simp]
 def arrow_NDEvent (M) [Machine CTX M] (f : α → β) : _NDEvent M α β :=
   {
-    effect := fun m x (y, m') => y = f x ∧ m' = m
+    effect := fun m x _ (y, m') => y = f x ∧ m' = m
   }
 
 -- Split is simply parallel composition
@@ -336,7 +344,7 @@ def arrow_NDEvent (M) [Machine CTX M] (f : α → β) : _NDEvent M α β :=
 def split_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M γ δ) : _NDEvent M (α × γ) (β × δ) :=
   {
     guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
-    effect := fun m (x, y) ((x', y'), m') => ev₁.effect m x (x', m') ∧ ev₂.effect m y (y', m')
+    effect := fun m (x, y) grd ((x', y'), m') => ev₁.effect m x grd.1 (x', m') ∧ ev₂.effect m y grd.2 (y', m')
   }
 
 -- Remark: without an explicit first the law `arrow_unit` is not provable
@@ -344,7 +352,7 @@ def split_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M
 def first_NDEvent [Machine CTX M] (ev : _NDEvent M α β) : _NDEvent M (α × γ) (β × γ) :=
   {
     guard := fun m (x, _) => ev.guard m x
-    effect := fun m (x, y) ((x', y'), m') => ev.effect m x (x', m') ∧ y'= y
+    effect := fun m (x, y) grd ((x', y'), m') => ev.effect m x grd (x', m') ∧ y'= y
   }
 
 -- An alternative possible definition for split based on first
@@ -365,77 +373,87 @@ instance [Machine CTX M]: Arrow (_NDEvent M) where
 instance [Machine CTX M] [Semigroup M]: Arrow (_NDEvent M) where
   arrow {α β} (f : α → β) : _NDEvent M α β := {
     guard := fun _ _ => True
-    effect := fun m x (y, m') => y = f x ∧ m' = m
+    effect := fun m x _ (y, m') => y = f x ∧ m' = m
   }
 
   split {α α' β β'} (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α' β') : _NDEvent M (α × α') (β × β') := {
     guard := fun m (x,y) => ev₁.guard m x ∧ ev₂.guard m y
-    effect := fun m (x, y) ((x', y'), m') =>
-                ∃ m'₁ m'₂, ev₁.effect m x (x', m'₁) ∧ ev₂.effect m y (y', m'₂) ∧ m' = m'₁ * m'₂
+    effect := fun m (x, y) grd ((x', y'), m') =>
+                ∃ m'₁ m'₂, ev₁.effect m x grd.1 (x', m'₁) ∧ ev₂.effect m y grd.2 (y', m'₂) ∧ m' = m'₁ * m'₂
   }
   first := first_NDEvent
 
 instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
   arrow_id := by simp [Arrow.arrow]
-  arrow_ext f := by simp [Arrow.arrow, Arrow.first]
-                    funext m (x, z) ((y, z'), m')
-                    simp
-                    constructor
-                    <;> (intro H ; simp [H])
+  arrow_ext f := by
+    simp [Arrow.arrow, Arrow.first]
+    funext m (x, z) grd ((y, z'), m')
+    simp
+    constructor
+    <;> (intro H ; simp [H])
 
-  arrow_fun f g := by simp [Arrow.arrow]
-                      funext m x (z, m')
-                      simp
-                      constructor
-                      · intro H
-                        exists (f x)
-                        simp [H]
-                      · intro Hex
-                        cases Hex
-                        case _ y H =>
-                          simp [H]
-  arrow_xcg ev g := by simp [Arrow.arrow, Arrow.first]
-                       funext m (x, y₁) ((y₂, x'), m')
-                       simp
-                       constructor
-                       · intro Hex
-                         obtain ⟨x'', z, m'₁, ⟨⟨⟨H₁, H₂⟩, H₃⟩, ⟨H₄, H₅⟩⟩⟩ := Hex
-                         exists y₂ ; exists y₁
-                         simp [*] at *
-                         assumption
-                       · intro Hex
-                         obtain ⟨y₃, y₄, ⟨⟨H₁,H₂,H₂'⟩,H₃,H₄⟩⟩ := Hex
-                         exists x ; exists (g y₁) ; exists m
-                         simp [*] at *
+  arrow_fun f g := by
+    apply _NDEvent.ext'
+    simp [Arrow.arrow]
+    intros m x y m'
+    constructor
+    · intro ⟨H₁, H₂⟩
+      simp [H₁, H₂]
+      exists (f x) ; exists m
+      simp
+    · intro ⟨yy,mm',⟨⟨H₁,H₂⟩,H₃⟩⟩
+      simp [H₁,H₂,H₃]
 
-  arrow_unit ev := by simp [Arrow.arrow, Arrow.first]
-                      funext m (x, y₁) (y₂, m')
-                      simp
-                      constructor
-                      · intro Hex
-                        exists x
-                        exists m
-                      · intro Hex
-                        obtain ⟨x', Hex⟩  := Hex
-                        obtain ⟨m'', ⟨⟨H₁ , H₂⟩, H₃⟩⟩ := Hex
-                        rw [H₁, H₂] at H₃
-                        assumption
+  arrow_xcg ev g := by
+    apply _NDEvent.ext'
+    simp [Arrow.arrow, Arrow.first]
+    intros m x y yy xx m' grd₁ grd₂
+    constructor
+    · simp
+      intros x₁ x₂ mm Hx₁ Hx₂ Hmm Hxx
+      simp [*] at *
+      obtain ⟨Heff, Hxx⟩ := Hxx
+      exists yy ; exists y ; exists m'
+      simp [Heff]
+    · simp
+      intros z₁ z₂ mm' Heff Hz₂ H
+      exists x ; exists (g y) ; exists m
+      simp [*]
 
-  arrow_assoc ev := by simp [Arrow.arrow, Arrow.first]
-                       funext m ((x, z), t) ((y, z', t'), m')
-                       simp
-                       constructor
-                       · intro Hex
-                         obtain ⟨y',z'', t'', H⟩ := Hex
-                         obtain ⟨⟨⟨H₁, H₂⟩, H₃⟩, ⟨H₄, H₅, H₆⟩⟩ := H
-                         simp [*] at *
-                         exists x ; exists z ; exists t
-                         exists m
-                       ·  intro Hex
-                          obtain ⟨x',z'',t'', Hex⟩ := Hex
-                          obtain ⟨m'', ⟨⟨H₁, H₂⟩, ⟨H₃,H₄,H₅⟩⟩⟩ := Hex
-                          simp [*] at *
-                          exists y ; exists z ; exists t
+  arrow_unit ev := by
+    apply _NDEvent.ext'
+    intro m (x, x')
+    simp [Arrow.arrow, Arrow.first]
+    intros y m' Hgrd Hgrd'
+    constructor
+    case a.mp =>
+      intro ⟨y₁, y₂, mm, ⟨H', H⟩⟩
+      simp [H'] at H
+      exists x ; exists m
+      simp [*]
+    case a.mpr =>
+      intro ⟨xx, mm, ⟨⟨Hxx, Hmm⟩, Heff'⟩⟩
+      have Heff := Heff' ⟨Hxx, Hmm⟩ ; clear Heff'
+      exists y ; exists x' ; exists m'
+      simp [Heff,←Hxx,←Hmm]
+
+
+  arrow_assoc ev := by
+    apply _NDEvent.ext'
+    intro m ((x, z), t)
+    simp [Arrow.first, Arrow.arrow]
+    intros y zz tt m' grd₁ grd₂
+    constructor
+    case a.mp =>
+      intro ⟨yy,zzz,ttt,mm',⟨H₁,H₂⟩⟩
+      simp [H₁] at H₂
+      exists x ; exists z ; exists t ; exists m
+      simp [*]
+    case a.mpr =>
+      intro ⟨xx, zzz, ttt, mm, ⟨H₁, H₂⟩⟩
+      simp [H₁] at H₂
+      exists y ; exists z ; exists t ; exists m'
+      simp [*]
 
 /-  Other misc. combinators -/
 
@@ -443,7 +461,8 @@ def dlfNDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α
   : _NDEvent M α β :=
   {
     guard := fun m x => ev₁.guard m x ∨ ev₂.guard m x
-    effect := fun m x (y, m') =>
-      (ev₁.guard m x → ev₁.effect m x (y, m'))
-      ∧ (ev₂.guard m x → ev₂.effect m x (y, m'))
+    effect := fun m x _ (y, m') =>
+      ((grd₁ : ev₁.guard m x) → ev₁.effect m x grd₁ (y, m'))
+      ∧ ((grd₂ : ev₂.guard m x) → ev₂.effect m x grd₂ (y, m'))
+
   }

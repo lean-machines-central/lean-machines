@@ -52,8 +52,8 @@ structure _AnticipatedEventPO (v) [Preorder v] [instM: Machine CTX M] (ev : _Eve
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → let (_, m') := ev.action m x
+    → (grd : ev.guard m x)
+    → let (_, m') := ev.action m x grd
       variant m' ≤ variant m
 
 /-- The type of deterministic anticipated events.
@@ -69,8 +69,8 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
   (variant : M → v)
   (Hnincr: ∀ (m : M) (x : α),
     Machine.invariant m
-    → ev.guard m x
-    → let (_, m') := ev.action m x
+    → (grd : ev.guard m x)
+    → let (_, m') := ev.action m x grd
       variant m' ≤ variant m) : AnticipatedEvent v M α β :=
   {
     guard := ev.guard
@@ -104,8 +104,8 @@ structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [instM: Machine CTX M]
   /-- Proof obligation: the variant is non-increasing. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
+    → (grd : guard m x)
+    → let m' := (action m x grd).2
       variant m' ≤ variant m
 
 /-- Construction of an anticipated deterministic event from a
@@ -120,8 +120,8 @@ structure AnticipatedEventSpec' (v) [Preorder v] (M) [instM:Machine CTX M] (α)
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x)
+    → (grd : guard m x)
+    → let m' := (action m x grd)
       variant m' ≤ variant m
 
 @[simp]
@@ -143,8 +143,8 @@ structure AnticipatedEventSpec'' (v) [Preorder v] (M) [instM:Machine CTX M]
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := (action m)
+    → (grd : guard m)
+    → let m' := (action m grd)
       variant m' ≤ variant m
 
 @[simp]
@@ -171,8 +171,8 @@ structure _ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M] 
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → let (_, m') := ev.action m x
+    → (grd : ev.guard m x)
+    → let (_, m') := ev.action m x grd
       variant m' < variant m
 
 /-- The type of deterministic convergent events.
@@ -188,8 +188,8 @@ private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M}
   (variant : M → v)
   (Hconv: ∀ (m : M) (x : α),
     Machine.invariant m
-    → ev.guard m x
-    → let m' := (ev.action m x).2
+    → (grd : ev.guard m x)
+    → let m' := (ev.action m x grd).2
       variant m' < variant m)
  : ConvergentEvent v M α β :=
  {
@@ -198,11 +198,12 @@ private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M}
   po := {
     safety := ev.po.safety
     variant := variant
-    nonIncreasing := fun m x => by simp
-                                   intros Hinv Hgrd
-                                   have Hconv' := Hconv m x Hinv Hgrd
-                                   apply le_of_lt
-                                   exact Hconv'
+    nonIncreasing := fun m x => by
+      simp
+      intros Hinv Hgrd
+      have Hconv' := Hconv m x Hinv Hgrd
+      apply le_of_lt
+      exact Hconv'
     convergence := Hconv
   }
  }
@@ -242,8 +243,8 @@ structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [instM:Mach
   /-- Proof obligation: the variant is strictly decreasing. -/
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
+    → (grd : guard m x)
+    → let m' := (action m x grd).2
       variant m' < variant m
 
 /-- Construction of a convergent deterministic event from a
@@ -256,8 +257,8 @@ def newConvergentEvent {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (e
 private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : AnticipatedEvent v M α β)
     (hconv : (m : M) → (x : α)
     → Machine.invariant m
-    → ev.guard m x
-    → let m' := (ev.action m x).2
+    → (grd : ev.guard m x)
+    → let m' := (ev.action m x grd).2
       ev.po.variant m' < ev.po.variant m) : ConvergentEvent v M α β :=
   {
     guard := ev.guard
@@ -276,8 +277,8 @@ structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Mac
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x)
+    → (grd : guard m x)
+    → let m' := (action m x grd)
       variant m' < variant m
 
 @[simp]
@@ -299,8 +300,8 @@ structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Ma
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := (action m)
+    → (grd : guard m)
+    → let m' := (action m grd)
       variant m' < variant m
 
 @[simp]
@@ -328,8 +329,8 @@ and convergent events (experimental, not documented).
 def mapAnticipatedEvent [Preorder v] [Machine CTX M] (f : α → β) (ev : AnticipatedEvent v M γ α) : AnticipatedEvent v M γ β :=
   newAnticipatedEvent {
     guard := ev.guard
-    action := fun m x => let (y, m') := ev.action m x
-                         (f y, m')
+    action := fun m x grd => let (y, m') := ev.action m x grd
+                             (f y, m')
     safety :=  ev.po.safety
     variant := ev.po.variant
     nonIncreasing := ev.po.nonIncreasing
@@ -346,8 +347,8 @@ instance [Preorder v] [Machine CTX M] : LawfulFunctor (AnticipatedEvent v M γ) 
 def mapConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (f : α → β) (ev : ConvergentEvent v M γ α) : ConvergentEvent v M γ β :=
   newConvergentEvent {
     guard := ev.guard
-    action := fun m x => let (y, m') := ev.action m x
-                         (f y, m')
+    action := fun m x grd => let (y, m') := ev.action m x grd
+                             (f y, m')
     safety :=  ev.po.safety
     variant := ev.po.variant
     convergence := ev.po.convergence
@@ -381,13 +382,16 @@ instance [Preorder v] [Machine CTX M]: ContravariantFunctor (CoAnticipatedEvent 
     guard := event.guard
     action := event.action
     po := {
-      safety := fun m x => by simp [ContravariantFunctor.contramap]
-                              intros Hinv Hgrd
-                              exact ev.po.safety m (f x) Hinv Hgrd
+      safety := fun m x => by
+        simp [ContravariantFunctor.contramap]
+        intros Hinv Hgrd
+        exact ev.po.safety m (f x) Hinv Hgrd
       variant := ev.po.variant
-      nonIncreasing := fun m x => by simp
-                                     intros Hinv Hgrd
-                                     apply ev.po.nonIncreasing <;> assumption
+      nonIncreasing := fun m x => by
+        simp
+        intros Hinv Hgrd
+        apply ev.po.nonIncreasing
+        assumption
     }
   }
 
@@ -419,10 +423,10 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: ContravariantFunctor (C
       variant := ev.po.variant
       nonIncreasing := fun m x => by simp
                                      intros Hinv Hgrd
-                                     apply ev.po.nonIncreasing <;> assumption
+                                     apply ev.po.nonIncreasing ; assumption
       convergence := fun m x => by simp
                                    intros Hinv Hgrd
-                                   apply ev.po.convergence <;> assumption
+                                   apply ev.po.convergence ; assumption
     }
   }
 
@@ -439,25 +443,27 @@ instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedEvent v M) where
       guard := fun m x => ev.guard m (f x)
       action := fun m x => event.action m x
       po := {
-        safety := fun m x => by simp [Profunctor.dimap]
-                                intros Hinv Hgrd
-                                let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
-                                let ev'' := g <$> ev'
-                                have Hsafe := ev''.po.safety m x Hinv
-                                revert Hsafe ev' ev'' ; simp
-                                intro Hsafe
-                                exact Hsafe Hgrd
+        safety := fun m x => by
+          simp [Profunctor.dimap]
+          intros Hinv Hgrd
+          let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
+          let ev'' := g <$> ev'
+          have Hsafe := ev''.po.safety m x Hinv
+          revert Hsafe ev' ev'' ; simp
+          intro Hsafe
+          exact Hsafe Hgrd
 
         variant := ev.po.variant
 
-        nonIncreasing := fun m x => by simp
-                                       intros Hinv Hgrd
-                                       let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
-                                       let ev'' := g <$> ev'
-                                       have Hni := ev''.po.nonIncreasing m x Hinv
-                                       revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
-                                       intro Hni
-                                       apply Hni ; exact Hgrd
+        nonIncreasing := fun m x => by
+          simp
+          intros Hinv Hgrd
+          let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
+          let ev'' := g <$> ev'
+          have Hni := ev''.po.nonIncreasing m x Hinv
+          revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
+          intro Hni
+          apply Hni
       }
     }
 
@@ -470,7 +476,7 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedEvent v M) 
     let event := StrongProfunctor.first' ev.to_Event
     {
       guard := fun m (x, y) => ev.guard m x ∧ event.guard m (x, y)
-      action := event.action
+      action := fun m (x, y) grd => event.action m (x, y) grd.2
       po := {
         safety := fun m x => by simp
                                 intros Hinv _
@@ -478,9 +484,10 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedEvent v M) 
 
         variant := ev.po.variant
 
-        nonIncreasing := fun m (x,y) => by simp
-                                           intro Hinv _
-                                           apply ev.po.nonIncreasing m x Hinv
+        nonIncreasing := fun m (x,y) => by
+          simp
+          intro Hinv _
+          apply ev.po.nonIncreasing m x Hinv
       }
     }
 
@@ -494,34 +501,37 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (Convergent
       guard := fun m x => ev.guard m (f x)
       action := fun m x => event.action m x
       po := {
-        safety := fun m x => by simp [Profunctor.dimap]
-                                intros Hinv Hgrd
-                                let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
-                                let ev'' := g <$> ev'
-                                have Hsafe := ev''.po.safety m x Hinv
-                                revert Hsafe ev' ev'' ; simp
-                                intro Hsafe
-                                exact Hsafe Hgrd
+        safety := fun m x => by
+          simp [Profunctor.dimap]
+          intros Hinv Hgrd
+          let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+          let ev'' := g <$> ev'
+          have Hsafe := ev''.po.safety m x Hinv
+          revert Hsafe ev' ev'' ; simp
+          intro Hsafe
+          exact Hsafe Hgrd
 
         variant := ev.po.variant
 
-        nonIncreasing := fun m x => by simp
-                                       intros Hinv Hgrd
-                                       let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
-                                       let ev'' := g <$> ev'
-                                       have Hni := ev''.po.nonIncreasing m x Hinv
-                                       revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
-                                       intro Hni
-                                       apply Hni ; exact Hgrd
+        nonIncreasing := fun m x => by
+          simp
+          intros Hinv Hgrd
+          let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+          let ev'' := g <$> ev'
+          have Hni := ev''.po.nonIncreasing m x Hinv
+          revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
+          intro Hni
+          apply Hni
 
-        convergence := fun m x => by simp
-                                     intros Hinv Hgrd
-                                     let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
-                                     let ev'' := g <$> ev'
-                                     have Hni := ev''.po.convergence m x Hinv
-                                     revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
-                                     intro Hni
-                                     apply Hni ; exact Hgrd
+        convergence := fun m x => by
+          simp
+          intros Hinv Hgrd
+          let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
+          let ev'' := g <$> ev'
+          have Hni := ev''.po.convergence m x Hinv
+          revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
+          intro Hni
+          apply Hni
       }
     }
 
@@ -534,20 +544,24 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
     let event := StrongProfunctor.first' ev.to_Event
     {
       guard := fun m (x, y) => ev.guard m x ∧ event.guard m (x, y)
-      action := event.action
+      action := fun m (x, y) grd => event.action m (x, y) grd.2
       po := {
-        safety := fun m x => by simp
-                                intros Hinv _
-                                apply ev.po.safety ; assumption
+        safety := fun m x => by
+          simp
+          intros Hinv _
+          apply ev.po.safety ; assumption
 
         variant := ev.po.variant
 
-        nonIncreasing := fun m (x,y) => by simp
-                                           intro Hinv _
-                                           apply ev.po.nonIncreasing m x Hinv
-        convergence := fun m (x,y) => by simp
-                                         intro Hinv _
-                                         apply ev.po.convergence m x Hinv
+        nonIncreasing := fun m (x,y) => by
+          simp
+          intro Hinv _
+          apply ev.po.nonIncreasing m x Hinv
+
+        convergence := fun m (x,y) => by
+          simp
+          intro Hinv _
+          apply ev.po.convergence m x Hinv
 
       }
     }

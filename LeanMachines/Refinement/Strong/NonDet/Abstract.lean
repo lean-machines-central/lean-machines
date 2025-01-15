@@ -14,8 +14,8 @@ structure AbstractSRNDEventSpec (AM) [Machine ACTX AM]
 
   step_inv (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ y, ∀ am', abstract.effect (lift m) x (y, am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ y, ∀ am', abstract.effect (lift m) x agrd (y, am')
                   → Machine.invariant (unlift m am')
 
 @[simp]
@@ -59,8 +59,8 @@ structure AbstractSRNDEventSpec' (AM) [Machine ACTX AM]
 
   step_inv (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ am', abstract.effect (lift m) x ((), am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ am', abstract.effect (lift m) x agrd ((), am')
              → Machine.invariant (unlift m am')
 
 @[simp]
@@ -85,8 +85,8 @@ structure AbstractSRNDEventSpec'' (AM) [Machine ACTX AM]
 
   step_inv (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → ∀ am', abstract.effect (lift m) () ((), am')
+    → (agrd : abstract.guard (lift m) ())
+    → ∀ am', abstract.effect (lift m) () agrd ((), am')
              → Machine.invariant (unlift m am')
 
 @[simp]
@@ -112,8 +112,8 @@ structure AbstractInitSRNDEventSpec (AM) [Machine ACTX AM]
       where
 
   step_inv (x : α):
-    abstract.guard x
-    → ∀ y, ∀ am', abstract.init x (y, am')
+    (agrd : abstract.guard x)
+    → ∀ y, ∀ am', abstract.init x agrd (y, am')
                   → Machine.invariant (unlift (Machine.reset (M:=M)) am')
 
 @[simp]
@@ -157,8 +157,8 @@ structure AbstractInitSRNDEventSpec' (AM) [Machine ACTX AM]
       where
 
   step_inv (x : α):
-    abstract.guard x
-    → ∀ am', abstract.init x ((), am')
+    (agrd : abstract.guard x)
+    → ∀ am', abstract.init x agrd ((), am')
              → Machine.invariant (unlift (Machine.reset (M:=M)) am')
 
 @[simp]
@@ -184,8 +184,8 @@ structure AbstractInitSRNDEventSpec'' (AM) [Machine ACTX AM]
       where
 
   step_inv:
-    abstract.guard ()
-    → ∀ am', abstract.init () ((), am')
+    (agrd : abstract.guard ())
+    → ∀ am', abstract.init () agrd ((), am')
              → Machine.invariant (unlift (Machine.reset (M:=M)) am')
 
 @[simp]

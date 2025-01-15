@@ -79,10 +79,10 @@ structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefin
     → abstract.guard (lift m) (lift_in x)
 
   simulation (m : M) (x : α):
-    Machine.invariant m
-    → guard m x
-    → let (y, m') := action m x
-      let (z, am') := abstract.action (lift m) (lift_in x)
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m x)
+    → let (y, m') := action m x Hgrd
+      let (z, am') := abstract.action (lift m) (lift_in x) (strengthening m x Hinv Hgrd)
       lift_out y = z ∧ am' = (lift m')
 
 
@@ -109,7 +109,7 @@ def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinem
       have Hsim := ev.simulation m x Hinv Hgrd
       simp at Hsim
       simp [refine] at Href
-      rw [Href]
+      simp [Href]
       exact Hsim
   }
 
@@ -130,10 +130,10 @@ structure FREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefi
     → abstract.guard (lift m) (lift_in x)
 
   simulation (m : M) (x : α):
-    Machine.invariant m
-    → guard m x
-    → let m' := action m x
-      let ((), am') := abstract.action (lift m) (lift_in x)
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m x)
+    → let m' := action m x Hgrd
+      let ((), am') := abstract.action (lift m) (lift_in x) (strengthening m x Hinv Hgrd)
       am' = (lift m')
 
 @[simp]
@@ -163,10 +163,10 @@ structure FREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRef
     → abstract.guard (lift m) ()
 
   simulation (m : M):
-    Machine.invariant m
-    → guard m
-    → let m' := action m
-      let ((), am') := abstract.action (lift m) ()
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m)
+    → let m' := action m Hgrd
+      let ((), am') := abstract.action (lift m) () (strengthening m Hinv Hgrd)
       am' = (lift m')
 
 @[simp]
@@ -181,7 +181,7 @@ def FREventSpec''.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement A
     simulation := fun m () => by
       simp
       intros Hinv Hgrd
-      apply ev.simulation <;> assumption
+      apply ev.simulation ; assumption
   }
 
 @[simp]
@@ -204,9 +204,9 @@ structure InitFREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FR
     → abstract.guard (lift_in x)
 
   simulation (x : α):
-    guard x
-    → let (y, m') := init x
-      let (z, am') := abstract.init (lift_in x)
+    (Hgrd : guard x)
+    → let (y, m') := init x Hgrd
+      let (z, am') := abstract.init (lift_in x) (strengthening x Hgrd)
       lift_out y = z ∧ am' = lift m'
 
 @[simp]
@@ -227,7 +227,6 @@ def InitFREventSpec.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: 
       simp [Hsim]
       apply lift_ref
       apply ev.safety
-      assumption
   }
 
 @[simp]
@@ -246,9 +245,9 @@ structure InitFREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: F
     → abstract.guard (lift_in x)
 
   simulation (x : α):
-    guard x
-    → let m' := init x
-      let ((), am') := abstract.init (lift_in x)
+    (Hgrd : guard x)
+    → let m' := init x Hgrd
+      let ((), am') := abstract.init (lift_in x) (strengthening x Hgrd)
       am' = lift m'
 
 @[simp]
@@ -263,7 +262,7 @@ def InitFREventSpec'.toInitFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefin
     simulation := fun x => by
       simp
       intros Hgrd
-      apply ev.simulation ; assumption
+      apply ev.simulation
   }
 
 @[simp]
@@ -280,9 +279,9 @@ structure InitFREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: 
     → abstract.guard ()
 
   simulation:
-    guard
-    → let m' := init
-      let ((), am') := abstract.init ()
+    (Hgrd : guard)
+    → let m' := init Hgrd
+      let ((), am') := abstract.init () (strengthening Hgrd)
       am' = lift m'
 
 @[simp]
@@ -297,7 +296,7 @@ def InitFREventSpec''.toInitFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefi
     simulation := fun () => by
       simp
       intros Hgrd
-      apply ev.simulation ; assumption
+      apply ev.simulation
   }
 
 @[simp]

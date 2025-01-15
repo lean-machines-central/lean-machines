@@ -98,15 +98,15 @@ structure AbstractREventSpec (AM) [Machine ACTX AM]
   /-- Proof obligation: lifting, then unlifting is safe wrt. the `refine` invariant. -/
   step_ref (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → let (_, am') := abstract.action (lift m) x
+    → (agrd : abstract.guard (lift m) x)
+    → let (_, am') := abstract.action (lift m) x agrd
       refine am' (unlift (lift m) am' m x)
 
   /-- Proof obligation: invariant preservation of the abstract event. -/
   step_safe (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → let (_, am') := abstract.action (lift m) x
+    → (agrd : abstract.guard (lift m) x)
+    → let (_, am') := abstract.action (lift m) x agrd
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift (lift m) am' m x)
 
@@ -117,9 +117,10 @@ Parameter `ev` is the reuse specification (cf. `AbstractREventSpec`). -/
 def newAbstractREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
   (abs : OrdinaryEvent AM α β) (ev : AbstractREventSpec AM M abs) : OrdinaryREvent AM M α β :=
   { guard := fun (m : M) (x : α) => abs.guard (ev.lift m) x
-    action := fun (m : M) (x : α) => let am := ev.lift m
-                                     let (y, am') := abs.action am x
-                                     (y, ev.unlift am am' m x)
+    action := fun (m : M) (x : α) grd =>
+      let am := ev.lift m
+      let (y, am') := abs.action am x grd
+      (y, ev.unlift am am' m x)
     po := {
       safety := fun (m : M) (x : α) => by
         simp
@@ -134,23 +135,23 @@ def newAbstractREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
 
       abstract := abs.to_Event
 
-      strengthening := fun m x => by simp
-                                     intros Hinv Hgrd am Href
-                                     have Href' := ev.lift_ref m Hinv
-                                     have Ham: am = ev.lift m := by
-                                       apply ev.refine_uniq am (ev.lift m) m <;> assumption
-                                     rw [Ham]
-                                     assumption
+      strengthening := fun m x => by
+        simp
+        intros Hinv Hgrd am Href
+        have Href' := ev.lift_ref m Hinv
+        have Ham: am = ev.lift m := by
+          apply ev.refine_uniq am (ev.lift m) m <;> assumption
+        rw [Ham]
+        assumption
 
-      simulation := fun m x => by simp
-                                  intros Hinv Hgrd am Href
-                                  have Href' := ev.lift_ref m Hinv
-                                  have Ham: am = ev.lift m := by
-                                    apply ev.refine_uniq am (ev.lift m) m <;> assumption
-                                  rw [Ham]
-                                  constructor
-                                  · simp
-                                  apply ev.step_ref m x Hinv Hgrd
+      simulation := fun m x => by
+        simp
+        intros Hinv Hgrd am Href
+        have Href' := ev.lift_ref m Hinv
+        have Ham: am = ev.lift m := by
+          apply ev.refine_uniq am (ev.lift m) m <;> assumption
+        simp [Ham]
+        apply ev.step_ref m x Hinv Hgrd
     }
   }
 
@@ -177,14 +178,14 @@ structure AbstractREventSpec'' (AM) [Machine ACTX AM]
 
   step_ref (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → let ((), am') := abstract.action (lift m) ()
+    → (agrd : abstract.guard (lift m) ())
+    → let ((), am') := abstract.action (lift m) () agrd
       refine am' (unlift (lift m) am' m)
 
   step_safe (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → let (_, am') := abstract.action (lift m) ()
+    → (agrd : abstract.guard (lift m) ())
+    → let (_, am') := abstract.action (lift m) () agrd
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift (lift m) am' m)
 
@@ -220,14 +221,14 @@ structure AbstractInitREventSpec (AM) [Machine ACTX AM]
 
   /-- Proof obligation: unlifting abstract state change is safe wrt. the `refine` invariant. -/
   step_ref (x : α):
-    abstract.guard x
-    → let (_, am') := abstract.init x
+    (agrd : abstract.guard x)
+    → let (_, am') := abstract.init x agrd
       refine am' (unlift Machine.reset am' Machine.reset x)
 
   /-- Proof obligation: invariant preservation of the abstract event. -/
   step_safe (x : α):
-    abstract.guard x
-    → let (_, am') := abstract.init x
+    (agrd : abstract.guard x)
+    → let (_, am') := abstract.init x agrd
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
@@ -236,8 +237,8 @@ def AbstractInitREventSpec.to_InitEvent [Machine ACTX AM] [Machine CTX M] [Refin
   (abs : InitEvent AM α β) (ev : AbstractInitREventSpec AM M abs) : _InitEvent M α β :=
   {
     guard := fun x => abs.guard x
-    init := fun x => let (y, am') := abs.init x
-                     (y, ev.unlift Machine.reset am' Machine.reset x)
+    init := fun x grd => let (y, am') := abs.init x grd
+                         (y, ev.unlift Machine.reset am' Machine.reset x)
   }
 
 /-- The construction of a reused abstract initialization event.
@@ -280,13 +281,13 @@ structure AbstractInitREventSpec'' (AM) [Machine ACTX AM]
        extends _AbstractREventSpec'' AM M where
 
   step_ref:
-    abstract.guard ()
-    → let ((), am') := abstract.init ()
+    (agrd : abstract.guard ())
+    → let ((), am') := abstract.init () agrd
       refine am' (unlift Machine.reset am' Machine.reset)
 
   step_safe :
-    abstract.guard ()
-    → let ((), am') := abstract.init ()
+    (agrd : abstract.guard ())
+    → let ((), am') := abstract.init () agrd
       Machine.invariant am' -- redundant but useful
       → Machine.invariant (unlift Machine.reset am' Machine.reset)
 
@@ -324,8 +325,8 @@ structure AbstractAnticipatedREventSpec
   /-- Proof obligation: the abstract variant is preserved at the concrete level. -/
   step_variant (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → let (_, am') := abstract.action (lift m) x
+    → (agrd : abstract.guard (lift m) x)
+    → let (_, am') := abstract.action (lift m) x agrd
       Machine.invariant am' -- redundant but useful
       → abstract.po.variant (lift (unlift (lift m) am' m x))
       = abstract.po.variant am'
@@ -386,8 +387,8 @@ structure AbstractAnticipatedREventSpec''
 
   step_variant (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → let ((), am') := abstract.action (lift m) ()
+    → (agrd : abstract.guard (lift m) ())
+    → let ((), am') := abstract.action (lift m) () agrd
       Machine.invariant am' -- redundant but useful
       → abstract.po.variant (lift (unlift (lift m) am' m))
       = abstract.po.variant am'

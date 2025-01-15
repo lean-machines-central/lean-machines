@@ -70,21 +70,6 @@ inductive EventKind where
 
 open EventKind
 
-/-- The common root of all event representations.
-This simply defines the notion of a guard. -/
-structure _EventRoot (M) [Machine CTX M] (α : Type) where
-  guard : M → α → Prop := fun _ _ => True
-
-theorem ext_EventRoot [Machine CTX M] (ev1 ev2 : _EventRoot M α):
-  ev1.guard = ev2.guard
-  → ev1 = ev2 :=
-by
-  intro H
-  cases ev1
-  cases ev2
-  simp [*] at *
-  simp [*]
-
 /-!
 ## Deterministic events (internal representation)
 -/
@@ -94,42 +79,71 @@ with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 This extends `_EventRoot` with a notion of (deterministic/functional) action.
 .-/
-structure _Event (M) [Machine CTX M] (α) (β : Type)
-  extends _EventRoot M α where
+@[ext]
+structure _Event (M) [Machine CTX M] (α : Type) (β : Type) where
+  guard (m : M) (x : α) : Prop := True
+  action (m : M) (x : α) (grd : guard m x): (β × M)
 
-  action (m : M) (x : α): (β × M)
+theorem _Guard_ext [Machine CTX M] (guard₁ : M → α → Prop) (guard₂ : M → α → Prop):
+  (∀ m x, guard₁ m x = guard₂ m x)
+  → guard₁ = guard₂ :=
+by
+  intro H
+  funext m x
+  exact H m x
 
- -- Note : a possible alternative would be to require
-  --  the guard to hold, implicitly, something like:
-  -- `action (m : M) (x : α) {grd: guard m x}: (β × M)`
-  -- However, this does not work well in practice, at least
-  -- with this alternative.
+theorem _Guard_coext [Machine CTX M] (guard₁ : M → α → Prop) (guard₂ : M → α → Prop):
+  guard₁ = guard₂
+  → ∀ m x, guard₁ m x = guard₂ m x
+ :=
+by
+  intro H
+  intros m x
+  exact congrFun (congrFun H m) x
+
+/- XXX : does this axiom breaks something ?
+         (I don't think it's provable because of HEq) -/
+axiom _Action_ext_ax {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _Event M α β):
+   (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
+   → HEq ev₁.action ev₂.action
+
+theorem _Event.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: _Event M α β):
+  (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
+  → ev₁ = ev₂ :=
+by
+  intros H
+  have Hax := _Action_ext_ax ev₁ ev₂
+  cases ev₁
+  case mk g₁ act₁ =>
+    cases ev₂
+    case mk g₂ act₂ =>
+      simp at*
+      constructor
+      case left =>
+        apply _Guard_ext
+        intros m x
+        have Hg := (H m x).1
+        exact propext Hg
+      case right =>
+        exact Hax H
 
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 .-/
+@[ext]
 structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
-  guard : α → Prop
-  init: α → (β × M)
+  guard (x : α) : Prop := True
+  init (x : α) (grd : guard x) : (β × M)
 
 @[simp]
-def _InitEvent.to_Event [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
+def _InitEvent.to_Event [DecidableEq M] [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
   {
-    guard := fun m x => m = Machine.reset ∧ ev.guard x
-    action := fun _ x => ev.init x
+    guard := fun m x => m == Machine.reset ∧ ev.guard x
+    action := fun m x grd => ev.init x (by simp at grd ; apply grd.2)
   }
-
-theorem ext_Event [Machine CTX M] (ev1 ev2 : _Event M α β):
-  ev1.guard = ev2.guard → ev1.action = ev2.action
-  → ev1 = ev2 :=
-by
-  intro H₁ H₂
-  have Hr := ext_EventRoot ev1.to_EventRoot ev2.to_EventRoot H₁
-  cases ev1
-  cases ev2
-  simp [*] at *
-  simp [*]
 
 /-- The deterministic skip event, that does nothing.
 Note that the output type must match the input type,
@@ -138,7 +152,7 @@ Note that the output type must match the input type,
 @[simp]
 def skip_Event (M) [Machine CTX M] (α) : _Event M α α :=
 {
-  action := fun m x => (x, m)
+  action := fun m x _ => (x, m)
 }
 
 /-- Any type-theoretic function can be lifted to the
@@ -146,14 +160,14 @@ status of a (non-guarded) event. -/
 @[simp]
 def fun_Event  (M) [Machine CTX M] (f : α → β) : _Event M α β :=
 {
-  action := fun m x => (f x, m)
+  action := fun m x _ => (f x, m)
 }
 
 /-- This allows to lift a "stateful" function. -/
 @[simp]
 def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : _Event M α β :=
 {
-  action := fun m x => (xf m x, m)
+  action := fun m x _ => (xf m x, m)
 }
 
 /-!
@@ -171,77 +185,97 @@ This part is rather experimental and is thus not fully documented yet.
 
 def map_Event [Machine CTX M] (f : α → β) (ev : _Event M γ α)  : _Event M γ β :=
   { guard := ev.guard
-    action := fun m x => let (y, m') := (ev.action m x)
-                         (f y, m')
+    action := fun m x grd => let (y, m') := (ev.action m x grd)
+                             (f y, m')
    }
 
 instance [Machine CTX M]: Functor (_Event M γ) where
   map := map_Event
 
 instance [Machine CTX M]: LawfulFunctor (_Event M γ) where
-  map_const := by intros α β
-                  simp [Functor.mapConst, Functor.map]
-  id_map := by intros α ev
-               simp [Functor.map, map_Event]
-  comp_map := by intros α _ γ g h x
-                 simp [Functor.map, map_Event]
+  map_const := by
+    intros α β
+    simp [Functor.mapConst, Functor.map]
+  id_map := by
+    intros α ev
+    simp [Functor.map, map_Event]
+  comp_map := by
+    intros α _ γ g h x
+    simp [Functor.map, map_Event]
 
 /- Applicative Functor -/
 
 @[simp]
 def pure_Event [Machine CTX M] (y : α) : _Event M γ α :=
   {
-    action := fun m _ => (y, m)
+    action := fun m _ _ => (y, m)
   }
 
 instance [Machine CTX M]: Pure (_Event M γ) where
   pure := pure_Event
 
-/- XXX : this one does not respect seq_pure -/
-def apply_Event_bad [Machine CTX M] (ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
-  {
-    guard := fun m x => ef.guard m x ∧ ev.guard m x
-    action := fun m x => let (f, _) := ef.action m x
-                         let (y, m'') := ev.action m x
-                         (f y, m'')
-  }
-
 def apply_Event [Machine CTX M] ( ef : _Event M γ (α → β)) (ev : _Event M γ α) : _Event M γ β :=
   {
-    guard := fun m x => ef.guard m x ∧ ev.guard (ef.action m x).snd x
-    action := fun m x => let (f, m') := ef.action m x
-                         let (y, m'') := ev.action m' x
-                         (f y, m'')
+    guard := fun m x => ef.guard m x ∧ ((efg : ef.guard m x)
+                                         →  ev.guard (ef.action m x efg).snd x)
+    action := fun m x grd => let (y, m'') := ev.action (ef.action m x grd.1).2 x (grd.2 grd.1)
+                             ((ef.action m x grd.1).1 y, m'')
   }
 
 instance [Machine CTX M]: Applicative (_Event M γ) where
   seq ef ev := apply_Event ef (ev ())
+
+theorem Pure_seq_aux [Machine CTX M] (g : α → β) (ev : _Event M γ α):
+  apply_Event (pure g) ev = map_Event g ev :=
+by
+  apply _Event.ext'
+  intros m x
+  simp [apply_Event, pure, map_Event]
+
 
 instance [Machine CTX M]: LawfulApplicative (_Event M γ) where
   map_const := by intros ; rfl
   id_map := by intros ; rfl
   seqLeft_eq := by intros ; rfl
   seqRight_eq := by intros ; rfl
-  pure_seq := by intros α β g x
-                 simp [Seq.seq, Functor.map, map_Event, pure, pure_Event, apply_Event]
+  pure_seq := by
+    intros α β g ev
+    simp [pure, Seq.seq, Functor.map]
+    apply Pure_seq_aux
+
   map_pure := by intros α β g x ; rfl
-  seq_pure := by intros α β ev x
-                 simp [Seq.seq, pure, Functor.map, map_Event, apply_Event]
-  seq_assoc := by intros α β γ' ev g h
-                  simp [Seq.seq, Functor.map, map_Event, apply_Event]
-                  funext m y
-                  rw [And_eq_assoc]
+  seq_pure := by
+    intros α β ev x
+    simp [Seq.seq, Functor.map, pure]
+    apply _Event.ext'
+    simp [apply_Event, map_Event]
+
+  seq_assoc := by
+    intros α β γ' ev g h
+    simp [Functor.map, Seq.seq]
+    apply _Event.ext
+    case guard =>
+      simp [apply_Event, map_Event]
+      funext m x
+      refine propext ?_
+      constructor <;> intro H <;> simp [H]
+    case action =>
+      apply _Action_ext_ax
+      intros m x
+      simp [apply_Event, map_Event]
+      constructor <;> intro H <;> simp [H]
 
 /- Monad -/
 
 def bind_Event [Machine CTX M] (ev : _Event M γ α) (f : α → _Event M γ β) : _Event M γ β :=
   {
-    guard := fun m x => ev.guard m x ∧ let (y, m') := ev.action m x
-                                       let ev' := f y
-                                       ev'.guard m' x
-    action := fun m x => let (y, m') := ev.action m x
-                         let ev' := f y
-                         ev'.action m' x
+    guard := fun m x => ev.guard m x ∧
+                        ((grd : ev.guard m x) →
+                          (f (ev.action m x grd).1).guard (ev.action m x grd).2 x)
+
+    action := fun m x grd =>
+      (f (ev.action m x grd.1).1).action (ev.action m x grd.1).2 x (grd.2 grd.1)
+
   }
 
 
@@ -249,15 +283,35 @@ instance [Machine CTX M]: Monad (_Event M γ) where
   bind := bind_Event
 
 instance [Machine CTX M]: LawfulMonad (_Event M γ) where
-  bind_pure_comp := by intros α β f ev
-                       simp [pure, Functor.map, pure_Event, map_Event, bind, bind_Event]
+  bind_pure_comp := by
+    intros α β f ev
+    simp [pure, Functor.map, bind]
+    apply _Event.ext'
+    intros m x
+    simp [bind_Event, map_Event]
+
   bind_map := by simp [bind] ; intros ; rfl
-  pure_bind := by intros _ β x f
-                  simp [pure, bind, bind_Event]
-  bind_assoc := by intros β γ' x f g h
-                   simp [bind, bind_Event]
-                   funext
-                   apply And_eq_assoc
+
+  pure_bind := by
+    intros α β x f
+    simp [pure, bind]
+    apply _Event.ext'
+    intros m y
+    simp [bind_Event]
+
+  bind_assoc := by
+    intros β γ' x f g h
+    simp [bind]
+    apply _Event.ext
+    case guard =>
+      funext m x
+      simp [bind_Event]
+      constructor <;> intro H <;> simp [H]
+    case action =>
+      apply _Action_ext_ax
+      intros m x
+      simp [bind_Event]
+      constructor <;> intro H <;> simp [H]
 
 /- arrows -/
 
@@ -282,21 +336,40 @@ instance [Machine CTX M]: Category (_Event M) where
   id := fun_Event M id
 
   comp {α β γ} (ev₂ : _Event M β γ) (ev₁ : _Event M α β) : _Event M α γ :=
-    { guard := fun m x => ev₁.guard m x ∧ let (y, m') := ev₁.action m x
-                                          ev₂.guard m' y
-      action := fun m x => let (y, m') := ev₁.action m x
-                           ev₂.action m' y
+    { guard := fun m x => ev₁.guard m x ∧
+                          ((grd : ev₁.guard m x) →  let (y, m') := ev₁.action m x grd
+                                          ev₂.guard m' y)
+      action := fun m x grd => ev₂.action (ev₁.action m x grd.1).2 (ev₁.action m x grd.1).1 (grd.2 grd.1)
     }
 
 instance [Machine CTX M]: LawfulCategory (_Event M) where
-  id_right _ := by simp
-  id_left _ := by simp
-  id_assoc _ _ _ := by simp ; funext m x ; apply And_eq_assoc
+  id_right ev := by
+    apply _Event.ext
+    case guard => simp
+    case action => apply _Action_ext_ax ; intros ; simp
+
+  id_left ev := by
+    apply _Event.ext
+    case guard => simp
+    case action => apply _Action_ext_ax ; intros ; simp
+
+  id_assoc ev₁ ev₂ ev₃ := by
+    apply _Event.ext
+    case guard =>
+      simp
+      funext m x
+      simp
+      constructor <;> intro H <;> simp [H]
+    case action =>
+      apply _Action_ext_ax
+      intros m x
+      simp
+      constructor <;> intro H <;> simp [H]
 
 @[simp]
 def _Event_Arrow_first [Machine CTX M] (ev : _Event M α β) : _Event M (α × γ) (β × γ) :=
   { guard := fun m (x, _) => ev.guard m x
-    action := fun m (x, y) => let (x', m') := ev.action m x
+    action := fun m (x, y) grd => let (x', m') := ev.action m x grd
                               ((x',y), m')
   }
 
@@ -315,13 +388,13 @@ instance [Machine CTX M]: Arrow (_Event M) where
 instance [Machine CTX M]: Arrow (_Event M) where
   arrow {α β} (f : α → β) := {
     guard := fun _ _ => True
-    action := fun m x => (f x, m)
+    action := fun m x _ => (f x, m)
   }
 
   split {α α' β β'} (ev₁ : _Event M α β)  (ev₂ : _Event M α' β') : _Event M (α × α') (β × β') := {
     guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
-    action := fun m (x, y) => let (x',m') := ev₁.action m x
-                              let (y', _) := ev₂.action m y
+    action := fun m (x, y) grd => let (x',m') := ev₁.action m x grd.1
+                              let (y', _) := ev₂.action m y grd.2
                               -- note : we forget the second state change
                               ((x', y'), m')
   }
@@ -330,12 +403,21 @@ instance [Machine CTX M]: Arrow (_Event M) where
 
 instance [Machine CTX M]: LawfulArrow (_Event M) where
   arrow_id := by simp [Arrow.arrow]
-  arrow_ext _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_fun _ _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_xcg _ _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_unit _ := by simp [Arrow.arrow, Arrow.first]
-  arrow_assoc {α β γ δ} (f : _Event M α β) :=
-    by simp [Arrow.arrow, Arrow.first]
+  arrow_ext _ := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_fun _ _ := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_xcg _ _ := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_unit _ := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_assoc {α β γ δ} (f : _Event M α β) := by
+    apply _Event.ext'
+    simp [Arrow.arrow, Arrow.first]
 
 /- ContravariantFunctor functor -/
 
@@ -375,8 +457,8 @@ instance [Machine CTX M] : StrongProfunctor (_Event M) where
   first' {α β γ} (ev : _Event M α β): _Event M (α × γ) (β × γ) :=
     {
       guard := fun m (x, _) => ev.guard m x
-      action := fun m (x, y) => let (x', m') := ev.action m x
-                                ((x', y), m')
+      action := fun m (x, y) grd => let (x', m') := ev.action m x grd
+                                    ((x', y), m')
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (_Event M) where
@@ -393,9 +475,9 @@ def altEvent [Machine CTX M] (evl : _Event M α α') (evr : _Event M β β')
     guard := fun m x => match x with
                         | left l => evl.guard m l
                         | right r => evr.guard m r
-    action := fun m x => match x with
-                        | left l => let (y, m') := evl.action m l
+    action := fun m x grd => match x with
+                        | left l => let (y, m') := evl.action m l grd
                                     (left y, m')
-                        | right r => let (y, m') := evr.action m r
+                        | right r => let (y, m') := evr.action m r grd
                                     (right y, m')
   }

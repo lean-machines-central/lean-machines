@@ -12,8 +12,8 @@ structure AnticipatedFREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [in
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
+    → (grd : guard m x)
+    → let m' := (action m x grd).2
       variant m' ≤ variant m
 
 @[simp]
@@ -36,8 +36,8 @@ structure AnticipatedFREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [i
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       variant m' ≤ variant m
 
 @[simp]
@@ -60,8 +60,8 @@ structure AnticipatedFREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' ≤ variant m
 
 @[simp]
@@ -99,8 +99,8 @@ structure ConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := (action m x).2
+    → (grd : guard m x)
+    → let m' := (action m x grd).2
       variant m' < variant m
 
 @[simp]
@@ -123,8 +123,8 @@ structure ConvergentFREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machin
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → let m' := action m x
+    → (grd : guard m x)
+    → let m' := action m x grd
       variant m' < variant m
 
 @[simp]
@@ -147,8 +147,8 @@ structure ConvergentFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machi
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → let m' := action m
+    → (grd : guard m)
+    → let m' := action m grd
       variant m' < variant m
 
 @[simp]

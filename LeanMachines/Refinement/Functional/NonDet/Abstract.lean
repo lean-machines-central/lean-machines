@@ -18,14 +18,14 @@ structure AbstractFRNDEventSpec (AM) [Machine ACTX AM]
 
   step_ref (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ y, ∀ am', abstract.effect (lift m) x (y, am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ y, ∀ am', abstract.effect (lift m) x agrd (y, am')
                   → refine am' (unlift (lift m) am' m x)
 
   step_safe (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ y, ∀ am', abstract.effect (lift m) x (y, am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ y, ∀ am', abstract.effect (lift m) x agrd (y, am')
                   → Machine.invariant (unlift (lift m) am' m x)
 
   lift_unlift (m : M) (am am' : AM) (x : α):
@@ -55,14 +55,14 @@ structure AbstractFRNDEventSpec' (AM) [Machine ACTX AM]
 
   step_ref (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ am', abstract.effect (lift m) x ((), am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ am', abstract.effect (lift m) x agrd ((), am')
              → refine am' (unlift (lift m) am' m x)
 
   step_safe (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → ∀ am', abstract.effect (lift m) x ((), am')
+    → (agrd : abstract.guard (lift m) x)
+    → ∀ am', abstract.effect (lift m) x agrd ((), am')
               → Machine.invariant (unlift (lift m) am' m x)
 
   lift_unlift (m : M) (am am' : AM) (x : α):
@@ -98,14 +98,14 @@ structure AbstractFRNDEventSpec'' (AM) [Machine ACTX AM]
 
   step_ref (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → ∀ am', abstract.effect (lift m) () ((), am')
+    → (agrd : abstract.guard (lift m) ())
+    → ∀ am', abstract.effect (lift m) () agrd ((), am')
              → refine am' (unlift (lift m) am' m)
 
   step_safe (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → ∀ am', abstract.effect (lift m) () ((), am')
+    → (agrd : abstract.guard (lift m) ())
+    → ∀ am', abstract.effect (lift m) () agrd ((), am')
               → Machine.invariant (unlift (lift m) am' m)
 
   lift_unlift (m : M) (am am' : AM):
@@ -140,13 +140,13 @@ structure AbstractInitFRNDEventSpec (AM) [Machine ACTX AM]
           extends _AbstractFREventSpec AM M α where
 
   step_ref (x : α):
-    abstract.guard x
-    → ∀ y, ∀ am', abstract.init x (y, am')
+    (agrd : abstract.guard x)
+    → ∀ y, ∀ am', abstract.init x agrd (y, am')
                   → refine am' (unlift Machine.reset am' Machine.reset x)
 
   step_safe (x : α):
-    abstract.guard x
-    → ∀ y, ∀ am', abstract.init x (y, am')
+    (agrd : abstract.guard x)
+    → ∀ y, ∀ am', abstract.init x agrd (y, am')
                   → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
   lift_unlift (am' : AM) (x : α):
@@ -175,13 +175,13 @@ structure AbstractInitFRNDEventSpec' (AM) [Machine ACTX AM]
           extends _AbstractFREventSpec AM M α where
 
   step_ref (x : α):
-    abstract.guard x
-    → ∀ am', abstract.init x ((), am')
+    (agrd : abstract.guard x)
+    → ∀ am', abstract.init x agrd ((), am')
              → refine am' (unlift Machine.reset am' Machine.reset x)
 
   step_safe (x : α):
-    abstract.guard x
-    → ∀ am', abstract.init x ((), am')
+    (agrd : abstract.guard x)
+    → ∀ am', abstract.init x agrd ((), am')
              → Machine.invariant (unlift Machine.reset am' Machine.reset x)
 
   lift_unlift (am' : AM) (x : α):
@@ -216,13 +216,13 @@ structure AbstractInitFRNDEventSpec'' (AM) [Machine ACTX AM]
           extends _AbstractFREventSpec'' AM M where
 
   step_ref:
-    abstract.guard ()
-    → ∀ am', abstract.init () ((), am')
+    (agrd : abstract.guard ())
+    → ∀ am', abstract.init () agrd ((), am')
              → refine am' (unlift Machine.reset am' Machine.reset)
 
   step_safe:
-    abstract.guard ()
-    → ∀ am', abstract.init () ((), am')
+    (agrd : abstract.guard ())
+    → ∀ am', abstract.init () agrd ((), am')
              → Machine.invariant (unlift Machine.reset am' Machine.reset)
 
   lift_unlift (am' : AM):

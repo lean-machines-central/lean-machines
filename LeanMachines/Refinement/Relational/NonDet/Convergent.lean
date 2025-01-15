@@ -25,8 +25,8 @@ structure _AnticipatedRNDEventPO (v) [Preorder v]  [Machine ACTX AM] [instM:Mach
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → ∀ y, ∀ m', ev.effect m x (y, m')
+    → (grd : ev.guard m x)
+    → ∀ y, ∀ m', ev.effect m x grd (y, m')
                 → variant m' ≤ variant m
 
 /-- The representation of anticipated non-deterministic refined events, constructed
@@ -72,8 +72,8 @@ structure AnticipatedRNDEventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [i
   /-- Proof obligation: the variant does not increases. -/
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m', effect m x grd (y, m')
                  → variant m' ≤ variant m
 
 @[simp]
@@ -117,8 +117,8 @@ structure AnticipatedRNDEventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [
 
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
+    → (grd : guard m x)
+    → ∀ m', effect m x grd m'
             → variant m' ≤ variant m
 
 @[simp]
@@ -150,8 +150,8 @@ structure AnticipatedRNDEventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) 
 
   nonIncreasing (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
+    → (grd : guard m)
+    → ∀ m', effect m grd m'
             → variant m' ≤ variant m
 
 @[simp]
@@ -187,8 +187,8 @@ structure _ConvergentRNDEventPO (v) [Preorder v] [WellFoundedLT v]  [Machine ACT
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → ev.guard m x
-    → ∀ y, ∀ m', ev.effect m x (y, m')
+    → (grd : ev.guard m x)
+    → ∀ y, ∀ m', ev.effect m x grd (y, m')
                 → variant m' < variant m
 
 /-- The representation of convergent non-deterministic refined events, constructed
@@ -236,8 +236,8 @@ structure ConvergentRNDEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machin
   /-- Proof obligation: the variant strictly decreases. -/
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ y, ∀ m', effect m x (y, m')
+    → (grd : guard m x)
+    → ∀ y, ∀ m', effect m x grd (y, m')
                  → variant m' < variant m
 
 /-- Smart constructor for convergent non-deterministic refined event,
@@ -272,8 +272,8 @@ structure ConvergentRNDEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machi
 
   convergence (m : M) (x : α):
     Machine.invariant m
-    → guard m x
-    → ∀ m', effect m x m'
+    → (grd : guard m x)
+    → ∀ m', effect m x grd m'
             → variant m' < variant m
 
 @[simp]
@@ -299,8 +299,8 @@ structure ConvergentRNDEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Mach
 
   convergence (m : M):
     Machine.invariant m
-    → guard m
-    → ∀ m', effect m m'
+    → (grd : guard m)
+    → ∀ m', effect m grd m'
             → variant m' < variant m
 
 @[simp]

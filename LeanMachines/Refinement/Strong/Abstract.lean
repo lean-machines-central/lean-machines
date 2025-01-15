@@ -19,8 +19,8 @@ structure AbstractSREventSpec (AM) [Machine ACTX AM]
 
   step_inv (m : M) (x : α):
     Machine.invariant m
-    → abstract.guard (lift m) x
-    → Machine.invariant (unlift m (abstract.action (lift m) x).2)
+    → (agrd : abstract.guard (lift m) x)
+    → Machine.invariant (unlift m (abstract.action (lift m) x agrd).2)
 
 @[simp]
 def AbstractSREventSpec.toAbstractFREventSpec [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
@@ -66,8 +66,8 @@ structure AbstractSREventSpec'' (AM) [Machine ACTX AM]
 
   step_inv (m : M):
     Machine.invariant m
-    → abstract.guard (lift m) ()
-    → Machine.invariant (unlift m (abstract.action (lift m) x).2)
+    → (agrd : abstract.guard (lift m) ())
+    → Machine.invariant (unlift m (abstract.action (lift m) x agrd).2)
 
 @[simp]
 def AbstractSREventSpec''.toAbstractSREventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
@@ -90,8 +90,8 @@ structure AbstractInitSREventSpec (AM) [Machine ACTX AM]
           where
 
   step_inv (x : α):
-    abstract.guard x
-    → Machine.invariant (unlift (self:=instSR) Machine.reset (abstract.init x).2)
+    (agrd : abstract.guard x)
+    → Machine.invariant (unlift (self:=instSR) Machine.reset (abstract.init x agrd).2)
 
 @[simp]
 def AbstractInitSREventSpec.toAbstractInitFREventSpec [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
@@ -105,8 +105,8 @@ def AbstractInitSREventSpec.toAbstractInitFREventSpec [Machine ACTX AM] [Machine
       intros Hgrd
       have Hainv := abstract.po.safety x Hgrd
       have Hsi := ev.step_inv x Hgrd
-      have Href := lift_ref (AM:=AM) (unlift Machine.reset (abstract.init x).2) Hsi
-      have Hlu := lu_reset (self:=instSR) (abstract.init x).2 Hainv
+      have Href := lift_ref (AM:=AM) (unlift Machine.reset (abstract.init x Hgrd).2) Hsi
+      have Hlu := lu_reset (self:=instSR) (abstract.init x Hgrd).2 Hainv
       rw [Hlu] at Href
       assumption
 
@@ -136,8 +136,8 @@ structure AbstractInitSREventSpec'' (AM) [Machine ACTX AM]
           where
 
   step_inv:
-    abstract.guard ()
-    → Machine.invariant (unlift (self:=instSR) Machine.reset (abstract.init ()).2)
+    (agrd : abstract.guard ())
+    → Machine.invariant (unlift (self:=instSR) Machine.reset (abstract.init () agrd).2)
 
 @[simp]
 def AbstractInitSREventSpec''.toAbstractInitSREventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
