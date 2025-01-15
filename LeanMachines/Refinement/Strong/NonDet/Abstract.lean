@@ -114,7 +114,7 @@ structure AbstractInitSRNDEventSpec (AM) [Machine ACTX AM]
   step_inv (x : α):
     (agrd : abstract.guard x)
     → ∀ y, ∀ am', abstract.init x agrd (y, am')
-                  → Machine.invariant (unlift (Machine.reset (M:=M)) am')
+                  → Machine.invariant (M:=M) (unlift default am')
 
 @[simp]
 def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
@@ -128,8 +128,8 @@ def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Ma
       intros Hgrd y am' Heff
       have Hainv := abstract.po.safety x Hgrd y am' Heff
       have Hsi := ev.step_inv x Hgrd y am' Heff
-      have Href := lift_ref (AM:=AM) (unlift Machine.reset am') Hsi
-      have Hlu := lu_reset (self:=instSR) am' Hainv
+      have Href := lift_ref (AM:=AM) (unlift default am') Hsi
+      have Hlu := lu_default (self:=instSR) am' Hainv
       rw [Hlu] at Href
       assumption
 
@@ -140,7 +140,7 @@ def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Ma
 
     lift_unlift := fun am am' x => by
       simp
-      apply lu_reset
+      apply lu_default
       assumption
   }
 
@@ -159,7 +159,7 @@ structure AbstractInitSRNDEventSpec' (AM) [Machine ACTX AM]
   step_inv (x : α):
     (agrd : abstract.guard x)
     → ∀ am', abstract.init x agrd ((), am')
-             → Machine.invariant (unlift (Machine.reset (M:=M)) am')
+             → Machine.invariant (M:=M) (unlift default am')
 
 @[simp]
 def AbstractInitSRNDEventSpec'.toAbstractInitSRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
@@ -186,7 +186,7 @@ structure AbstractInitSRNDEventSpec'' (AM) [Machine ACTX AM]
   step_inv:
     (agrd : abstract.guard ())
     → ∀ am', abstract.init () agrd ((), am')
-             → Machine.invariant (unlift (Machine.reset (M:=M)) am')
+             → Machine.invariant (M:=M) (unlift default am')
 
 @[simp]
 def AbstractInitSRNDEventSpec''.toAbstractInitSRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]

@@ -142,16 +142,16 @@ structure AbstractInitFRNDEventSpec (AM) [Machine ACTX AM]
   step_ref (x : α):
     (agrd : abstract.guard x)
     → ∀ y, ∀ am', abstract.init x agrd (y, am')
-                  → refine am' (unlift Machine.reset am' Machine.reset x)
+                  → refine am' (unlift default am' default x)
 
   step_safe (x : α):
     (agrd : abstract.guard x)
     → ∀ y, ∀ am', abstract.init x agrd (y, am')
-                  → Machine.invariant (unlift Machine.reset am' Machine.reset x)
+                  → Machine.invariant (unlift default am' default x)
 
   lift_unlift (am' : AM) (x : α):
     Machine.invariant am'
-    → lift (unlift Machine.reset am' Machine.reset x) = am'
+    → lift (unlift default am' default x) = am'
 
 @[simp]
 def AbstractInitFRNDEventSpec.toAbstractInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
@@ -177,16 +177,16 @@ structure AbstractInitFRNDEventSpec' (AM) [Machine ACTX AM]
   step_ref (x : α):
     (agrd : abstract.guard x)
     → ∀ am', abstract.init x agrd ((), am')
-             → refine am' (unlift Machine.reset am' Machine.reset x)
+             → refine am' (unlift default am' default x)
 
   step_safe (x : α):
     (agrd : abstract.guard x)
     → ∀ am', abstract.init x agrd ((), am')
-             → Machine.invariant (unlift Machine.reset am' Machine.reset x)
+             → Machine.invariant (unlift default am' default x)
 
   lift_unlift (am' : AM) (x : α):
     Machine.invariant am'
-    → lift (unlift Machine.reset am' Machine.reset x) = am'
+    → lift (unlift default am' default x) = am'
 
 @[simp]
 def AbstractInitFRNDEventSpec'.toAbstractInitFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
@@ -218,16 +218,16 @@ structure AbstractInitFRNDEventSpec'' (AM) [Machine ACTX AM]
   step_ref:
     (agrd : abstract.guard ())
     → ∀ am', abstract.init () agrd ((), am')
-             → refine am' (unlift Machine.reset am' Machine.reset)
+             → refine am' (unlift default am' default)
 
   step_safe:
     (agrd : abstract.guard ())
     → ∀ am', abstract.init () agrd ((), am')
-             → Machine.invariant (unlift Machine.reset am' Machine.reset)
+             → Machine.invariant (unlift default am' default)
 
   lift_unlift (am' : AM):
     Machine.invariant am'
-    → lift (unlift Machine.reset am' Machine.reset) = am'
+    → lift (unlift default am' default) = am'
 
 @[simp]
 def AbstractInitFRNDEventSpec''.toAbstractInitFRNDEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]

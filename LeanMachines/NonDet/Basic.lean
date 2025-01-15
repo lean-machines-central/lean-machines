@@ -80,7 +80,7 @@ def _InitEvent.to_InitNDEvent [Machine CTX M] (ev : _InitEvent M α β) : _InitN
 @[simp]
 def _InitNDEvent.to_NDEvent [Machine CTX M] (ev : _InitNDEvent M α β) : _NDEvent M α β :=
 {
-  guard := fun m x => m = Machine.reset ∧ ev.guard x
+  guard := fun m x => m = default ∧ ev.guard x
   effect := fun _ x grd (y, m') => ev.init x grd.2 (y, m')
 }
 

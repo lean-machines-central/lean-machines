@@ -223,14 +223,14 @@ structure AbstractInitREventSpec (AM) [Machine ACTX AM]
   step_ref (x : α):
     (agrd : abstract.guard x)
     → let (_, am') := abstract.init x agrd
-      refine am' (unlift Machine.reset am' Machine.reset x)
+      refine am' (unlift default am' default x)
 
   /-- Proof obligation: invariant preservation of the abstract event. -/
   step_safe (x : α):
     (agrd : abstract.guard x)
     → let (_, am') := abstract.init x agrd
       Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift Machine.reset am' Machine.reset x)
+      → Machine.invariant (unlift default am' default x)
 
 @[simp]
 def AbstractInitREventSpec.to_InitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
@@ -238,7 +238,7 @@ def AbstractInitREventSpec.to_InitEvent [Machine ACTX AM] [Machine CTX M] [Refin
   {
     guard := fun x => abs.guard x
     init := fun x grd => let (y, am') := abs.init x grd
-                         (y, ev.unlift Machine.reset am' Machine.reset x)
+                         (y, ev.unlift default am' default x)
   }
 
 /-- The construction of a reused abstract initialization event.
@@ -283,13 +283,13 @@ structure AbstractInitREventSpec'' (AM) [Machine ACTX AM]
   step_ref:
     (agrd : abstract.guard ())
     → let ((), am') := abstract.init () agrd
-      refine am' (unlift Machine.reset am' Machine.reset)
+      refine am' (unlift default am' default)
 
   step_safe :
     (agrd : abstract.guard ())
     → let ((), am') := abstract.init () agrd
       Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift Machine.reset am' Machine.reset)
+      → Machine.invariant (unlift default am' default)
 
 @[simp]
 def AbstractInitREventSpec''.toAbstractInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]

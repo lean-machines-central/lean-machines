@@ -234,19 +234,19 @@ structure AbstractInitRNDEventSpec (AM) [Machine ACTX AM]
   (a kind of functionality). -/
   lift_unlift (am' : AM) (x : α):
     Machine.invariant am'
-    → lift (unlift Machine.reset am' Machine.reset x) = am'
+    → lift (unlift default am' default x) = am'
 
   /-- Proof obligation: unlifting abstract state change is safe wrt. the `refine` invariant. -/
   step_ref (x : α):
     (agrd : abstract.guard x)
     → ∀ y, ∀ am', abstract.init x agrd (y, am')
-                  → refine am' (unlift Machine.reset am' Machine.reset x)
+                  → refine am' (unlift default am' default x)
 
   /-- Proof obligation: invariant preservation of the abstract event. -/
   step_safe (x : α):
     (agrd : abstract.guard x)
     → ∀ y, ∀ am', abstract.init x agrd (y, am')
-                  → Machine.invariant (unlift Machine.reset am' Machine.reset x)
+                  → Machine.invariant (unlift default am' default x)
 
 @[simp]
 def AbstractInitRNDEventSpec.to_InitNDEvent  [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
@@ -254,7 +254,7 @@ def AbstractInitRNDEventSpec.to_InitNDEvent  [Machine ACTX AM] [Machine CTX M] [
   {
     guard := abs.guard
     init := fun x grd (y, m') => ∃ am', abs.init x grd (y, am')
-                                 ∧ m' =  ev.unlift Machine.reset am' Machine.reset x
+                                 ∧ m' =  ev.unlift default am' default x
   }
 
 /-- The construction of a reused non-deterministic abstract initialization event.
@@ -288,7 +288,7 @@ def newAbstractInitRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement 
         intros Hagrd
         obtain ⟨y, am', Hafeas⟩ := abs.po.feasibility x Hagrd
         exists y
-        exists (ev.unlift Machine.reset am' Machine.reset x)
+        exists (ev.unlift default am' default x)
         exists am'
 
       abstract := abs.to_InitNDEvent
@@ -323,17 +323,17 @@ structure AbstractInitRNDEventSpec' (AM) [Machine ACTX AM]
 
   lift_unlift (am' : AM) (x : α):
     Machine.invariant am'
-    → lift (unlift Machine.reset am' Machine.reset x) = am'
+    → lift (unlift default am' default x) = am'
 
   step_ref (x : α):
     (agrd : abstract.guard x)
     → ∀ am', abstract.init x agrd ((), am')
-             → refine am' (unlift Machine.reset am' Machine.reset x)
+             → refine am' (unlift default am' default x)
 
   step_safe (x : α):
     (agrd : abstract.guard x)
     → ∀ am', abstract.init x agrd ((), am')
-             → Machine.invariant (unlift Machine.reset am' Machine.reset x)
+             → Machine.invariant (unlift default am' default x)
 
 /-- Variant of `AbstractInitRNDEventSpec` with implicit `Unit` output type -/
 @[simp]
@@ -366,17 +366,17 @@ structure AbstractInitRNDEventSpec'' (AM) [Machine ACTX AM]
 
   lift_unlift (am' : AM):
     Machine.invariant am'
-    → lift (unlift Machine.reset am' Machine.reset) = am'
+    → lift (unlift default am' default) = am'
 
   step_ref:
     (agrd : abstract.guard ())
     → ∀ am', abstract.init () agrd ((), am')
-             → refine am' (unlift Machine.reset am' Machine.reset)
+             → refine am' (unlift default am' default)
 
   step_safe:
     (agrd : abstract.guard ())
     → ∀ am', abstract.init () agrd ((), am')
-             → Machine.invariant (unlift Machine.reset am' Machine.reset)
+             → Machine.invariant (unlift default am' default)
 
 @[simp]
 def AbstractInitRNDEventSpec''.toAbstractInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]

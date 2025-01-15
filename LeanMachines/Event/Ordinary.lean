@@ -137,7 +137,7 @@ def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
 ## Initialization events (deterministic)
 
 Initialization events, of the deterministic kind,
-are ordinary deterministic events with the *reset* state as a pre-state.
+are ordinary deterministic events with the *default* state as a pre-state.
 
  -/
 

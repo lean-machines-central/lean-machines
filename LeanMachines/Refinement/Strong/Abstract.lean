@@ -91,7 +91,7 @@ structure AbstractInitSREventSpec (AM) [Machine ACTX AM]
 
   step_inv (x : α):
     (agrd : abstract.guard x)
-    → Machine.invariant (unlift (self:=instSR) Machine.reset (abstract.init x agrd).2)
+    → Machine.invariant (unlift (self:=instSR) default (abstract.init x agrd).2)
 
 @[simp]
 def AbstractInitSREventSpec.toAbstractInitFREventSpec [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
@@ -105,8 +105,8 @@ def AbstractInitSREventSpec.toAbstractInitFREventSpec [Machine ACTX AM] [Machine
       intros Hgrd
       have Hainv := abstract.po.safety x Hgrd
       have Hsi := ev.step_inv x Hgrd
-      have Href := lift_ref (AM:=AM) (unlift Machine.reset (abstract.init x Hgrd).2) Hsi
-      have Hlu := lu_reset (self:=instSR) (abstract.init x Hgrd).2 Hainv
+      have Href := lift_ref (AM:=AM) (unlift default (abstract.init x Hgrd).2) Hsi
+      have Hlu := lu_default (self:=instSR) (abstract.init x Hgrd).2 Hainv
       rw [Hlu] at Href
       assumption
 
@@ -137,7 +137,7 @@ structure AbstractInitSREventSpec'' (AM) [Machine ACTX AM]
 
   step_inv:
     (agrd : abstract.guard ())
-    → Machine.invariant (unlift (self:=instSR) Machine.reset (abstract.init () agrd).2)
+    → Machine.invariant (unlift (self:=instSR) default (abstract.init () agrd).2)
 
 @[simp]
 def AbstractInitSREventSpec''.toAbstractInitSREventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]

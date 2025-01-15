@@ -123,13 +123,13 @@ structure AbstractInitFREventSpec (AM) [Machine ACTX AM]
   step_ref (x : α):
     (agrd : abstract.guard x)
     → let (_, am') := abstract.init x agrd
-      refine am' (unlift Machine.reset am' Machine.reset x)
+      refine am' (unlift default am' default x)
 
   step_safe (x : α):
     (agrd : abstract.guard x)
     → let (_, am') := abstract.init x agrd
       Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift Machine.reset am' Machine.reset x)
+      → Machine.invariant (unlift default am' default x)
 
 @[simp]
 def AbstractInitFREventSpec.toAbstractInitREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
@@ -159,13 +159,13 @@ structure AbstractInitFREventSpec'' (AM) [Machine ACTX AM]
   step_ref:
     (agrd : abstract.guard ())
     → let (_, am') := abstract.init () agrd
-      refine am' (unlift Machine.reset am' Machine.reset)
+      refine am' (unlift default am' default)
 
   step_safe:
     (agrd : abstract.guard ())
     → let (_, am') := abstract.init () agrd
       Machine.invariant am' -- redundant but useful
-      → Machine.invariant (unlift Machine.reset am' Machine.reset)
+      → Machine.invariant (unlift default am' default)
 
 @[simp]
 def AbstractInitFREventSpec''.toAbstractInitFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
