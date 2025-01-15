@@ -1,5 +1,7 @@
 # LeanMachines: a Lean4 framework for the modeling and refinement of stateful systems
 
+**IMPORTANT** : this branch is not developed anymore, but it is the last stable branch with non-dependent guards 
+
 ## Overview
 
 LeanMachines is a library for the Lean4 programming language and proof
