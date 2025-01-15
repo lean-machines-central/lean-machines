@@ -144,11 +144,11 @@ structure ConcreteInitREventSpec (AM) [instAM: Machine ACTX AM]
 
   simulation (x : α):
     guard x
-    → refine (self:=instR) Machine.reset (init x).2
+    → refine (self:=instR) default (init x).2
 
 -- **Remark** : ConcreteInit is not possible because
--- the destination state of  Skip from Machine.reset
--- is Machine.reset, which is not a proper destination
+-- the destination state of  Skip from default
+-- is default, which is not a proper destination
 -- state (in particular, there is no invariant enforced)
 
 -/

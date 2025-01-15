@@ -42,14 +42,14 @@ This comprises:
   but it can also be an unreachable "pre-init" state if required).
 
 -/
-class Machine (CTX : outParam (Type u)) (M) where
+
+class Machine (CTX : outParam (Type u)) (M)
+  extends Inhabited M where
   /-- The context (i.e. parameters) of the machine. -/
   context : CTX
   /-- The invariant property that must be satisfied
   by a machine (state) of type `M`. -/
   invariant : M → Prop
-  /-- The "before initialization", or *reset state*. -/
-  reset : M
 
 /-- Enumeration for event kinds (ordinary, anticipated or convergent). -/
 inductive Convergence where
@@ -141,7 +141,7 @@ structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
 @[simp]
 def _InitEvent.to_Event [DecidableEq M] [Machine CTX M] (ev : _InitEvent M α β) : _Event M α β :=
   {
-    guard := fun m x => m == Machine.reset ∧ ev.guard x
+    guard := fun m x => m == default ∧ ev.guard x
     action := fun m x grd => ev.init x (by simp at grd ; apply grd.2)
   }
 

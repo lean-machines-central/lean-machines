@@ -56,7 +56,7 @@ class SRefinement {ACTX : outParam (Type u₁)} (AM)
   /-- Proof obligation: a special case of `lift_unlift` for the `reset` state. -/
   lu_reset (am' : AM):
     Machine.invariant am'
-    → lift (unlift Machine.reset am') = am'
+    → lift (unlift default am') = am'
 
 open Refinement
 open SRefinement
