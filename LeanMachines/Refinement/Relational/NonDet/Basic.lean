@@ -18,7 +18,7 @@ for ordinary, non-deterministic events.
 -/
 
 /-- Internal representation of proof obligations for ordinary non-deterministic events. -/
-structure _RNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+structure _RNDEventPO  [@Machine ACTX AM] [@Machine CTX M] [instR: Refinement AM M]
    (ev : _NDEvent M α β) (kind : EventKind) (α' β')
    extends _NDEventPO ev kind where
 
@@ -50,12 +50,12 @@ Note that events, of type `OrdinaryRNDEvent`, are not directly constructed using
 structure. More user-friendly specification structures, such as `RNDEventSpec`, and smart constructors,
  such as `newRNDEvent` are preferably employed in practice.
  -/
-structure OrdinaryRNDEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+structure OrdinaryRNDEvent (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instR: Refinement AM M]
   (α β) (α':=α) (β':=β) extends _NDEvent M α β where
   po : _RNDEventPO (instR:=instR) to_NDEvent (EventKind.TransNonDet Convergence.Ordinary) α' β'
 
 @[simp]
-def OrdinaryRNDEvent.toOrdinaryNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def OrdinaryRNDEvent.toOrdinaryNDEvent [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (ev : OrdinaryRNDEvent AM M α β α' β') : OrdinaryNDEvent M α β :=
   {
     to_NDEvent := ev.to_NDEvent
@@ -76,8 +76,8 @@ The input and output types can be lifted to the abstract, if needed,
 The proof obligations, beyond `safety` and `feasibility` (of abstract events),
 are guard `strengthening` and abstract event `simulation`.
  -/
-structure RNDEventSpec (AM) [Machine ACTX AM]
-                        (M) [Machine CTX M]
+structure RNDEventSpec (AM) [@Machine ACTX AM]
+                        (M) [@Machine CTX M]
                         [Refinement AM M]
   {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
   extends NDEventSpec M α β where
@@ -112,7 +112,7 @@ with: `abs` the (ordinary) non-deterministic event to refine, and
   `ev` the refined event specification (cf. `RNDEventSpec`).
 -/
 @[simp]
-def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newRNDEvent [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : RNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRNDEvent AM M α β α' β' :=
   {
     to_NDEvent := ev.to_NDEvent
@@ -126,8 +126,8 @@ def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   }
 
 /-- Variant of `RNDEventSpec` with implicit `Unit` output type -/
-structure RNDEventSpec' (AM) [Machine ACTX AM]
-                        (M) [Machine CTX M]
+structure RNDEventSpec' (AM) [@Machine ACTX AM]
+                        (M) [@Machine CTX M]
                         [Refinement AM M]
   {α α'} (abstract : OrdinaryNDEvent AM α' Unit)
   extends NDEventSpec' M α where
@@ -150,7 +150,7 @@ structure RNDEventSpec' (AM) [Machine ACTX AM]
                  ∧ refine am' m'
 
 @[simp]
-def RNDEventSpec'.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def RNDEventSpec'.toRNDEventSpec [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   {α α'} (abs : OrdinaryNDEvent AM α' Unit) (ev : RNDEventSpec' AM M (α:=α) (α':=α') abs) : RNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
     toNDEventSpec := ev.toNDEventSpec
@@ -166,13 +166,13 @@ def RNDEventSpec'.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement A
 
 /-- Variant of `newRNDEvent` with implicit `Unit` output type -/
 @[simp]
-def newRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newRNDEvent' [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' Unit) (ev : RNDEventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryRNDEvent AM M α Unit α' Unit :=
   newRNDEvent abs ev.toRNDEventSpec
 
 /-- Variant of `RNDEventSpec` with implicit `Unit` input and output types -/
-structure RNDEventSpec'' (AM) [Machine ACTX AM]
-                        (M) [Machine CTX M]
+structure RNDEventSpec'' (AM) [@Machine ACTX AM]
+                        (M) [@Machine CTX M]
                         [Refinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit)
   extends NDEventSpec'' M where
@@ -192,7 +192,7 @@ structure RNDEventSpec'' (AM) [Machine ACTX AM]
                  ∧ refine am' m'
 
 @[simp]
-def RNDEventSpec''.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def RNDEventSpec''.toRNDEventSpec [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit) (ev : RNDEventSpec'' AM M abs) : RNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
     toNDEventSpec := ev.toNDEventSpec
@@ -208,7 +208,7 @@ def RNDEventSpec''.toRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement 
 
 /-- Variant of `newRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
-def newRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newRNDEvent'' [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit) (ev : RNDEventSpec'' AM M abs) : OrdinaryRNDEvent AM M Unit Unit :=
   newRNDEvent abs ev.toRNDEventSpec
 
@@ -217,7 +217,7 @@ def newRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 -/
 
 /-- Internal representation of proof obligations for ordinary initialization events. -/
-structure _InitRNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+structure _InitRNDEventPO  [@Machine ACTX AM] [@Machine CTX M] [instR: Refinement AM M]
    (ev : _InitNDEvent M α β) (kind : EventKind) (α' β')
    extends _InitNDEventPO ev kind where
 
@@ -240,13 +240,13 @@ structure _InitRNDEventPO  [Machine ACTX AM] [Machine CTX M] [instR: Refinement 
 with: `AM` the abstact machine type, `M` the concrete maching type,
  `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
  `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`) -/
-structure InitRNDEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+structure InitRNDEvent (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instR: Refinement AM M]
   (α) (β) (α':=α) (β':=β)
   extends _InitNDEvent M α β where
   po : _InitRNDEventPO (instR:=instR) to_InitNDEvent (EventKind.InitNonDet) α' β'
 
 @[simp]
-def InitRNDEvent.toInitNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ev : InitRNDEvent AM M α β α' β') : InitNDEvent M α β :=
+def InitRNDEvent.toInitNDEvent [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M] (ev : InitRNDEvent AM M α β α' β') : InitNDEvent M α β :=
 {
   to_InitNDEvent:= ev.to_InitNDEvent
   po := ev.po.to_InitNDEventPO
@@ -259,7 +259,7 @@ and abstract event `simulation`.
 The input and output types can be lifted to the abstract, if needed,
  using the `lift_in` and `lift_out` components.
  -/
-structure InitRNDEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure InitRNDEventSpec (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : InitNDEvent AM α' β')
   extends InitNDEventSpec M α β where
 
@@ -281,7 +281,7 @@ with: `abs` the (ordinary) event to refine, and
   `ev` the refined event specification (cf. `InitRNDEventSpec`).
 -/
 @[simp]
-def newInitRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newInitRNDEvent [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   {α β α' β'} (abs : InitNDEvent AM α' β')
   (ev : InitRNDEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : InitRNDEvent AM M α β α' β' :=
   {
@@ -316,7 +316,7 @@ def newInitRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   }
 
 /-- Variant of `InitRNDEventSpec` with implicit `Unit` output type -/
-structure InitRNDEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure InitRNDEventSpec' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [Refinement AM M]
   {α α'} (abstract : InitNDEvent AM α' Unit)
   extends InitNDEventSpec' M α where
 
@@ -333,7 +333,7 @@ structure InitRNDEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refineme
                ∧ refine am' m'
 
 @[simp]
-def InitRNDEventSpec'.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def InitRNDEventSpec'.toInitRNDEventSpec [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abstract : InitNDEvent AM α' Unit)
   (ev : InitRNDEventSpec' AM M (α:=α) (α':=α') abstract): InitRNDEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abstract :=
   {
@@ -349,13 +349,13 @@ def InitRNDEventSpec'.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refi
 
 /-- Variant of `newInitRNDEvent` with implicit `Unit` output type -/
 @[simp]
-def newInitRNDEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newInitRNDEvent' [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   {α α'} (abs : InitNDEvent AM α' Unit)
   (ev : InitRNDEventSpec' AM M (α:=α) (α':=α') abs) : InitRNDEvent AM M α Unit α' Unit :=
   newInitRNDEvent abs ev.toInitRNDEventSpec
 
 /-- Variant of `InitRNDEventSpec` with implicit `Unit` input and output types -/
-structure InitRNDEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinement AM M]
+structure InitRNDEventSpec'' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [Refinement AM M]
   (abstract : InitNDEvent AM Unit Unit)
   extends InitNDEventSpec'' M where
 
@@ -370,7 +370,7 @@ structure InitRNDEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [Refinem
                ∧ refine am' m'
 
 @[simp]
-def InitRNDEventSpec''.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def InitRNDEventSpec''.toInitRNDEventSpec [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abstract : InitNDEvent AM Unit Unit)
   (ev : InitRNDEventSpec'' AM M abstract): InitRNDEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abstract :=
   {
@@ -386,7 +386,7 @@ def InitRNDEventSpec''.toInitRNDEventSpec [Machine ACTX AM] [Machine CTX M] [Ref
 
 /-- Variant of `newInitRNDEvent` with implicit `Unit` input and output types -/
 @[simp]
-def newInitRNDEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newInitRNDEvent'' [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : InitNDEvent AM Unit Unit)
   (ev : InitRNDEventSpec'' AM M abs) : InitRNDEvent AM M Unit Unit :=
   newInitRNDEvent abs ev.toInitRNDEventSpec

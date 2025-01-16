@@ -58,8 +58,8 @@ open Refinement
 -/
 
 /-- Reuse of abstract events: the `lift ` part of machine-level requirements. -/
-structure __AbstractREventSpec (AM) [Machine ACTX AM]
-                               (M) [Machine CTX M]
+structure __AbstractREventSpec (AM) [@Machine ACTX AM]
+                               (M) [@Machine CTX M]
                                [Refinement AM M] where
   /-- The construction of an abstract state from the concrete state `m`. -/
   lift (m: M) : AM
@@ -76,8 +76,8 @@ structure __AbstractREventSpec (AM) [Machine ACTX AM]
 
 
 /-- Reuse of abstract events: the `unlift ` part of machine-level requirements. -/
-structure _AbstractREventSpec (AM) [Machine ACTX AM]
-                              (M) [Machine CTX M]
+structure _AbstractREventSpec (AM) [@Machine ACTX AM]
+                              (M) [@Machine CTX M]
                               [Refinement AM M] (α)
 
   extends __AbstractREventSpec AM M  where
@@ -89,8 +89,8 @@ structure _AbstractREventSpec (AM) [Machine ACTX AM]
 /-- The specification of the reuse of an `abstract` event, with the
 `lift` and `unlift` operations, the associated proof obligations,
  and the further two event-level proof obligations. -/
-structure AbstractREventSpec (AM) [Machine ACTX AM]
-                             (M) [Machine CTX M]
+structure AbstractREventSpec (AM) [@Machine ACTX AM]
+                             (M) [@Machine CTX M]
                             [Refinement AM M]
   {α β} (abstract : OrdinaryEvent AM α β)
           extends _AbstractREventSpec AM M α where
@@ -114,7 +114,7 @@ structure AbstractREventSpec (AM) [Machine ACTX AM]
 Parameter `abs` is the event to reuse  (event of abstract machine)
 Parameter `ev` is the reuse specification (cf. `AbstractREventSpec`). -/
 @[simp]
-def newAbstractREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
+def newAbstractREvent [@Machine ACTX AM] [@Machine CTX M] [instR:Refinement AM M]
   (abs : OrdinaryEvent AM α β) (ev : AbstractREventSpec AM M abs) : OrdinaryREvent AM M α β :=
   { guard := fun (m : M) (x : α) => abs.guard (ev.lift m) x
     action := fun (m : M) (x : α) grd =>
@@ -157,12 +157,12 @@ def newAbstractREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
 
 /-- Variant of `newAbstractREvent` with implicit `Unit` output type -/
 @[simp]
-def newAbstractREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAbstractREvent' [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM α Unit) (ev : AbstractREventSpec AM M abs) : OrdinaryREvent AM M α Unit :=
   newAbstractREvent abs ev
 
-structure _AbstractREventSpec'' (AM) [Machine ACTX AM]
-                                (M) [Machine CTX M]
+structure _AbstractREventSpec'' (AM) [@Machine ACTX AM]
+                                (M) [@Machine CTX M]
                                 [Refinement AM M]
 
   extends __AbstractREventSpec AM M  where
@@ -170,8 +170,8 @@ structure _AbstractREventSpec'' (AM) [Machine ACTX AM]
   unlift (am am' : AM) (m : M): M
 
 /-- Variant of `AbstractREventSpec` with implicit `Unit` input and output types -/
-structure AbstractREventSpec'' (AM) [Machine ACTX AM]
-                               (M) [Machine CTX M]
+structure AbstractREventSpec'' (AM) [@Machine ACTX AM]
+                               (M) [@Machine CTX M]
                                [Refinement AM M]
   (abstract : OrdinaryEvent AM Unit Unit)
           extends _AbstractREventSpec'' AM M where
@@ -190,7 +190,7 @@ structure AbstractREventSpec'' (AM) [Machine ACTX AM]
       → Machine.invariant (unlift (lift m) am' m)
 
 @[simp]
-def AbstractREventSpec''.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def AbstractREventSpec''.toAbstractREventSpec [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
     (abs : OrdinaryEvent AM Unit Unit) (ev : AbstractREventSpec'' AM M abs) : AbstractREventSpec AM M abs :=
   {
     to__AbstractREventSpec := ev.to__AbstractREventSpec
@@ -202,7 +202,7 @@ def AbstractREventSpec''.toAbstractREventSpec [Machine ACTX AM] [Machine CTX M] 
 
 /-- Variant of `newAbstractREvent` with implicit `Unit` input and output types -/
 @[simp]
-def newAbstractREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAbstractREvent'' [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev : AbstractREventSpec'' AM M abs) : OrdinaryREvent AM M Unit Unit :=
   newAbstractREvent abs ev.toAbstractREventSpec
 
@@ -213,8 +213,8 @@ def newAbstractREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 /-- The specification of the reuse of an `abstract` initialization event,
 with the `lift` and `unlift` operations, the associated proof obligations,
  and the further two event-level proof obligations. -/
-structure AbstractInitREventSpec (AM) [Machine ACTX AM]
-                                 (M) [Machine CTX M]
+structure AbstractInitREventSpec (AM) [@Machine ACTX AM]
+                                 (M) [@Machine CTX M]
                                  [Refinement AM M]
   {α β} (abstract : InitEvent AM α β)
           extends _AbstractREventSpec AM M α where
@@ -233,7 +233,7 @@ structure AbstractInitREventSpec (AM) [Machine ACTX AM]
       → Machine.invariant (unlift default am' default x)
 
 @[simp]
-def AbstractInitREventSpec.to_InitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def AbstractInitREventSpec.to_InitEvent [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM α β) (ev : AbstractInitREventSpec AM M abs) : _InitEvent M α β :=
   {
     guard := fun x => abs.guard x
@@ -245,7 +245,7 @@ def AbstractInitREventSpec.to_InitEvent [Machine ACTX AM] [Machine CTX M] [Refin
 Parameter `abs` is the event to reuse  (event of abstract machine)
 Parameter `ev` is the reuse specification (cf. `AbstractInitREventSpec`). -/
 @[simp]
-def newAbstractInitREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M]
+def newAbstractInitREvent [@Machine ACTX AM] [@Machine CTX M] [instR:Refinement AM M]
   (abs : InitEvent AM α β) (ev : AbstractInitREventSpec AM M abs) : InitREvent AM M α β :=
   {
     to_InitEvent := ev.to_InitEvent
@@ -269,13 +269,13 @@ def newAbstractInitREvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM
 
 /-- Variant of `newAbstractInitREvent` with implicit `Unit` output type -/
 @[simp]
-def newAbstractInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAbstractInitREvent' [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM α Unit) (ev : AbstractInitREventSpec AM M abs) : InitREvent AM M α Unit :=
   newAbstractInitREvent abs ev
 
 /-- Variant of `AbstractInitREventSpec` with implicit `Unit` input and output types -/
-structure AbstractInitREventSpec'' (AM) [Machine ACTX AM]
-                                 (M) [Machine CTX M]
+structure AbstractInitREventSpec'' (AM) [@Machine ACTX AM]
+                                 (M) [@Machine CTX M]
                                  [Refinement AM M]
   (abstract : InitEvent AM Unit Unit)
        extends _AbstractREventSpec'' AM M where
@@ -292,7 +292,7 @@ structure AbstractInitREventSpec'' (AM) [Machine ACTX AM]
       → Machine.invariant (unlift default am' default)
 
 @[simp]
-def AbstractInitREventSpec''.toAbstractInitREventSpec [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def AbstractInitREventSpec''.toAbstractInitREventSpec [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
     (abs : InitEvent AM Unit Unit) (ev : AbstractInitREventSpec'' AM M abs) : AbstractInitREventSpec AM M abs :=
   {
     to__AbstractREventSpec := ev.to__AbstractREventSpec
@@ -303,7 +303,7 @@ def AbstractInitREventSpec''.toAbstractInitREventSpec [Machine ACTX AM] [Machine
 
 /-- Variant of `newAbstractInitREvent` with implicit `Unit` input and output types -/
 @[simp]
-def newAbstractRInitEvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAbstractRInitEvent'' [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM Unit Unit) (ev : AbstractInitREventSpec'' AM M abs) : InitREvent AM M Unit Unit :=
   newAbstractInitREvent abs ev.toAbstractInitREventSpec
 
@@ -316,8 +316,8 @@ The requirements are thow of `AbstractREventSpec` with a demonstration
 that the abstract variant is preserved when reflected at the concrete level. -/
 structure AbstractAnticipatedREventSpec
               (v) [Preorder v]
-              (AM) [Machine ACTX AM]
-              (M) [Machine CTX M]
+              (AM) [@Machine ACTX AM]
+              (M) [@Machine CTX M]
               [Refinement AM M]
   {α β} (abstract : AnticipatedEvent v AM α β)
           extends AbstractREventSpec AM M abstract.toOrdinaryEvent where
@@ -336,8 +336,8 @@ Parameter `abs` is the event to reuse  (event of abstract machine)
 Parameter `ev` is the reuse specification (cf. `AbstractREventSpec`). -/
 @[simp]
 def newAbstractAnticipatedREvent [Preorder v]
-                                 [Machine ACTX AM]
-                                 [Machine CTX M]
+                                 [@Machine ACTX AM]
+                                 [@Machine CTX M]
                                  [instR:Refinement AM M]
   (abs : AnticipatedEvent v AM α β) (ev : AbstractAnticipatedREventSpec v AM M abs) : AnticipatedREvent v AM M α β :=
   let oev := newAbstractREvent abs.toOrdinaryEvent ev.toAbstractREventSpec
@@ -370,8 +370,8 @@ def newAbstractAnticipatedREvent [Preorder v]
 /-- Variant of `newAbstractAnticipatedREvent` with implicit `Unit` output type -/
 @[simp]
 def newAbstractAnticipatedREvent' [Preorder v]
-                                  [Machine ACTX AM]
-                                  [Machine CTX M]
+                                  [@Machine ACTX AM]
+                                  [@Machine CTX M]
                                   [Refinement AM M]
   (abs : AnticipatedEvent v AM α Unit) (ev : AbstractAnticipatedREventSpec v AM M abs) : AnticipatedREvent v AM M α Unit :=
   newAbstractAnticipatedREvent abs ev
@@ -379,8 +379,8 @@ def newAbstractAnticipatedREvent' [Preorder v]
 /-- Variant of `AbstractAnticipatedREventSpec` with implicit `Unit` input and output types -/
 structure AbstractAnticipatedREventSpec''
               (v) [Preorder v]
-              (AM) [Machine ACTX AM]
-              (M) [Machine CTX M]
+              (AM) [@Machine ACTX AM]
+              (M) [@Machine CTX M]
               [Refinement AM M]
   (abstract : AnticipatedEvent v AM Unit Unit)
           extends AbstractREventSpec'' AM M abstract.toOrdinaryEvent where
@@ -394,7 +394,7 @@ structure AbstractAnticipatedREventSpec''
       = abstract.po.variant am'
 
 @[simp]
-def AbstractAnticipatedREventSpec''.toAbstractAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def AbstractAnticipatedREventSpec''.toAbstractAnticipatedREventSpec [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : AnticipatedEvent v AM Unit Unit) (ev : AbstractAnticipatedREventSpec'' v AM M abs) : AbstractAnticipatedREventSpec v AM M abs :=
   {
     to__AbstractREventSpec := ev.to__AbstractREventSpec
@@ -407,8 +407,8 @@ def AbstractAnticipatedREventSpec''.toAbstractAnticipatedREventSpec [Preorder v]
 /-- Variant of `newAbstractAnticipatedREvent` with implicit `Unit` output type -/
 @[simp]
 def newAbstractAnticipatedREvent'' [Preorder v]
-                                  [Machine ACTX AM]
-                                  [Machine CTX M]
+                                  [@Machine ACTX AM]
+                                  [@Machine CTX M]
                                   [Refinement AM M]
   (abs : AnticipatedEvent v AM Unit Unit) (ev : AbstractAnticipatedREventSpec'' v AM M abs) : AnticipatedREvent v AM M Unit Unit :=
   newAbstractAnticipatedREvent abs ev.toAbstractAnticipatedREventSpec
@@ -418,8 +418,8 @@ Parameter `abs` is the event to reuse  (event of abstract machine)
 Parameter `ev` is the reuse specification (cf. `AbstractREventSpec`). -/
 @[simp]
 def newAbstractConvergentREvent  [Preorder v] [WellFoundedLT v]
-                                 [Machine ACTX AM]
-                                 [Machine CTX M]
+                                 [@Machine ACTX AM]
+                                 [@Machine CTX M]
                                  [instR:Refinement AM M]
   (abs : ConvergentEvent v AM α β) (ev : AbstractAnticipatedREventSpec v AM M abs.toAnticipatedEvent) : ConvergentREvent v AM M α β :=
   let oev := newAbstractAnticipatedREvent abs.toAnticipatedEvent ev
@@ -452,8 +452,8 @@ def newAbstractConvergentREvent  [Preorder v] [WellFoundedLT v]
 /-- Variant of `newAbstractConvergentREvent` with implicit `Unit` output type -/
 @[simp]
 def newAbstractConvergentREvent'  [Preorder v] [WellFoundedLT v]
-                                  [Machine ACTX AM]
-                                  [Machine CTX M]
+                                  [@Machine ACTX AM]
+                                  [@Machine CTX M]
                                   [Refinement AM M]
   (abs : ConvergentEvent v AM α Unit) (ev : AbstractAnticipatedREventSpec v AM M abs.toAnticipatedEvent) : ConvergentREvent v AM M α Unit :=
   newAbstractConvergentREvent abs ev
@@ -461,8 +461,8 @@ def newAbstractConvergentREvent'  [Preorder v] [WellFoundedLT v]
 /-- Variant of `newAbstractConvergentREvent` with implicit `Unit` input and output types -/
 @[simp]
 def newAbstractConvergentREvent''  [Preorder v] [WellFoundedLT v]
-                                   [Machine ACTX AM]
-                                   [Machine CTX M]
+                                   [@Machine ACTX AM]
+                                   [@Machine CTX M]
                                    [Refinement AM M]
   (abs : ConvergentEvent v AM Unit Unit) (ev : AbstractAnticipatedREventSpec'' v AM M abs.toAnticipatedEvent) : ConvergentREvent v AM M Unit Unit :=
   newAbstractConvergentREvent abs ev.toAbstractAnticipatedREventSpec

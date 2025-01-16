@@ -21,7 +21,7 @@ open Refinement
 -/
 
 /-- Internal representation of proof obligations for anticipated events -/
-structure _AnticipatedRDetEventPO (v) [Preorder v]  [Machine ACTX AM] [instM:Machine CTX M] [instR: Refinement AM M]
+structure _AnticipatedRDetEventPO (v) [Preorder v]  [@Machine ACTX AM] [instM:@Machine CTX M] [instR: Refinement AM M]
           (ev : _Event M α β) (kind : EventKind) (α' β')
           extends _Variant v (instM:=instM), _RDetEventPO (instR:=instR) ev kind α' β'  where
 
@@ -34,7 +34,7 @@ structure _AnticipatedRDetEventPO (v) [Preorder v]  [Machine ACTX AM] [instM:Mac
 /-- The representation of anticipated deterministic refined events, constructed
 by specifications structures, e.g. `AnticipatedRDetEventSpec`,
  and smart constructors, e.g. `newAnticipatedRDetEvent`. -/
-structure AnticipatedRDetEvent (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+structure AnticipatedRDetEvent (v) [Preorder v] (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instR: Refinement AM M]
   (α) (β) (α':=α) (β':=β) extends _Event M α β where
   po : _AnticipatedRDetEventPO v (instR:=instR) to_Event (EventKind.TransDet Convergence.Anticipated) α' β'
 
@@ -54,7 +54,7 @@ The input and output types can be lifted to the abstract, if needed,
 The added proof obligation, beyond `safety` , guard `strengthening`,
 abstract event `simulation`, is a `nonIncreasing` requirement.
  -/
-structure AnticipatedRDetEventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
+structure AnticipatedRDetEventSpec (v) [Preorder v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
   extends _Variant v (instM:=instM), RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract where
 
@@ -65,7 +65,7 @@ structure AnticipatedRDetEventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [
       variant m' ≤ variant m
 
 @[simp]
-private def _newAnticipatedRDetEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+private def _newAnticipatedRDetEvent [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : AnticipatedRDetEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : AnticipatedRDetEvent v AM M α β α' β' :=
   {
     to_Event := ev.to_Event
@@ -87,7 +87,7 @@ with: `abs` the ordinary non-deterministic event to refine, and
   (cf. `AnticipatedRDetEventSpec`).
 -/
 @[simp]
-def newAnticipatedRDetEventfromOrdinary [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAnticipatedRDetEventfromOrdinary [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : AnticipatedRDetEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : AnticipatedRDetEvent v AM M α β α' β' :=
   _newAnticipatedRDetEvent abs ev
 
@@ -97,12 +97,12 @@ with: `abs` the anticipated non-deterministic event to refine, and
   (cf. `AnticipatedRDetEventSpec`).
 -/
 @[simp]
-def newAnticipatedRDetEventfromAnticipated [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAnticipatedRDetEventfromAnticipated [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : AnticipatedNDEvent v AM α' β') (ev : AnticipatedRDetEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.toOrdinaryNDEvent) : AnticipatedRDetEvent v AM M α β α' β' :=
   _newAnticipatedRDetEvent abs.toOrdinaryNDEvent ev
 
 /-- Variant of `AnticipatedRDetEventSpec` with implicit `Unit` output type -/
-structure AnticipatedRDetEventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
+structure AnticipatedRDetEventSpec' (v) [Preorder v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [Refinement AM M]
   {α α'} (abstract : OrdinaryNDEvent AM α' Unit)
   extends _Variant v (instM:=instM), RDetEventSpec' AM M (α:=α) (α':=α') abstract where
 
@@ -113,7 +113,7 @@ structure AnticipatedRDetEventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) 
       variant m' ≤ variant m
 
 @[simp]
-def AnticipatedRDetEventSpec'.toAnticipatedRDetEventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def AnticipatedRDetEventSpec'.toAnticipatedRDetEventSpec [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abstract : OrdinaryNDEvent AM α' Unit)
   (ev : AnticipatedRDetEventSpec' v AM M  (α:=α) (α':=α') abstract) : AnticipatedRDetEventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abstract :=
   {
@@ -124,18 +124,18 @@ def AnticipatedRDetEventSpec'.toAnticipatedRDetEventSpec [Preorder v] [Machine A
 
 /-- Variant of `newAnticipatedRDetEventFromOrdinary` with implicit `Unit` output type -/
 @[simp]
-def newAnticipatedRDetEventfromOrdinary' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAnticipatedRDetEventfromOrdinary' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' Unit) (ev : AnticipatedRDetEventSpec' v AM M (α:=α) (α':=α') abs) : AnticipatedRDetEvent v AM M α Unit α' Unit :=
   _newAnticipatedRDetEvent abs ev.toAnticipatedRDetEventSpec
 
 /-- Variant of `newAnticipatedRDetEventFromAnticipated` with implicit `Unit` output type -/
 @[simp]
-def newAnticipatedRDetEventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAnticipatedRDetEventfromAnticipated' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : AnticipatedNDEvent v AM α' Unit) (ev : AnticipatedRDetEventSpec' v AM M (α:=α) (α':=α') abs.toOrdinaryNDEvent) : AnticipatedRDetEvent v AM M α Unit α' Unit :=
   _newAnticipatedRDetEvent abs.toOrdinaryNDEvent ev.toAnticipatedRDetEventSpec
 
 /-- Variant of `AnticipatedRDetEventSpec` with implicit `Unit` input and output types -/
-structure AnticipatedRDetEventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
+structure AnticipatedRDetEventSpec'' (v) [Preorder v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [Refinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit)
   extends _Variant v (instM:=instM), RDetEventSpec'' AM M abstract where
 
@@ -146,7 +146,7 @@ structure AnticipatedRDetEventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M)
       variant m' ≤ variant m
 
 @[simp]
-def AnticipatedRDetEventSpec''.toAnticipatedRDetEventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def AnticipatedRDetEventSpec''.toAnticipatedRDetEventSpec [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit)
   (ev : AnticipatedRDetEventSpec'' v AM M  abstract) : AnticipatedRDetEventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abstract :=
   {
@@ -157,13 +157,13 @@ def AnticipatedRDetEventSpec''.toAnticipatedRDetEventSpec [Preorder v] [Machine 
 
 /-- Variant of `newAnticipatedRDetEventfromOrdinary` with implicit `Unit` input and output types -/
 @[simp]
-def newAnticipatedRDetEventfromOrdinary'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAnticipatedRDetEventfromOrdinary'' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit) (ev : AnticipatedRDetEventSpec'' v AM M abs) : AnticipatedRDetEvent v AM M Unit Unit :=
   _newAnticipatedRDetEvent abs ev.toAnticipatedRDetEventSpec
 
 /-- Variant of `newAnticipatedRDetEventfromAnticipated` with implicit `Unit` input and output types -/
 @[simp]
-def newAnticipatedRDetEventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newAnticipatedRDetEventfromAnticipated'' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : AnticipatedNDEvent v AM Unit Unit) (ev : AnticipatedRDetEventSpec'' v AM M abs.toOrdinaryNDEvent) : AnticipatedRDetEvent v AM M Unit Unit :=
   _newAnticipatedRDetEvent abs.toOrdinaryNDEvent ev.toAnticipatedRDetEventSpec
 
@@ -172,7 +172,7 @@ def newAnticipatedRDetEventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Mac
 -/
 
 /-- Internal representation of proof obligations for convergent deterministic refined events -/
-structure _ConvergentRDetEventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+structure _ConvergentRDetEventPO (v) [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [instR: Refinement AM M]
           (ev : _Event M α β) (kind : EventKind) (α' β')
           extends _AnticipatedRDetEventPO v (instR:=instR) ev kind α' β' where
 
@@ -185,13 +185,13 @@ structure _ConvergentRDetEventPO (v) [Preorder v] [WellFoundedLT v] [Machine ACT
 /-- The representation of convergent deterministic refined events, constructed
 by specifications structures, e.g. `ConvergentRDetEventSpec`,
  and smart constructors, e.g. `newConvergentRDetEvent`. -/
-structure ConvergentRDetEvent (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+structure ConvergentRDetEvent (v) [Preorder v] [WellFoundedLT v] (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instR: Refinement AM M]
   (α) (β) (α':=α) (β':=β) extends _Event M α β where
   po : _ConvergentRDetEventPO v (instR:=instR) to_Event (EventKind.TransDet Convergence.Convergent) α' β'
 
 
 @[simp]
-def ConvergentRDetEvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def ConvergentRDetEvent.toConvergentEvent [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (ev : ConvergentRDetEvent v AM M α β α' β') : ConvergentEvent v M α β :=
   {
     to_Event := ev.to_Event
@@ -215,7 +215,7 @@ The input and output types can be lifted to the abstract, if needed,
 The added proof obligation, beyond `safety` , guard `strengthening`,
 abstract event `simulation`, is a `convergence` requirement.
  -/
-structure ConvergentRDetEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
+structure ConvergentRDetEventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [Refinement AM M]
   {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
   extends _Variant v (instM:=instM), RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract where
 
@@ -231,7 +231,7 @@ with: `abs` the event to refine, and
   `ev` the refined event specification (cf. `ConvergentRDetEventSpec`).
 -/
 @[simp]
-def newConvergentRDetEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newConvergentRDetEvent [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : ConvergentRDetEventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : ConvergentRDetEvent v AM M α β α' β' :=
   {
     to_Event := ev.to_Event
@@ -252,7 +252,7 @@ def newConvergentRDetEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mac
   }
 
 /-- Variant of `ConvergentRDetEventSpec` with implicit `Unit` output type -/
-structure ConvergentRDetEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
+structure ConvergentRDetEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [Refinement AM M]
   {α α'} (abstract : OrdinaryNDEvent AM α' Unit)
   extends _Variant v (instM:=instM), RDetEventSpec' AM M (α:=α) (α':=α') abstract where
 
@@ -263,7 +263,7 @@ structure ConvergentRDetEventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Mach
       variant m' < variant m
 
 @[simp]
-def ConvergentRDetEventSpec'.toConvergentRDetEventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def ConvergentRDetEventSpec'.toConvergentRDetEventSpec [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abstract : OrdinaryNDEvent AM α' Unit)
   (ev : ConvergentRDetEventSpec' v AM M  (α:=α) (α':=α') abstract) : ConvergentRDetEventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abstract :=
   {
@@ -274,12 +274,12 @@ def ConvergentRDetEventSpec'.toConvergentRDetEventSpec [Preorder v] [WellFounded
 
 /-- Variant of `newConvergentRDetEvent` with implicit `Unit` output type -/
 @[simp]
-def newConvergentRDetEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newConvergentRDetEvent' [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM α' Unit) (ev : ConvergentRDetEventSpec' v AM M (α:=α) (α':=α') abs) : ConvergentRDetEvent v AM M α Unit α' Unit :=
   newConvergentRDetEvent abs ev.toConvergentRDetEventSpec
 
 /-- Variant of `ConvergentRDetEventSpec` with implicit `Unit` input and output types -/
-structure ConvergentRDetEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [Refinement AM M]
+structure ConvergentRDetEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [Refinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit)
   extends _Variant v (instM:=instM), RDetEventSpec'' AM M abstract where
 
@@ -290,7 +290,7 @@ structure ConvergentRDetEventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Mac
       variant m' < variant m
 
 @[simp]
-def ConvergentRDetEventSpec''.toConvergentRDetEventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def ConvergentRDetEventSpec''.toConvergentRDetEventSpec [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit)
   (ev : ConvergentRDetEventSpec'' v AM M abstract) : ConvergentRDetEventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abstract :=
   {
@@ -301,6 +301,6 @@ def ConvergentRDetEventSpec''.toConvergentRDetEventSpec [Preorder v] [WellFounde
 
 /-- Variant of `newConvergentRDetEvent` with implicit `Unit` input and output types -/
 @[simp]
-def newConvergentRDetEvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
+def newConvergentRDetEvent'' [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit) (ev : ConvergentRDetEventSpec'' v AM M abs) : ConvergentRDetEvent v AM M Unit Unit :=
   newConvergentRDetEvent abs ev.toConvergentRDetEventSpec

@@ -39,7 +39,7 @@ natural numbers (type `Nat`), or subset ordering for finite sets
 /-- The definition of a `variant` of type `v` obtained from
 a machine pre-state. The type `v` must be a preorder
 (i.e. an instance of the `Preorder` typeclass). -/
-structure _Variant (v) [Preorder v] [instM:Machine CTX M] where
+structure _Variant (v) [Preorder v] [instM:@Machine CTX M] where
   variant : M → v
 
 /-!
@@ -47,7 +47,7 @@ structure _Variant (v) [Preorder v] [instM:Machine CTX M] where
 -/
 
 /-- The internal representation of proof obligations for anticipated events. -/
-structure _AnticipatedEventPO (v) [Preorder v] [instM: Machine CTX M] (ev : _Event M α β) (kind : EventKind)
+structure _AnticipatedEventPO (v) [Preorder v] [instM:@Machine CTX M] (ev : _Event M α β) (kind : EventKind)
           extends _Variant v (instM:=instM), _EventPO ev kind  where
 
   nonIncreasing (m : M) (x : α):
@@ -60,12 +60,12 @@ structure _AnticipatedEventPO (v) [Preorder v] [instM: Machine CTX M] (ev : _Eve
 It is an event for machine type `M` with input type `α` and output type `β`.
 The non-increasing argument is based on the variant type `v` assumed
 to be a preorder. -/
-structure AnticipatedEvent (v) [Preorder v] (M) [Machine CTX M] (α) (β)
+structure AnticipatedEvent (v) [Preorder v] (M) [@Machine CTX M] (α) (β)
           extends (_Event M α β)  where
   po : _AnticipatedEventPO v to_Event (EventKind.TransDet Convergence.Anticipated)
 
 @[simp]
-private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
+private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [@Machine CTX M] (ev : OrdinaryEvent M α β)
   (variant : M → v)
   (Hnincr: ∀ (m : M) (x : α),
     Machine.invariant m
@@ -84,7 +84,7 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
 
 /-- The "downgrading" of an anticipated event to an ordinary one. -/
 @[simp]
-def AnticipatedEvent.toOrdinaryEvent [Preorder v] [Machine CTX M]
+def AnticipatedEvent.toOrdinaryEvent [Preorder v] [@Machine CTX M]
   (ev : AnticipatedEvent v M α β) : OrdinaryEvent M α β :=
   {
     to_Event := ev.to_Event
@@ -99,7 +99,7 @@ with input type `α` and output type `β`. The non-increasing proof relies
 Note that the guard, action and safety PO of the event must be also
 specified, as in the ordinary case (cf. `OrdinaryEventSpec`).
   -/
-structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [instM: Machine CTX M] (α) (β)
+structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [instM:@Machine CTX M] (α) (β)
   extends _Variant v (instM:=instM), EventSpec M α β where
   /-- Proof obligation: the variant is non-increasing. -/
   nonIncreasing (m : M) (x : α):
@@ -111,11 +111,11 @@ structure AnticipatedEventSpec (v) [Preorder v] {CTX} (M) [instM: Machine CTX M]
 /-- Construction of an anticipated deterministic event from a
 `AnticipatedEventSpec` specification. -/
 @[simp]
-def newAnticipatedEvent {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec v M α β) : AnticipatedEvent v M α β :=
+def newAnticipatedEvent {v} [Preorder v] {M} [@Machine CTX M] (ev : AnticipatedEventSpec v M α β) : AnticipatedEvent v M α β :=
   AnticipatedEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.nonIncreasing
 
 /-- Variant of `AnticipatedEventSpec` with implicit `Unit` output type -/
-structure AnticipatedEventSpec' (v) [Preorder v] (M) [instM:Machine CTX M] (α)
+structure AnticipatedEventSpec' (v) [Preorder v] (M) [instM:@Machine CTX M] (α)
   extends _Variant v (instM:=instM), EventSpec' M α where
 
   nonIncreasing (m : M) (x : α):
@@ -125,7 +125,7 @@ structure AnticipatedEventSpec' (v) [Preorder v] (M) [instM:Machine CTX M] (α)
       variant m' ≤ variant m
 
 @[simp]
-def AnticipatedEventSpec'.toAnticipatedEventSpec {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec' v M α) : AnticipatedEventSpec v M α Unit :=
+def AnticipatedEventSpec'.toAnticipatedEventSpec {v} [Preorder v] {M} [@Machine CTX M] (ev : AnticipatedEventSpec' v M α) : AnticipatedEventSpec v M α Unit :=
   {
     toEventSpec := ev.toEventSpec
     variant := ev.variant
@@ -134,11 +134,11 @@ def AnticipatedEventSpec'.toAnticipatedEventSpec {v} [Preorder v] {M} [Machine C
 
 /-- Variant of `newAnticipatedEvent` with implicit `Unit` output type -/
 @[simp]
-def newAnticipatedEvent' {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec' v M α ) : AnticipatedEvent v M α Unit :=
+def newAnticipatedEvent' {v} [Preorder v] {M} [@Machine CTX M] (ev : AnticipatedEventSpec' v M α ) : AnticipatedEvent v M α Unit :=
   newAnticipatedEvent ev.toAnticipatedEventSpec
 
 /-- Variant of `AnticipatedEventSpec` with implicit `Unit` input and output types -/
-structure AnticipatedEventSpec'' (v) [Preorder v] (M) [instM:Machine CTX M]
+structure AnticipatedEventSpec'' (v) [Preorder v] (M) [instM:@Machine CTX M]
   extends _Variant v (instM:=instM), EventSpec'' M where
 
   nonIncreasing (m : M):
@@ -148,7 +148,7 @@ structure AnticipatedEventSpec'' (v) [Preorder v] (M) [instM:Machine CTX M]
       variant m' ≤ variant m
 
 @[simp]
-def AnticipatedEventSpec''.toAnticipatedEventSpec {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec'' v M) : AnticipatedEventSpec v M Unit Unit :=
+def AnticipatedEventSpec''.toAnticipatedEventSpec {v} [Preorder v] {M} [@Machine CTX M] (ev : AnticipatedEventSpec'' v M) : AnticipatedEventSpec v M Unit Unit :=
   {
     toEventSpec := ev.toEventSpec
     variant := ev.variant
@@ -157,7 +157,7 @@ def AnticipatedEventSpec''.toAnticipatedEventSpec {v} [Preorder v] {M} [Machine 
 
 /-- Variant of `newAnticipatedEvent` with implicit `Unit` input and output types -/
 @[simp]
-def newAnticipatedEvent'' {v} [Preorder v] {M} [Machine CTX M] (ev : AnticipatedEventSpec'' v M) : AnticipatedEvent v M Unit Unit :=
+def newAnticipatedEvent'' {v} [Preorder v] {M} [@Machine CTX M] (ev : AnticipatedEventSpec'' v M) : AnticipatedEvent v M Unit Unit :=
   newAnticipatedEvent ev.toAnticipatedEventSpec
 
 
@@ -166,7 +166,7 @@ def newAnticipatedEvent'' {v} [Preorder v] {M} [Machine CTX M] (ev : Anticipated
 -/
 
 /-- The internal representation of proof obligations for convergent events. -/
-structure _ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : _Event M α β) (kind : EventKind)
+structure _ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [@Machine CTX M] (ev : _Event M α β) (kind : EventKind)
           extends _AnticipatedEventPO v ev kind  where
 
   convergence (m : M) (x : α):
@@ -179,12 +179,12 @@ structure _ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [Machine CTX M] 
 It is an event for machine type `M` with input type `α` and output type `β`.
 The convergence argument is based on the variant type `v` assumed
 to be a well-founded preorder. -/
-structure ConvergentEvent (v) [Preorder v]  [WellFoundedLT v] (M) [Machine CTX M] (α) (β)
+structure ConvergentEvent (v) [Preorder v]  [WellFoundedLT v] (M) [@Machine CTX M] (α) (β)
           extends (_Event M α β)  where
   po : _ConvergentEventPO v to_Event (EventKind.TransDet Convergence.Convergent)
 
 @[simp]
-private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : OrdinaryEvent M α β)
+private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M} [@Machine CTX M] (ev : OrdinaryEvent M α β)
   (variant : M → v)
   (Hconv: ∀ (m : M) (x : α),
     Machine.invariant m
@@ -209,7 +209,7 @@ private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M}
  }
 
 @[simp]
-def ConvergentEvent.toOrdinaryEvent [Preorder v] [WellFoundedLT v] [Machine CTX M]
+def ConvergentEvent.toOrdinaryEvent [Preorder v] [WellFoundedLT v] [@Machine CTX M]
   (ev : ConvergentEvent v M α β) : OrdinaryEvent M α β :=
   {
     to_Event := ev.to_Event
@@ -220,7 +220,7 @@ def ConvergentEvent.toOrdinaryEvent [Preorder v] [WellFoundedLT v] [Machine CTX 
 
 /-- The "downgrading" of a convergent event to an anticipated one. -/
 @[simp]
-def ConvergentEvent.toAnticipatedEvent [Preorder v] [WellFoundedLT v] [Machine CTX M]
+def ConvergentEvent.toAnticipatedEvent [Preorder v] [WellFoundedLT v] [@Machine CTX M]
   (ev : ConvergentEvent v M α β) : AnticipatedEvent v M α β :=
   {
     to_Event := ev.to_Event
@@ -238,7 +238,7 @@ with input type `α` and output type `β`. The convergence proof relies
 Note that the guard, action and safety PO of the event must be also
 specified, as in the ordinary case (cf. `OrdinaryEventSpec`).
   -/
-structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M] (α) (β)
+structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [instM:@Machine CTX M] (α) (β)
   extends _Variant v (instM:=instM), EventSpec M α β where
   /-- Proof obligation: the variant is strictly decreasing. -/
   convergence (m : M) (x : α):
@@ -250,11 +250,11 @@ structure ConvergentEventSpec (v) [Preorder v] [WellFoundedLT v] (M) [instM:Mach
 /-- Construction of a convergent deterministic event from a
 `ConvergentEventSpec` specification. -/
 @[simp]
-def newConvergentEvent {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec v M α β) : ConvergentEvent v M α β :=
+def newConvergentEvent {v} [Preorder v] [WellFoundedLT v] {M} [@Machine CTX M] (ev : ConvergentEventSpec v M α β) : ConvergentEvent v M α β :=
   ConvergentEvent_fromOrdinary (newEvent ev.toEventSpec) ev.to_Variant.variant ev.convergence
 
 @[simp]
-private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : AnticipatedEvent v M α β)
+private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [@Machine CTX M] (ev : AnticipatedEvent v M α β)
     (hconv : (m : M) → (x : α)
     → Machine.invariant m
     → (grd : ev.guard m x)
@@ -272,7 +272,7 @@ private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {
   }
 
 /-- Variant of `ConvergentEventSpec` with implicit `Unit` output type -/
-structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M] (α)
+structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:@Machine CTX M] (α)
   extends _Variant v (instM:=instM), EventSpec' M α where
 
   convergence (m : M) (x : α):
@@ -282,7 +282,7 @@ structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Mac
       variant m' < variant m
 
 @[simp]
-def ConvergentEventSpec'.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec' v M α) : ConvergentEventSpec v M α Unit :=
+def ConvergentEventSpec'.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [@Machine CTX M] (ev : ConvergentEventSpec' v M α) : ConvergentEventSpec v M α Unit :=
   {
     toEventSpec := ev.toEventSpec
     variant := ev.variant
@@ -291,11 +291,11 @@ def ConvergentEventSpec'.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v
 
 /-- Variant of `newConvergentEvent` with implicit `Unit` output type -/
 @[simp]
-def newConvergentEvent' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec' v M α ) : ConvergentEvent v M α Unit :=
+def newConvergentEvent' {v} [Preorder v] [WellFoundedLT v] {M} [@Machine CTX M] (ev : ConvergentEventSpec' v M α ) : ConvergentEvent v M α Unit :=
   newConvergentEvent ev.toConvergentEventSpec
 
 /-- Variant of `ConvergentEventSpec` with implicit `Unit` input and output types -/
-structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M]
+structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [instM:@Machine CTX M]
   extends _Variant v (instM:=instM), EventSpec'' M where
 
   convergence (m : M):
@@ -305,7 +305,7 @@ structure ConvergentEventSpec'' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Ma
       variant m' < variant m
 
 @[simp]
-def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEventSpec v M Unit Unit :=
+def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT v] {M} [@Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEventSpec v M Unit Unit :=
   {
     toEventSpec := ev.toEventSpec
     variant := ev.variant
@@ -314,7 +314,7 @@ def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT 
 
 /-- Variant of `newConvergentEvent` with implicit `Unit` input and output types -/
 @[simp]
-def newConvergentEvent'' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEvent v M Unit Unit :=
+def newConvergentEvent'' {v} [Preorder v] [WellFoundedLT v] {M} [@Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEvent v M Unit Unit :=
   newConvergentEvent ev.toConvergentEventSpec
 
 /-!
@@ -326,7 +326,7 @@ and convergent events (experimental, not documented).
 -/
 
 @[simp]
-def mapAnticipatedEvent [Preorder v] [Machine CTX M] (f : α → β) (ev : AnticipatedEvent v M γ α) : AnticipatedEvent v M γ β :=
+def mapAnticipatedEvent [Preorder v] [@Machine CTX M] (f : α → β) (ev : AnticipatedEvent v M γ α) : AnticipatedEvent v M γ β :=
   newAnticipatedEvent {
     guard := ev.guard
     action := fun m x grd => let (y, m') := ev.action m x grd
@@ -336,15 +336,15 @@ def mapAnticipatedEvent [Preorder v] [Machine CTX M] (f : α → β) (ev : Antic
     nonIncreasing := ev.po.nonIncreasing
   }
 
-instance [Preorder v] [Machine CTX M] : Functor (AnticipatedEvent v M γ) where
+instance [Preorder v] [@Machine CTX M] : Functor (AnticipatedEvent v M γ) where
   map := mapAnticipatedEvent
 
-instance [Preorder v] [Machine CTX M] : LawfulFunctor (AnticipatedEvent v M γ) where
+instance [Preorder v] [@Machine CTX M] : LawfulFunctor (AnticipatedEvent v M γ) where
   map_const := rfl
   id_map := by intros ; rfl
   comp_map := by intros ; rfl
 
-def mapConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (f : α → β) (ev : ConvergentEvent v M γ α) : ConvergentEvent v M γ β :=
+def mapConvergentEvent [Preorder v] [WellFoundedLT v] [@Machine CTX M] (f : α → β) (ev : ConvergentEvent v M γ α) : ConvergentEvent v M γ β :=
   newConvergentEvent {
     guard := ev.guard
     action := fun m x grd => let (y, m') := ev.action m x grd
@@ -354,26 +354,26 @@ def mapConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (f : α �
     convergence := ev.po.convergence
   }
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Functor (ConvergentEvent v M γ) where
+instance [Preorder v] [WellFoundedLT v] [@Machine CTX M] : Functor (ConvergentEvent v M γ) where
   map := mapConvergentEvent
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulFunctor (ConvergentEvent v M γ) where
+instance [Preorder v] [WellFoundedLT v] [@Machine CTX M] : LawfulFunctor (ConvergentEvent v M γ) where
   map_const := rfl
   id_map := by intros ; rfl
   comp_map := by intros ; rfl
 
 /- Contravariant functor -/
 
-abbrev CoAnticipatedEvent (v) [Preorder v] (M) [Machine CTX M] (α) (β) :=
+abbrev CoAnticipatedEvent (v) [Preorder v] (M) [@Machine CTX M] (α) (β) :=
    AnticipatedEvent v M β α
 
 @[simp]
-def AnticipatedEvent_from_CoAnticipatedEvent [Preorder v] [Machine CTX M] (ev : CoAnticipatedEvent v M α β) : AnticipatedEvent v M β α := ev
+def AnticipatedEvent_from_CoAnticipatedEvent [Preorder v] [@Machine CTX M] (ev : CoAnticipatedEvent v M α β) : AnticipatedEvent v M β α := ev
 
 @[simp]
-def CoAnticipatedEvent_from_AnticipatedEvent [Preorder v] [Machine CTX M] (ev : AnticipatedEvent v M α β) : CoAnticipatedEvent v M β α := ev
+def CoAnticipatedEvent_from_AnticipatedEvent [Preorder v] [@Machine CTX M] (ev : AnticipatedEvent v M α β) : CoAnticipatedEvent v M β α := ev
 
-instance [Preorder v] [Machine CTX M]: ContravariantFunctor (CoAnticipatedEvent v M γ) where
+instance [Preorder v] [@Machine CTX M]: ContravariantFunctor (CoAnticipatedEvent v M γ) where
   contramap {α β} (f : β → α) (ev : CoAnticipatedEvent v M γ α) :=
   let event := let ev' := coEvent_from_Event ev.to_Event
              let ev'' := ContravariantFunctor.contramap f ev'
@@ -395,20 +395,20 @@ instance [Preorder v] [Machine CTX M]: ContravariantFunctor (CoAnticipatedEvent 
     }
   }
 
-instance [Preorder v] [Machine CTX M] : LawfullContravariantFunctor (CoAnticipatedEvent v M α) where
+instance [Preorder v] [@Machine CTX M] : LawfullContravariantFunctor (CoAnticipatedEvent v M α) where
   cmap_id _ := by rfl
   cmap_comp _ _ := by rfl
 
-abbrev CoConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α) (β) :=
+abbrev CoConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [@Machine CTX M] (α) (β) :=
    ConvergentEvent v M β α
 
 @[simp]
-def ConvergentEvent_from_CoConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : CoConvergentEvent v M α β) : ConvergentEvent v M β α := ev
+def ConvergentEvent_from_CoConvergentEvent [Preorder v] [WellFoundedLT v] [@Machine CTX M] (ev : CoConvergentEvent v M α β) : ConvergentEvent v M β α := ev
 
 @[simp]
-def CoConvergentEvent_from_ConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : ConvergentEvent v M α β) : CoConvergentEvent v M β α := ev
+def CoConvergentEvent_from_ConvergentEvent [Preorder v] [WellFoundedLT v] [@Machine CTX M] (ev : ConvergentEvent v M α β) : CoConvergentEvent v M β α := ev
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: ContravariantFunctor (CoConvergentEvent v M γ) where
+instance [Preorder v] [WellFoundedLT v] [@Machine CTX M]: ContravariantFunctor (CoConvergentEvent v M γ) where
   contramap {α β} (f : β → α) (ev : CoConvergentEvent v M γ α) :=
   let event := let ev' := coEvent_from_Event ev.to_Event
              let ev'' := ContravariantFunctor.contramap f ev'
@@ -430,13 +430,13 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: ContravariantFunctor (C
     }
   }
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariantFunctor (CoConvergentEvent v M α) where
+instance [Preorder v] [WellFoundedLT v] [@Machine CTX M] : LawfullContravariantFunctor (CoConvergentEvent v M α) where
   cmap_id _ := by rfl
   cmap_comp _ _ := by rfl
 
 /- Profunctor -/
 
-instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedEvent v M) where
+instance [Preorder v] [@Machine CTX M] : Profunctor (AnticipatedEvent v M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : AnticipatedEvent v M α γ) : AnticipatedEvent v M β δ :=
     let event := Profunctor.dimap f g ev.to_Event
     {
@@ -467,11 +467,11 @@ instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedEvent v M) where
       }
     }
 
-instance [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedEvent v M) where
+instance [Preorder v] [@Machine CTX M] : LawfulProfunctor (AnticipatedEvent v M) where
   dimap_id := rfl
   dimap_comp _ _ _ _ := rfl
 
-instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedEvent v M) where
+instance [Preorder v] [@Machine CTX M] : StrongProfunctor (AnticipatedEvent v M) where
   first' {α β γ} (ev : AnticipatedEvent v M α β): AnticipatedEvent v M (α × γ) (β × γ) :=
     let event := StrongProfunctor.first' ev.to_Event
     {
@@ -491,10 +491,10 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedEvent v M) 
       }
     }
 
-instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedEvent v M) where
+instance [Preorder v] [@Machine CTX M] : LawfulStrongProfunctor (AnticipatedEvent v M) where
   -- XXX : at some point the laws should be demonstrated
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (ConvergentEvent v M) where
+instance [Preorder v] [WellFoundedLT v] [@Machine CTX M] : Profunctor (ConvergentEvent v M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : ConvergentEvent v M α γ) : ConvergentEvent v M β δ :=
     let event := Profunctor.dimap f g ev.to_Event
     {
@@ -535,11 +535,11 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (Convergent
       }
     }
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (ConvergentEvent v M) where
+instance [Preorder v] [WellFoundedLT v] [@Machine CTX M] : LawfulProfunctor (ConvergentEvent v M) where
   dimap_id := rfl
   dimap_comp _ _ _ _ := rfl
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (ConvergentEvent v M) where
+instance [Preorder v] [WellFoundedLT v] [@Machine CTX M] : StrongProfunctor (ConvergentEvent v M) where
   first' {α β γ} (ev : ConvergentEvent v M α β): ConvergentEvent v M (α × γ) (β × γ) :=
     let event := StrongProfunctor.first' ev.to_Event
     {
@@ -566,7 +566,7 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
       }
     }
 
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentEvent v M) where
+instance [Preorder v] [WellFoundedLT v] [@Machine CTX M] : LawfulStrongProfunctor (ConvergentEvent v M) where
   -- XXX : at some point the laws should be demonstrated
 
 /-

@@ -23,7 +23,7 @@ relational notion of effect
 
 /-- The internal representation of proof obligations for ordinary
 non-deterministic events. -/
-structure _NDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) where
+structure _NDEventPO [@Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) where
   safety (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
@@ -37,10 +37,10 @@ structure _NDEventPO [Machine CTX M] (ev : _NDEvent M α β) (kind : EventKind) 
 
 /-- The type of non-deterministic events without convergence properties.
 It is an event for machine type `M` with input type `α` and output type `β` -/
-structure OrdinaryNDEvent (M) [Machine CTX M] (α) (β) extends _NDEvent M α β where
+structure OrdinaryNDEvent (M) [@Machine CTX M] (α) (β) extends _NDEvent M α β where
   po : _NDEventPO to_NDEvent  (EventKind.TransNonDet Convergence.Ordinary)
 
-theorem OrdinaryNDEvent.ext [Machine CTX M] (ev₁ : OrdinaryNDEvent M α β) (ev₂ : OrdinaryNDEvent M α β):
+theorem OrdinaryNDEvent.ext [@Machine CTX M] (ev₁ : OrdinaryNDEvent M α β) (ev₂ : OrdinaryNDEvent M α β):
   ev₁.to_NDEvent = ev₂.to_NDEvent
   → ev₁ = ev₂ :=
 by
@@ -48,7 +48,7 @@ by
 
 
 @[simp]
-def OrdinaryEvent.toOrdinaryNDEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryNDEvent M α β :=
+def OrdinaryEvent.toOrdinaryNDEvent [@Machine CTX M] (ev : OrdinaryEvent M α β) : OrdinaryNDEvent M α β :=
   let event := ev.to_Event.to_NDEvent
 {
   guard := event.guard
@@ -64,7 +64,7 @@ def OrdinaryEvent.toOrdinaryNDEvent [Machine CTX M] (ev : OrdinaryEvent M α β)
 
 /-- The specification of a non-deterministic, ordinary event for machine `M`
 with input type `α` and output type `β`. . -/
-structure NDEventSpec (M) [Machine CTX M] (α) (β) where
+structure NDEventSpec (M) [@Machine CTX M] (α) (β) where
   /-- The guard property of the event, in machine state `m` with input `x`. -/
   guard (m : M) (x : α) : Prop := True
 
@@ -96,7 +96,7 @@ structure NDEventSpec (M) [Machine CTX M] (α) (β) where
     → ∃ y, ∃ m', effect m x grd (y, m')
 
 @[simp]
-def NDEventSpec.to_NDEvent [Machine CTX M] (ev : NDEventSpec M α β) : _NDEvent M α β :=
+def NDEventSpec.to_NDEvent [@Machine CTX M] (ev : NDEventSpec M α β) : _NDEvent M α β :=
   { guard := ev.guard
     effect := ev.effect
   }
@@ -104,7 +104,7 @@ def NDEventSpec.to_NDEvent [Machine CTX M] (ev : NDEventSpec M α β) : _NDEvent
 /-- Construction of an ordinary non-deterministic event from a
 `NDEventSpec` specification. -/
 @[simp]
-def newNDEvent {M} [Machine CTX M] (ev : NDEventSpec M α β) : OrdinaryNDEvent M α β :=
+def newNDEvent {M} [@Machine CTX M] (ev : NDEventSpec M α β) : OrdinaryNDEvent M α β :=
   {
     to_NDEvent := ev.to_NDEvent
     po := { safety := fun m x => by simp
@@ -117,7 +117,7 @@ def newNDEvent {M} [Machine CTX M] (ev : NDEventSpec M α β) : OrdinaryNDEvent 
   }
 
 /-- Variant of `NDEventSpec` with implicit `Unit` output type -/
-structure NDEventSpec' (M) [Machine CTX M] (α) where
+structure NDEventSpec' (M) [@Machine CTX M] (α) where
   guard (m : M) (x : α) : Prop := True
   effect (m : M) (x : α) (grd : guard m x) (m' : M) : Prop
 
@@ -133,7 +133,7 @@ structure NDEventSpec' (M) [Machine CTX M] (α) where
     → ∃ m', effect m x grd m'
 
 @[simp]
-def NDEventSpec'.toNDEventSpec [Machine CTX M] (ev : NDEventSpec' M α) : NDEventSpec M α Unit :=
+def NDEventSpec'.toNDEventSpec [@Machine CTX M] (ev : NDEventSpec' M α) : NDEventSpec M α Unit :=
   { guard := ev.guard
     effect := fun m x grd ((), m') => ev.effect m x grd m'
     safety := fun m x => by simp ; apply ev.safety
@@ -142,11 +142,11 @@ def NDEventSpec'.toNDEventSpec [Machine CTX M] (ev : NDEventSpec' M α) : NDEven
 
 /-- Variant of `newNDEvent` with implicit `Unit` output type -/
 @[simp]
-def newNDEvent' {M} [Machine CTX M] (ev : NDEventSpec' M α) : OrdinaryNDEvent M α Unit :=
+def newNDEvent' {M} [@Machine CTX M] (ev : NDEventSpec' M α) : OrdinaryNDEvent M α Unit :=
   newNDEvent ev.toNDEventSpec
 
 /-- Variant of `NDEventSpec` with implicit `Unit` input and output types -/
-structure NDEventSpec'' (M) [Machine CTX M] where
+structure NDEventSpec'' (M) [@Machine CTX M] where
   guard (m : M) : Prop := True
   effect (m : M) (grd : guard m) (m' : M) : Prop
 
@@ -162,7 +162,7 @@ structure NDEventSpec'' (M) [Machine CTX M] where
     → ∃ m', effect m grd m'
 
 @[simp]
-def NDEventSpec''.toNDEventSpec [Machine CTX M] (ev : NDEventSpec'' M) : NDEventSpec M Unit Unit :=
+def NDEventSpec''.toNDEventSpec [@Machine CTX M] (ev : NDEventSpec'' M) : NDEventSpec M Unit Unit :=
   { guard := fun m _ => ev.guard m
     effect := fun m () grd ((), m') => ev.effect m grd m'
     safety := fun m x => by
@@ -177,7 +177,7 @@ def NDEventSpec''.toNDEventSpec [Machine CTX M] (ev : NDEventSpec'' M) : NDEvent
 
 /-- Variant of `newNDEvent` with implicit `Unit` input and output types -/
 @[simp]
-def newNDEvent'' {M} [Machine CTX M] (ev : NDEventSpec'' M) : OrdinaryNDEvent M Unit Unit :=
+def newNDEvent'' {M} [@Machine CTX M] (ev : NDEventSpec'' M) : OrdinaryNDEvent M Unit Unit :=
   newNDEvent ev.toNDEventSpec
 
 /-!
@@ -185,7 +185,7 @@ def newNDEvent'' {M} [Machine CTX M] (ev : NDEventSpec'' M) : OrdinaryNDEvent M 
 -/
 
 /-- The internal representation of proof obligations for initialization events. -/
-structure _InitNDEventPO [Machine CTX M] (ev : _InitNDEvent M α β) (kind : EventKind) where
+structure _InitNDEventPO [@Machine CTX M] (ev : _InitNDEvent M α β) (kind : EventKind) where
   safety (x : α):
     (grd : ev.guard x)
     → ∀ y, ∀ m', ev.init x grd (y, m')
@@ -197,14 +197,14 @@ structure _InitNDEventPO [Machine CTX M] (ev : _InitNDEvent M α β) (kind : Eve
 
 /-- Type type of non-deterministic initialization events.
 It is an event for machine type `M` with input type `α` and output type `β` -/
-structure InitNDEvent (M) [Machine CTX M] (α) (β) extends _InitNDEvent M α β where
+structure InitNDEvent (M) [@Machine CTX M] (α) (β) extends _InitNDEvent M α β where
   po : _InitNDEventPO to_InitNDEvent  EventKind.InitNonDet
 
 /-- The specification of a non-deterministic intialization event for machine `M`
 with input type `α` and output type `β`.
 The effect of the event is called an `init`.
 -/
-structure InitNDEventSpec (M) [Machine CTX M] (α) (β) where
+structure InitNDEventSpec (M) [@Machine CTX M] (α) (β) where
   /-- The guard property of the event, an initialization with input `x`. -/
   guard (x : α) : Prop := True
   /-- The (non-deterministic) effect of the event, with
@@ -222,7 +222,7 @@ structure InitNDEventSpec (M) [Machine CTX M] (α) (β) where
     → ∃ y, ∃ m, init x grd (y, m)
 
 @[simp]
-def InitNDEventSpec.to_InitNDEvent [Machine CTX M]
+def InitNDEventSpec.to_InitNDEvent [@Machine CTX M]
   (ev : InitNDEventSpec M α β) : _InitNDEvent M α β :=
   {
     guard := ev.guard
@@ -232,7 +232,7 @@ def InitNDEventSpec.to_InitNDEvent [Machine CTX M]
 /-- Construction of a on-deterministic initialization event from a
 `InitNDEventSpec` specification. -/
 @[simp]
-def newInitNDEvent {M} [Machine CTX M] (ev : InitNDEventSpec M α β) : InitNDEvent M α β :=
+def newInitNDEvent {M} [@Machine CTX M] (ev : InitNDEventSpec M α β) : InitNDEvent M α β :=
   {
     to_InitNDEvent := ev.to_InitNDEvent
     po := {
@@ -244,7 +244,7 @@ def newInitNDEvent {M} [Machine CTX M] (ev : InitNDEventSpec M α β) : InitNDEv
   }
 
 /-- Variant of `InitNDEventSpec` with implicit `Unit` output type -/
-structure InitNDEventSpec' (M) [Machine CTX M] (α) where
+structure InitNDEventSpec' (M) [@Machine CTX M] (α) where
   guard (x : α) : Prop := True
   init (x : α) (grd : guard x) (m : M) : Prop
 
@@ -258,7 +258,7 @@ structure InitNDEventSpec' (M) [Machine CTX M] (α) where
     → ∃ m, init x grd m
 
 @[simp]
-def InitNDEventSpec'.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEventSpec M α Unit :=
+def InitNDEventSpec'.toInitNDEventSpec [@Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEventSpec M α Unit :=
   {
     guard := ev.guard
     init := fun x grd ((), m) => ev.init x grd m
@@ -274,12 +274,12 @@ def InitNDEventSpec'.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec' M 
 
 /-- Variant of `newInitNDEvent` with implicit `Unit` output type -/
 @[simp]
-def newInitNDEvent' [Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEvent M α Unit :=
+def newInitNDEvent' [@Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEvent M α Unit :=
   newInitNDEvent ev.toInitNDEventSpec
 
 
 /-- Variant of `InitNDEventSpec` with implicit `Unit` input and output types -/
-structure InitNDEventSpec'' (M) [Machine CTX M] where
+structure InitNDEventSpec'' (M) [@Machine CTX M] where
   guard : Prop := True
   init (grd : guard) (m : M) : Prop
 
@@ -293,7 +293,7 @@ structure InitNDEventSpec'' (M) [Machine CTX M] where
     → ∃ m, init grd m
 
 @[simp]
-def InitNDEventSpec''.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEventSpec M Unit Unit :=
+def InitNDEventSpec''.toInitNDEventSpec [@Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEventSpec M Unit Unit :=
   {
     guard := fun () => ev.guard
     init := fun () grd ((), m) => ev.init grd m
@@ -309,7 +309,7 @@ def InitNDEventSpec''.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec'' 
 
 /-- Variant of `newInitNDEvent` with implicit `Unit` input and output types -/
 @[simp]
-def newInitNDEvent'' [Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEvent M Unit Unit :=
+def newInitNDEvent'' [@Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEvent M Unit Unit :=
   newInitNDEvent ev.toInitNDEventSpec
 
 /-!
@@ -323,7 +323,7 @@ This part is rather experimental and is thus not fully documented yet.
 
 -/
 
-instance [Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
+instance [@Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
   map {α β} (f : α → β) event :=
   let ev' : _NDEvent M γ β := f <$> event.to_NDEvent
   {
@@ -346,7 +346,7 @@ instance [Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
   }
 
 -- XXX: proofs are a little bit painful due to the existentials ...
-instance [Machine CTX M] : LawfulFunctor (OrdinaryNDEvent M γ) where
+instance [@Machine CTX M] : LawfulFunctor (OrdinaryNDEvent M γ) where
   map_const := rfl
   id_map ev := by simp [Functor.map]
 
@@ -362,7 +362,7 @@ instance [Machine CTX M] : LawfulFunctor (OrdinaryNDEvent M γ) where
 /- XXX:
 --  The output contravariant functor not provable, because we would
 -- need a iso morphisme between α and β.
-instance [Machine CTX M] : ContravariantFunctor (OrdinaryNDEvent M γ) where
+instance [@Machine CTX M] : ContravariantFunctor (OrdinaryNDEvent M γ) where
   contramap {α β} (f : β → α) event :=
   let ev' : _NDEvent M γ β := ContravariantFunctor.contramap f event.to_NDEvent
   {
@@ -385,18 +385,18 @@ instance [Machine CTX M] : ContravariantFunctor (OrdinaryNDEvent M γ) where
 
 
 -- The input contravariant functor
-abbrev CoOrdinaryNDEvent (M) [Machine CTX M] (α) (β) := OrdinaryNDEvent M β α
+abbrev CoOrdinaryNDEvent (M) [@Machine CTX M] (α) (β) := OrdinaryNDEvent M β α
 
 
 @[simp]
-def CoOrdinaryNDEvent_from_OrdinaryNDEvent [Machine CTX M] (ev : OrdinaryNDEvent M α β) : CoOrdinaryNDEvent M β α :=
+def CoOrdinaryNDEvent_from_OrdinaryNDEvent [@Machine CTX M] (ev : OrdinaryNDEvent M α β) : CoOrdinaryNDEvent M β α :=
  ev
 
 @[simp]
-def OrdinaryNDEvent_from_CoOrdinaryNDEvent [Machine CTX M] (ev : CoOrdinaryNDEvent M β α) : OrdinaryNDEvent M α β :=
+def OrdinaryNDEvent_from_CoOrdinaryNDEvent [@Machine CTX M] (ev : CoOrdinaryNDEvent M β α) : OrdinaryNDEvent M α β :=
  ev
 
-instance [Machine CTX M] : ContravariantFunctor (CoOrdinaryNDEvent M γ) where
+instance [@Machine CTX M] : ContravariantFunctor (CoOrdinaryNDEvent M γ) where
   contramap {α β} (f : β → α) event :=
   let ev : _CoNDEvent M γ β := ContravariantFunctor.contramap f event.to_NDEvent
   {
@@ -422,17 +422,17 @@ instance [Machine CTX M] : ContravariantFunctor (CoOrdinaryNDEvent M γ) where
      }
   }
 
-instance [Machine CTX M] : LawfullContravariantFunctor (CoOrdinaryNDEvent M γ) where
+instance [@Machine CTX M] : LawfullContravariantFunctor (CoOrdinaryNDEvent M γ) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
-instance [Machine CTX M] : Profunctor (OrdinaryNDEvent M) where
+instance [@Machine CTX M] : Profunctor (OrdinaryNDEvent M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : OrdinaryNDEvent M α γ) : OrdinaryNDEvent M β δ :=
   let ev' := OrdinaryNDEvent_from_CoOrdinaryNDEvent (ContravariantFunctor.contramap f (CoOrdinaryNDEvent_from_OrdinaryNDEvent ev))
   g <$> ev'
 
 
-instance [Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
+instance [@Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
   dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
   dimap_comp f f' g g' := by
@@ -448,7 +448,7 @@ instance [Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
         simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
         simp [*]
 
-instance [Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
+instance [@Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
   first' {α β γ} (event : OrdinaryNDEvent M α β): OrdinaryNDEvent M (α × γ) (β × γ) :=
     let ev : _NDEvent M (α × γ) (β × γ) := StrongProfunctor.first' event.to_NDEvent
     {
@@ -471,9 +471,9 @@ instance [Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
       }
     }
 
-instance [Machine CTX M] : LawfulStrongProfunctor (OrdinaryNDEvent M) where
+instance [@Machine CTX M] : LawfulStrongProfunctor (OrdinaryNDEvent M) where
 
-instance [Machine CTX M]: Category (OrdinaryNDEvent M) where
+instance [@Machine CTX M]: Category (OrdinaryNDEvent M) where
   id {α }:=
   let ev : _NDEvent M α α := Category.id
   {
@@ -516,7 +516,7 @@ instance [Machine CTX M]: Category (OrdinaryNDEvent M) where
       }
     }
 
-instance [Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
+instance [@Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
   id_right ev := by
     simp
     have Hir := LawfulCategory.id_right ev.to_NDEvent
@@ -542,20 +542,20 @@ instance [Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
 
 -- XXX: This axiom is required to obtain feasibility
 /-
-axiom OrdinaryNDEvent_split_feasibility_ax {CTX} {M} [Machine CTX M] [Semigroup M] {α β α' β'} (ev₁ : _NDEvent M α β)  (ev₂ : _NDEvent M α' β')
+axiom OrdinaryNDEvent_split_feasibility_ax {CTX} {M} [@Machine CTX M] [Semigroup M] {α β α' β'} (ev₁ : _NDEvent M α β)  (ev₂ : _NDEvent M α' β')
   (m : M) (x : α) (x' : α'):
   (∃ y, ∃ grd₁, ∃ m', ev₁.effect m x grd₁ (y, m'))
   → (∃ y', ∃ grd₂, ∃ m', ev₂.effect m x' grd₂ (y', m'))
   → (∃ y, ∃ y', ∃ m', (Arrow.split ev₁ ev₂).effect m (x, x') (by sorry) ((y, y'), m'))
 -/
 
-class ParallelMachine (M) [Machine CTX M] extends Semigroup M where
+class ParallelMachine (M) [@Machine CTX M] extends Semigroup M where
   par_safe (m₁ m₂ : M):
     Machine.invariant m₁
     → Machine.invariant m₂
     → Machine.invariant (m₁ * m₂)
 
-instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
+instance [@Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
 
   arrow {α β} (f : α → β) :=
     let event : _NDEvent M α β := Arrow.arrow f
@@ -625,7 +625,7 @@ instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
 
 
 
-instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) where
+instance [@Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) where
   arrow_id := by simp [Arrow.arrow]
 
   arrow_ext {α β γ } f :=

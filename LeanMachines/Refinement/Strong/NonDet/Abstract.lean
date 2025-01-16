@@ -6,8 +6,8 @@ open Refinement
 open FRefinement
 open SRefinement
 
-structure AbstractSRNDEventSpec (AM) [Machine ACTX AM]
-                             (M) [Machine CTX M]
+structure AbstractSRNDEventSpec (AM) [@Machine ACTX AM]
+                             (M) [@Machine CTX M]
                             [instSR: SRefinement AM M]
   {α β} (abstract : OrdinaryNDEvent AM α β)
       where
@@ -19,7 +19,7 @@ structure AbstractSRNDEventSpec (AM) [Machine ACTX AM]
                   → Machine.invariant (unlift m am')
 
 @[simp]
-def AbstractSRNDEventSpec.toAbstractFRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractSRNDEventSpec.toAbstractFRNDEventSpec  [@Machine ACTX AM] [@Machine CTX M] [instSR: SRefinement AM M]
   (abstract : OrdinaryNDEvent AM α β)
   (ev : AbstractSRNDEventSpec AM M abstract) : AbstractFRNDEventSpec AM M abstract :=
   {
@@ -46,13 +46,13 @@ def AbstractSRNDEventSpec.toAbstractFRNDEventSpec  [Machine ACTX AM] [Machine CT
   }
 
 @[simp]
-def newAbstractSRNDEvent [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractSRNDEvent [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : OrdinaryNDEvent AM α β)
   (ev : AbstractSRNDEventSpec AM M abs) : OrdinaryRNDEvent AM M α β :=
   newAbstractFRNDEvent abs ev.toAbstractFRNDEventSpec
 
-structure AbstractSRNDEventSpec' (AM) [Machine ACTX AM]
-                             (M) [Machine CTX M]
+structure AbstractSRNDEventSpec' (AM) [@Machine ACTX AM]
+                             (M) [@Machine CTX M]
                             [instSR: SRefinement AM M]
   {α} (abstract : OrdinaryNDEvent AM α Unit)
       where
@@ -64,7 +64,7 @@ structure AbstractSRNDEventSpec' (AM) [Machine ACTX AM]
              → Machine.invariant (unlift m am')
 
 @[simp]
-def AbstractSRNDEventSpec'.toAbstractSRNDEventSpec [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def AbstractSRNDEventSpec'.toAbstractSRNDEventSpec [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abstract : OrdinaryNDEvent AM α Unit)
   (ev : AbstractSRNDEventSpec' AM M abstract) : AbstractSRNDEventSpec AM M abstract :=
   {
@@ -72,13 +72,13 @@ def AbstractSRNDEventSpec'.toAbstractSRNDEventSpec [Machine ACTX AM] [Machine CT
   }
 
 @[simp]
-def newAbstractSRNDEvent' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractSRNDEvent' [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : OrdinaryNDEvent AM α Unit)
   (ev : AbstractSRNDEventSpec' AM M abs) : OrdinaryRNDEvent AM M α Unit :=
   newAbstractSRNDEvent abs ev.toAbstractSRNDEventSpec
 
-structure AbstractSRNDEventSpec'' (AM) [Machine ACTX AM]
-                             (M) [Machine CTX M]
+structure AbstractSRNDEventSpec'' (AM) [@Machine ACTX AM]
+                             (M) [@Machine CTX M]
                             [instSR: SRefinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit)
       where
@@ -90,7 +90,7 @@ structure AbstractSRNDEventSpec'' (AM) [Machine ACTX AM]
              → Machine.invariant (unlift m am')
 
 @[simp]
-def AbstractSRNDEventSpec''.toAbstractSRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractSRNDEventSpec''.toAbstractSRNDEventSpec  [@Machine ACTX AM] [@Machine CTX M] [instSR: SRefinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit)
   (ev : AbstractSRNDEventSpec'' AM M abstract) : AbstractSRNDEventSpec AM M abstract :=
   {
@@ -100,13 +100,13 @@ def AbstractSRNDEventSpec''.toAbstractSRNDEventSpec  [Machine ACTX AM] [Machine 
   }
 
 @[simp]
-def newAbstractSRNDEvent'' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractSRNDEvent'' [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit)
   (ev : AbstractSRNDEventSpec'' AM M abs) : OrdinaryRNDEvent AM M Unit Unit :=
   newAbstractSRNDEvent abs ev.toAbstractSRNDEventSpec
 
-structure AbstractInitSRNDEventSpec (AM) [Machine ACTX AM]
-                             (M) [Machine CTX M]
+structure AbstractInitSRNDEventSpec (AM) [@Machine ACTX AM]
+                             (M) [@Machine CTX M]
                             [instSR: SRefinement AM M]
   {α β} (abstract : InitNDEvent AM α β)
       where
@@ -117,7 +117,7 @@ structure AbstractInitSRNDEventSpec (AM) [Machine ACTX AM]
                   → Machine.invariant (M:=M) (unlift default am')
 
 @[simp]
-def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [@Machine ACTX AM] [@Machine CTX M] [instSR: SRefinement AM M]
   (abstract : InitNDEvent AM α β)
   (ev : AbstractInitSRNDEventSpec AM M abstract) : AbstractInitFRNDEventSpec AM M abstract :=
   {
@@ -145,13 +145,13 @@ def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Ma
   }
 
 @[simp]
-def newAbstractInitSRNDEvent [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractInitSRNDEvent [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : InitNDEvent AM α β)
   (ev : AbstractInitSRNDEventSpec AM M abs) : InitRNDEvent AM M α β :=
   newAbstractInitFRNDEvent abs ev.toAbstractInitFRNDEventSpec
 
-structure AbstractInitSRNDEventSpec' (AM) [Machine ACTX AM]
-                             (M) [Machine CTX M]
+structure AbstractInitSRNDEventSpec' (AM) [@Machine ACTX AM]
+                             (M) [@Machine CTX M]
                             [instSR: SRefinement AM M]
   {α} (abstract : InitNDEvent AM α Unit)
       where
@@ -162,7 +162,7 @@ structure AbstractInitSRNDEventSpec' (AM) [Machine ACTX AM]
              → Machine.invariant (M:=M) (unlift default am')
 
 @[simp]
-def AbstractInitSRNDEventSpec'.toAbstractInitSRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractInitSRNDEventSpec'.toAbstractInitSRNDEventSpec  [@Machine ACTX AM] [@Machine CTX M] [instSR: SRefinement AM M]
   (abstract : InitNDEvent AM α Unit)
   (ev : AbstractInitSRNDEventSpec' AM M abstract) : AbstractInitSRNDEventSpec AM M abstract :=
   {
@@ -172,13 +172,13 @@ def AbstractInitSRNDEventSpec'.toAbstractInitSRNDEventSpec  [Machine ACTX AM] [M
   }
 
 @[simp]
-def newAbstractInitSRNDEvent' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractInitSRNDEvent' [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : InitNDEvent AM α Unit)
   (ev : AbstractInitSRNDEventSpec' AM M abs) : InitRNDEvent AM M α Unit :=
   newAbstractInitSRNDEvent abs ev.toAbstractInitSRNDEventSpec
 
-structure AbstractInitSRNDEventSpec'' (AM) [Machine ACTX AM]
-                             (M) [Machine CTX M]
+structure AbstractInitSRNDEventSpec'' (AM) [@Machine ACTX AM]
+                             (M) [@Machine CTX M]
                             [instSR: SRefinement AM M]
   (abstract : InitNDEvent AM Unit Unit)
       where
@@ -189,7 +189,7 @@ structure AbstractInitSRNDEventSpec'' (AM) [Machine ACTX AM]
              → Machine.invariant (M:=M) (unlift default am')
 
 @[simp]
-def AbstractInitSRNDEventSpec''.toAbstractInitSRNDEventSpec  [Machine ACTX AM] [Machine CTX M] [instSR: SRefinement AM M]
+def AbstractInitSRNDEventSpec''.toAbstractInitSRNDEventSpec  [@Machine ACTX AM] [@Machine CTX M] [instSR: SRefinement AM M]
   (abstract : InitNDEvent AM Unit Unit)
   (ev : AbstractInitSRNDEventSpec'' AM M abstract) : AbstractInitSRNDEventSpec AM M abstract :=
   {
@@ -199,41 +199,41 @@ def AbstractInitSRNDEventSpec''.toAbstractInitSRNDEventSpec  [Machine ACTX AM] [
   }
 
 @[simp]
-def newAbstractInitSRNDEvent'' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractInitSRNDEvent'' [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : InitNDEvent AM Unit Unit)
   (ev : AbstractInitSRNDEventSpec'' AM M abs) : InitRNDEvent AM M Unit Unit :=
   newAbstractInitSRNDEvent abs ev.toAbstractInitSRNDEventSpec
 
 
 @[simp]
-def newAbstractAnticipatedSRNDEvent [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractAnticipatedSRNDEvent [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : AnticipatedNDEvent v AM α β)
   (ev : AbstractSRNDEventSpec AM M abs.toOrdinaryNDEvent) : AnticipatedRNDEvent v AM M α β :=
   newAbstractAnticipatedFRNDEvent abs (ev.toAbstractFRNDEventSpec abs.toOrdinaryNDEvent)
 
 @[simp]
-def newAbstractAnticipatedSRNDEvent' [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractAnticipatedSRNDEvent' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : AnticipatedNDEvent v AM α Unit)
   (ev : AbstractSRNDEventSpec' AM M abs.toOrdinaryNDEvent) : AnticipatedRNDEvent v AM M α Unit :=
   newAbstractAnticipatedSRNDEvent abs ev.toAbstractSRNDEventSpec
 
 @[simp]
-def newAbstractAnticipatedSRNDEvent'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractAnticipatedSRNDEvent'' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : AnticipatedNDEvent v AM Unit Unit)
   (ev : AbstractSRNDEventSpec'' AM M abs.toOrdinaryNDEvent) : AnticipatedRNDEvent v AM M Unit Unit :=
   newAbstractAnticipatedSRNDEvent abs ev.toAbstractSRNDEventSpec
 
 @[simp]
-def newAbstractConvergentSRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractConvergentSRNDEvent [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : ConvergentNDEvent v AM α β) (ev : AbstractSRNDEventSpec AM M abs.toAnticipatedNDEvent.toOrdinaryNDEvent) : ConvergentRNDEvent v AM M α β :=
   newAbstractConvergentFRNDEvent abs (ev.toAbstractFRNDEventSpec abs.toAnticipatedNDEvent.toOrdinaryNDEvent)
 
 @[simp]
-def newAbstractConvergentSRNDEvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractConvergentSRNDEvent' [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : ConvergentNDEvent v AM α Unit) (ev : AbstractSRNDEventSpec' AM M abs.toAnticipatedNDEvent.toOrdinaryNDEvent) : ConvergentRNDEvent v AM M α Unit :=
   newAbstractConvergentSRNDEvent abs ev.toAbstractSRNDEventSpec
 
 @[simp]
-def newAbstractConvergentSRNDEvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newAbstractConvergentSRNDEvent'' [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : ConvergentNDEvent v AM Unit Unit) (ev : AbstractSRNDEventSpec' AM M abs.toAnticipatedNDEvent.toOrdinaryNDEvent) : ConvergentRNDEvent v AM M Unit Unit :=
   newAbstractConvergentSRNDEvent abs ev.toAbstractSRNDEventSpec

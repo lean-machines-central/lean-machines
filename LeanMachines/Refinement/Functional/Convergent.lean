@@ -6,7 +6,7 @@ import LeanMachines.Event.Convergent
 open Refinement
 open FRefinement
 
-structure AnticipatedFREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
+structure AnticipatedFREventSpec (v) [Preorder v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [FRefinement AM M]
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
   extends _Variant v (instM:=instM), FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
@@ -17,7 +17,7 @@ structure AnticipatedFREventSpec (v) [Preorder v] (AM) [Machine ACTX AM] (M) [in
       variant m' ≤ variant m
 
 @[simp]
-def AnticipatedFREventSpec.toAnticipatedREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def AnticipatedFREventSpec.toAnticipatedREventSpec [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev :  AnticipatedFREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : AnticipatedREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
   {
     toREventSpec := ev.toREventSpec
@@ -26,11 +26,11 @@ def AnticipatedFREventSpec.toAnticipatedREventSpec [Preorder v] [Machine ACTX AM
   }
 
 @[simp]
-def newAnticipatedFREventfromOrdinary [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newAnticipatedFREventfromOrdinary [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : AnticipatedFREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : AnticipatedREvent v AM M α β α' β' :=
   newAnticipatedREventfromOrdinary abs ev.toAnticipatedREventSpec
 
-structure AnticipatedFREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
+structure AnticipatedFREventSpec' (v) [Preorder v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [FRefinement AM M]
   {α α'} (abs : OrdinaryEvent AM α' Unit)
   extends _Variant v (instM:=instM), FREventSpec' AM M (α:=α) (α':=α') abs where
 
@@ -41,7 +41,7 @@ structure AnticipatedFREventSpec' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [i
       variant m' ≤ variant m
 
 @[simp]
-def AnticipatedFREventSpec'.toAnticipatedFREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def AnticipatedFREventSpec'.toAnticipatedFREventSpec [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev :  AnticipatedFREventSpec' v AM M (α:=α) (α':=α') abs) : AnticipatedFREventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
     toFREventSpec := ev.toFREventSpec
@@ -50,11 +50,11 @@ def AnticipatedFREventSpec'.toAnticipatedFREventSpec [Preorder v] [Machine ACTX 
   }
 
 @[simp]
-def newAnticipatedFREventfromOrdinary' [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newAnticipatedFREventfromOrdinary' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev : AnticipatedFREventSpec' v AM M (α:=α) (α':=α') abs) : AnticipatedREvent v AM M α Unit α' Unit :=
   newAnticipatedFREventfromOrdinary abs ev.toAnticipatedFREventSpec
 
-structure AnticipatedFREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
+structure AnticipatedFREventSpec'' (v) [Preorder v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit)
   extends _Variant v (instM:=instM), FREventSpec'' AM M abs where
 
@@ -65,7 +65,7 @@ structure AnticipatedFREventSpec'' (v) [Preorder v] (AM) [Machine ACTX AM] (M) [
       variant m' ≤ variant m
 
 @[simp]
-def AnticipatedFREventSpec''.toAnticipatedFREventSpec [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def AnticipatedFREventSpec''.toAnticipatedFREventSpec [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev :  AnticipatedFREventSpec'' v AM M abs) : AnticipatedFREventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
     toFREventSpec := ev.toFREventSpec
@@ -74,26 +74,26 @@ def AnticipatedFREventSpec''.toAnticipatedFREventSpec [Preorder v] [Machine ACTX
   }
 
 @[simp]
-def newAnticipatedFREventfromOrdinary'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newAnticipatedFREventfromOrdinary'' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev : AnticipatedFREventSpec'' v AM M abs) : AnticipatedREvent v AM M Unit Unit :=
   newAnticipatedFREventfromOrdinary abs ev.toAnticipatedFREventSpec
 
 @[simp]
-def newAnticipatedFREventfromAnticipated [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newAnticipatedFREventfromAnticipated [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : AnticipatedEvent v AM α' β') (ev : AnticipatedFREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs.toOrdinaryEvent) : AnticipatedREvent v AM M α β α' β' :=
   newAnticipatedREventfromAnticipated abs ev.toAnticipatedREventSpec
 
 @[simp]
-def newAnticipatedFREventfromAnticipated' [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newAnticipatedFREventfromAnticipated' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : AnticipatedEvent v AM α' Unit) (ev : AnticipatedFREventSpec' v AM M (α:=α) (α':=α') abs.toOrdinaryEvent) : AnticipatedREvent v AM M α Unit α' Unit :=
   newAnticipatedFREventfromAnticipated abs ev.toAnticipatedFREventSpec
 
 @[simp]
-def newAnticipatedFREventfromAnticipated'' [Preorder v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newAnticipatedFREventfromAnticipated'' [Preorder v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : AnticipatedEvent v AM Unit Unit) (ev : AnticipatedFREventSpec'' v AM M abs.toOrdinaryEvent) : AnticipatedREvent v AM M Unit Unit :=
   newAnticipatedFREventfromAnticipated abs ev.toAnticipatedFREventSpec
 
-structure ConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
+structure ConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [FRefinement AM M]
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
   extends _Variant v (instM:=instM), FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs where
 
@@ -104,7 +104,7 @@ structure ConvergentFREventSpec (v) [Preorder v] [WellFoundedLT v] (AM) [Machine
       variant m' < variant m
 
 @[simp]
-def ConvergentFREventSpec.toConvergentREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def ConvergentFREventSpec.toConvergentREventSpec [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev :  ConvergentFREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : ConvergentREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
   {
     toREventSpec := ev.toREventSpec
@@ -113,11 +113,11 @@ def ConvergentFREventSpec.toConvergentREventSpec [Preorder v] [WellFoundedLT v] 
   }
 
 @[simp]
-def newConvergentFREvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newConvergentFREvent [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : ConvergentFREventSpec v AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : ConvergentREvent v AM M α β α' β' :=
   newConvergentREvent abs ev.toConvergentREventSpec
 
-structure ConvergentFREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
+structure ConvergentFREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [FRefinement AM M]
   {α α'} (abs : OrdinaryEvent AM α' Unit)
   extends _Variant v (instM:=instM), FREventSpec' AM M (α:=α) (α':=α') abs where
 
@@ -128,7 +128,7 @@ structure ConvergentFREventSpec' (v) [Preorder v] [WellFoundedLT v] (AM) [Machin
       variant m' < variant m
 
 @[simp]
-def ConvergentFREventSpec'.toConvergentFREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def ConvergentFREventSpec'.toConvergentFREventSpec [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev :  ConvergentFREventSpec' v AM M (α:=α) (α':=α') abs) : ConvergentFREventSpec v AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
     toFREventSpec := ev.toFREventSpec
@@ -137,11 +137,11 @@ def ConvergentFREventSpec'.toConvergentFREventSpec [Preorder v] [WellFoundedLT v
   }
 
 @[simp]
-def newConvergentFREvent' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newConvergentFREvent' [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev : ConvergentFREventSpec' v AM M (α:=α) (α':=α') abs) : ConvergentREvent v AM M α Unit α' Unit :=
   newConvergentFREvent abs ev.toConvergentFREventSpec
 
-structure ConvergentFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machine ACTX AM] (M) [instM:Machine CTX M] [FRefinement AM M]
+structure ConvergentFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [@Machine ACTX AM] (M) [instM:@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit)
   extends _Variant v (instM:=instM), FREventSpec'' AM M abs where
 
@@ -152,7 +152,7 @@ structure ConvergentFREventSpec'' (v) [Preorder v] [WellFoundedLT v] (AM) [Machi
       variant m' < variant m
 
 @[simp]
-def ConvergentFREventSpec''.toConvergentFREventSpec [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def ConvergentFREventSpec''.toConvergentFREventSpec [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev :  ConvergentFREventSpec'' v AM M abs) : ConvergentFREventSpec v AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
     toFREventSpec := ev.toFREventSpec
@@ -161,6 +161,6 @@ def ConvergentFREventSpec''.toConvergentFREventSpec [Preorder v] [WellFoundedLT 
   }
 
 @[simp]
-def newConvergentFREvent'' [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newConvergentFREvent'' [Preorder v] [WellFoundedLT v] [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev : ConvergentFREventSpec'' v AM M abs) : ConvergentREvent v AM M Unit Unit :=
   newConvergentFREvent abs ev.toConvergentFREventSpec
