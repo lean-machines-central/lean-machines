@@ -39,7 +39,7 @@ However, the requirements are now promoted to the machine-level.
 -/
 class SRefinement {ACTX : outParam (Type u₁)} (AM)
                  {CTX : outParam (Type u₂)} (M)
-                 [Machine ACTX AM] [Machine CTX M] extends FRefinement AM M where
+                 [@Machine ACTX AM] [@Machine CTX M] extends FRefinement AM M where
 
   /-- Reconstruction of a concrete post-state from a concrete-pre state `m`
    and an abstract post-state `am'`.
@@ -61,7 +61,7 @@ class SRefinement {ACTX : outParam (Type u₁)} (AM)
 open Refinement
 open SRefinement
 
-theorem unlift_refine [Machine ACTX AM] [Machine CTX M] [instSR:SRefinement AM M] {m : M} {am : AM}:
+theorem unlift_refine [@Machine ACTX AM] [@Machine CTX M] [instSR:SRefinement AM M] {m : M} {am : AM}:
     Machine.invariant m → Machine.invariant am → refine am (unlift m am) := by
   intro Hinv₁ Hinv₂
   have Href: refine (self:=inferInstanceAs (Refinement AM M)) (lift (unlift m am)) (unlift m am) := rfl
@@ -81,33 +81,33 @@ cf. the module `Refinement.Functional.Basic` for further documentation.
 -/
 
 @[simp]
-def newSREvent [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newSREvent [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
   newREvent abs ev.toREventSpec
 
 @[simp]
-def newSREvent' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newSREvent' [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev : FREventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryREvent AM M α Unit α' Unit :=
   newSREvent abs ev.toFREventSpec
 
 @[simp]
-def newSREvent'' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newSREvent'' [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev : FREventSpec'' AM M abs) : OrdinaryREvent AM M Unit Unit :=
   newSREvent abs ev.toFREventSpec
 
 /- Initialization events -/
 
 @[simp]
-def newInitSREvent [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newInitSREvent [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : InitEvent AM α' β') (ev : InitFREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : InitREvent AM M α β α' β' :=
   newInitREvent abs ev.toInitREventSpec
 
 @[simp]
-def newInitSREvent' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newInitSREvent' [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : InitEvent AM α' Unit) (ev : InitFREventSpec' AM M (α:=α) (α':=α') abs) : InitREvent AM M α Unit α' Unit :=
   newInitSREvent abs ev.toInitFREventSpec
 
 @[simp]
-def newInitSREvent'' [Machine ACTX AM] [Machine CTX M] [SRefinement AM M]
+def newInitSREvent'' [@Machine ACTX AM] [@Machine CTX M] [SRefinement AM M]
   (abs : InitEvent AM Unit Unit) (ev : InitFREventSpec'' AM M abs) : InitREvent AM M Unit Unit :=
   newInitSREvent abs ev.toInitFREventSpec

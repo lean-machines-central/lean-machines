@@ -6,7 +6,7 @@ import LeanMachines.Refinement.Relational.NonDet.Det.Basic
 open Refinement
 open FRefinement
 
-structure FRDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure FRDetEventSpec (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [FRefinement AM M]
   {α β α' β'} (abstract : OrdinaryNDEvent AM α' β')
   extends EventSpec M α β where
 
@@ -27,7 +27,7 @@ structure FRDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement
         (lift_out y, lift m')
 
 @[simp]
-def FRDetEventSpec.toRDetEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def FRDetEventSpec.toRDetEventSpec [@Machine ACTX AM] [@Machine CTX M] [instFR: FRefinement AM M]
   (abstract : OrdinaryNDEvent AM α' β') (ev : FRDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract) : RDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract :=
   {
     toEventSpec := ev.toEventSpec
@@ -51,12 +51,12 @@ def FRDetEventSpec.toRDetEventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FR
   }
 
 @[simp]
-def newFRDetEvent [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newFRDetEvent [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM α' β')
   (ev : FRDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryRDetEvent AM M α β α' β':=
   newRDetEvent abs ev.toRDetEventSpec
 
-structure FRDetEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure FRDetEventSpec' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [FRefinement AM M]
   {α α'} (abstract : OrdinaryNDEvent AM α' Unit)
   extends EventSpec' M α where
 
@@ -76,7 +76,7 @@ structure FRDetEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinemen
         ((), lift m')
 
 @[simp]
-def FRDetEventSpec'.toFRDetEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def FRDetEventSpec'.toFRDetEventSpec [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abstract : OrdinaryNDEvent AM α' Unit) (ev : FRDetEventSpec' AM M (α:=α) (α':=α') abstract) : FRDetEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abstract :=
   {
     toEventSpec := ev.toEventSpec
@@ -87,12 +87,12 @@ def FRDetEventSpec'.toFRDetEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinem
   }
 
 @[simp]
-def newFRDetEvent' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newFRDetEvent' [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM α' Unit)
   (ev : FRDetEventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryRDetEvent AM M α Unit α' Unit:=
   newFRDetEvent abs ev.toFRDetEventSpec
 
-structure FRDetEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure FRDetEventSpec'' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [FRefinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit)
   extends EventSpec'' M where
 
@@ -108,7 +108,7 @@ structure FRDetEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefineme
       abstract.effect (lift m) () (strengthening m Hinv Hgrd) ((), lift m')
 
 @[simp]
-def FRDetEventSpec''.toFRDetEventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def FRDetEventSpec''.toFRDetEventSpec [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abstract : OrdinaryNDEvent AM Unit Unit) (ev : FRDetEventSpec'' AM M abstract) : FRDetEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abstract :=
   {
     toEventSpec := ev.toEventSpec
@@ -119,7 +119,7 @@ def FRDetEventSpec''.toFRDetEventSpec [Machine ACTX AM] [Machine CTX M] [FRefine
   }
 
 @[simp]
-def newFRDetEvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newFRDetEvent'' [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit)
   (ev : FRDetEventSpec'' AM M abs) : OrdinaryRDetEvent AM M Unit Unit:=
   newFRDetEvent abs ev.toFRDetEventSpec
@@ -127,7 +127,7 @@ def newFRDetEvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
 
 /- Initialization events -/
 
-structure InitFRDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure InitFRDetEventSpec (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [FRefinement AM M]
   {α β α' β'} (abstract : InitNDEvent AM α' β')
   extends InitEventSpec M α β where
 
@@ -144,7 +144,7 @@ structure InitFRDetEventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefine
       abstract.init (lift_in x) (strengthening x Hgrd) (lift_out y, lift m')
 
 @[simp]
-def InitFRDetEventSpec.toInitRDetEventSpec  [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M]
+def InitFRDetEventSpec.toInitRDetEventSpec  [@Machine ACTX AM] [@Machine CTX M] [instFR:FRefinement AM M]
   (abstract : InitNDEvent AM α' β')
   (ev : InitFRDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract) : InitRDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abstract :=
   {
@@ -161,12 +161,12 @@ def InitFRDetEventSpec.toInitRDetEventSpec  [Machine ACTX AM] [Machine CTX M] [i
   }
 
 @[simp]
-def newInitFRDetEvent [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newInitFRDetEvent [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : InitNDEvent AM α' β')
   (ev : InitFRDetEventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : InitRDetEvent AM M α β α' β' :=
   newInitRDetEvent abs ev.toInitRDetEventSpec
 
-structure InitFRDetEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure InitFRDetEventSpec' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [FRefinement AM M]
   {α α'} (abstract : InitNDEvent AM α' Unit)
   extends InitEventSpec' M α where
 
@@ -182,7 +182,7 @@ structure InitFRDetEventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefin
       abstract.init (lift_in x) (strengthening x Hgrd) ((), lift m')
 
 @[simp]
-def InitFRDetEventSpec'.toInitFRDetEventSpec  [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def InitFRDetEventSpec'.toInitFRDetEventSpec  [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abstract : InitNDEvent AM α' Unit)
   (ev : InitFRDetEventSpec' AM M (α:=α) (α':=α') abstract) : InitFRDetEventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abstract :=
   {
@@ -194,12 +194,12 @@ def InitFRDetEventSpec'.toInitFRDetEventSpec  [Machine ACTX AM] [Machine CTX M] 
   }
 
 @[simp]
-def newInitFRDetEvent' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newInitFRDetEvent' [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : InitNDEvent AM α' Unit)
   (ev : InitFRDetEventSpec' AM M (α:=α) (α':=α') abs) : InitRDetEvent AM M α Unit α' Unit :=
   newInitFRDetEvent abs ev.toInitFRDetEventSpec
 
-structure InitFRDetEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefinement AM M]
+structure InitFRDetEventSpec'' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [FRefinement AM M]
   (abstract : InitNDEvent AM Unit Unit)
   extends InitEventSpec'' M where
 
@@ -213,7 +213,7 @@ structure InitFRDetEventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [FRefi
       abstract.init () (strengthening Hgrd) ((), lift m')
 
 @[simp]
-def InitFRDetEventSpec''.toInitFRDetEventSpec  [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def InitFRDetEventSpec''.toInitFRDetEventSpec  [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abstract : InitNDEvent AM Unit Unit)
   (ev : InitFRDetEventSpec'' AM M abstract) : InitFRDetEventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abstract :=
   {
@@ -225,7 +225,7 @@ def InitFRDetEventSpec''.toInitFRDetEventSpec  [Machine ACTX AM] [Machine CTX M]
   }
 
 @[simp]
-def newInitFRDetEvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newInitFRDetEvent'' [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : InitNDEvent AM Unit Unit)
   (ev : InitFRDetEventSpec'' AM M abs) : InitRDetEvent AM M Unit Unit :=
   newInitFRDetEvent abs ev.toInitFRDetEventSpec

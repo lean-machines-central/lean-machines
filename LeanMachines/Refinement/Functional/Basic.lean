@@ -20,7 +20,7 @@ of an abstract machine type `AM` (in context `ACTX`) by
 -/
 class FRefinement {ACTX : outParam (Type u₁)} (AM)
                   {CTX : outParam (Type u₂)} (M)
-                  [Machine ACTX AM] [Machine CTX M] where
+                  [@Machine ACTX AM] [@Machine CTX M] where
   /-- The *lifting* of a concrete state `m` to the abstract level. -/
   lift (m : M): AM
 
@@ -37,7 +37,7 @@ The (somewhat meta-theoretical) proof that functional refinement is preserving
 the relational `Refinement` principles. Technically, any (typeclass) instance
 of a `FRefinement` is also an instance of `Refinement`.
 -/
-instance [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]: Refinement AM M where
+instance [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]: Refinement AM M where
   refine (am : AM) (m : M) := am = lift m
 
   refine_safe (am : AM) (m : M) := by
@@ -47,7 +47,7 @@ instance [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]: Refinement AM M w
     exact lift_safe m Hinv
 
 /-- This theorem allows to go back to the relational refinement level if needed. -/
-theorem lift_ref [Machine ACTX AM] [Machine CTX M] [instFR:FRefinement AM M] (m : M) :
+theorem lift_ref [@Machine ACTX AM] [@Machine CTX M] [instFR:FRefinement AM M] (m : M) :
   Machine.invariant m
   → refine (AM:=AM) (self:=instRefinementOfFRefinement) (lift m) m :=
 by
@@ -66,7 +66,7 @@ cf. the module `Refinement.Refinement.Basic` for further documentation.
 /-- Specification of ordinary refined events.
 cf.  `REventSpec` in relational refinement.
  -/
-structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
+structure FREventSpec (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instfr: FRefinement AM M]
   {α β α' β'} (abstract : OrdinaryEvent AM α' β')
   extends EventSpec M α β where
 
@@ -87,7 +87,7 @@ structure FREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefin
 
 
 @[simp]
-def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def FREventSpec.toREventSpec [@Machine ACTX AM] [@Machine CTX M] [instFR: FRefinement AM M]
   {α β α' β'} (abs : OrdinaryEvent AM α' β')
   (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs :=
   {
@@ -114,11 +114,11 @@ def FREventSpec.toREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinem
   }
 
 @[simp]
-def newFREvent [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newFREvent [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : FREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
   newREvent abs ev.toREventSpec
 
-structure FREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
+structure FREventSpec' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instfr: FRefinement AM M]
   {α α'} (abstract : OrdinaryEvent AM α' Unit)
   extends EventSpec' M α where
 
@@ -137,7 +137,7 @@ structure FREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefi
       am' = (lift m')
 
 @[simp]
-def FREventSpec'.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def FREventSpec'.toFREventSpec [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   {α α'} (abs : OrdinaryEvent AM α' Unit)
   (ev : FREventSpec' AM M (α:=α) (α':=α') abs) : FREventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
@@ -149,11 +149,11 @@ def FREventSpec'.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM
   }
 
 @[simp]
-def newFREvent' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newFREvent' [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM α' Unit) (ev : FREventSpec' AM M (α:=α) (α':=α') abs) : OrdinaryREvent AM M α Unit α' Unit :=
   newFREvent abs ev.toFREventSpec
 
-structure FREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRefinement AM M]
+structure FREventSpec'' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instfr: FRefinement AM M]
   (abstract : OrdinaryEvent AM Unit Unit)
   extends EventSpec'' M where
 
@@ -170,7 +170,7 @@ structure FREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instfr: FRef
       am' = (lift m')
 
 @[simp]
-def FREventSpec''.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def FREventSpec''.toFREventSpec [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit)
   (ev : FREventSpec'' AM M abs) : FREventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
@@ -185,14 +185,14 @@ def FREventSpec''.toFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement A
   }
 
 @[simp]
-def newFREvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newFREvent'' [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : OrdinaryEvent AM Unit Unit) (ev : FREventSpec'' AM M abs) : OrdinaryREvent AM M Unit Unit :=
   newFREvent abs ev.toFREventSpec
 
 
 /- Initialization events -/
 
-structure InitFREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FRefinement AM M]
+structure InitFREventSpec (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instFR: FRefinement AM M]
   {α β α' β'} (abstract : InitEvent AM α' β')
   extends InitEventSpec M α β where
 
@@ -210,7 +210,7 @@ structure InitFREventSpec (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FR
       lift_out y = z ∧ am' = lift m'
 
 @[simp]
-def InitFREventSpec.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: FRefinement AM M]
+def InitFREventSpec.toInitREventSpec [@Machine ACTX AM] [@Machine CTX M] [instFR: FRefinement AM M]
   {abs : InitEvent AM α' β'}
   (ev : InitFREventSpec (AM:=AM) (M:=M) (instFR:=instFR) (α:=α) (β:=β) (α':=α') (β':=β') abs)
     : InitREventSpec (AM:=AM) (M:=M) (α:=α) (β:=β) (α':=α') (β':=β') abs :=
@@ -230,11 +230,11 @@ def InitFREventSpec.toInitREventSpec [Machine ACTX AM] [Machine CTX M] [instFR: 
   }
 
 @[simp]
-def newInitFREvent [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newInitFREvent [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : InitEvent AM α' β') (ev : InitFREventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : InitREvent AM M α β α' β' :=
   newInitREvent abs ev.toInitREventSpec
 
-structure InitFREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FRefinement AM M]
+structure InitFREventSpec' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instFR: FRefinement AM M]
   {α α'} (abstract : InitEvent AM α' Unit)
   extends InitEventSpec' M α where
 
@@ -251,7 +251,7 @@ structure InitFREventSpec' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: F
       am' = lift m'
 
 @[simp]
-def InitFREventSpec'.toInitFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def InitFREventSpec'.toInitFREventSpec [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   {α α'} (abs : InitEvent AM α' Unit)
   (ev : InitFREventSpec' AM M (α:=α) (α':=α') abs) : InitFREventSpec AM M (α:=α) (β:=Unit) (α':=α') (β':=Unit) abs :=
   {
@@ -266,11 +266,11 @@ def InitFREventSpec'.toInitFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefin
   }
 
 @[simp]
-def newInitFREvent' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newInitFREvent' [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : InitEvent AM α' Unit) (ev : InitFREventSpec' AM M (α:=α) (α':=α') abs) : InitREvent AM M α Unit α' Unit :=
   newInitFREvent abs ev.toInitFREventSpec
 
-structure InitFREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: FRefinement AM M]
+structure InitFREventSpec'' (AM) [@Machine ACTX AM] (M) [@Machine CTX M] [instFR: FRefinement AM M]
   (abstract : InitEvent AM Unit Unit)
   extends InitEventSpec'' M where
 
@@ -285,7 +285,7 @@ structure InitFREventSpec'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instFR: 
       am' = lift m'
 
 @[simp]
-def InitFREventSpec''.toInitFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def InitFREventSpec''.toInitFREventSpec [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : InitEvent AM Unit Unit)
   (ev : InitFREventSpec'' AM M abs) : InitFREventSpec AM M (α:=Unit) (β:=Unit) (α':=Unit) (β':=Unit) abs :=
   {
@@ -300,6 +300,6 @@ def InitFREventSpec''.toInitFREventSpec [Machine ACTX AM] [Machine CTX M] [FRefi
   }
 
 @[simp]
-def newInitFREvent'' [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]
+def newInitFREvent'' [@Machine ACTX AM] [@Machine CTX M] [FRefinement AM M]
   (abs : InitEvent AM Unit Unit) (ev : InitFREventSpec'' AM M abs) : InitREvent AM M Unit Unit :=
   newInitFREvent abs ev.toInitFREventSpec
