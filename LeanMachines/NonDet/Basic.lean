@@ -24,6 +24,10 @@ structure _NDEvent (M) [Machine CTX M] (α β : Type) where
   guard (m : M) (x : α) : Prop := True
   effect (m : M) (x : α) (grd : guard m x) (eff : β × M): Prop
 
+def prop_NDEvent (M) [Machine CTX M] (p : α → β → Prop) : _NDEvent M α β :=
+  { guard _ _ := True
+    effect m x _ := fun (y, m') => (m' = m) ∧ p x y }
+
 @[simp]
 def _Event.to_NDEvent [Machine CTX M] (ev : _Event M α β) : _NDEvent M α β :=
 {

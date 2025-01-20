@@ -444,10 +444,19 @@ instance [Machine CTX M] : LawfullContravariantFunctor (_CoEvent M β) where
 
 /- Profunctor -/
 
+-- An indirect definition using the covariant and contravariant functors
+--instance [Machine CTX M] : Profunctor (_Event M) where
+--  dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : _Event M α γ) : _Event M β δ :=
+--    let ev' := Event_from_CoEvent (ContravariantFunctor.contramap f (coEvent_from_Event ev))
+--    Functor.map g ev'
+
+-- alternatively, a direct definition
 instance [Machine CTX M] : Profunctor (_Event M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : _Event M α γ) : _Event M β δ :=
-    let ev' := Event_from_CoEvent (ContravariantFunctor.contramap f (coEvent_from_Event ev))
-    Functor.map g ev'
+  { guard m x := ev.guard m (f x)
+    action m x grd := let (y, m') := ev.action m (f x) grd
+                      (g y, m')
+  }
 
 instance [Machine CTX M] : LawfulProfunctor (_Event M) where
   dimap_id := rfl
