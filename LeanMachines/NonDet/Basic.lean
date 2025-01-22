@@ -24,6 +24,7 @@ structure _NDEvent (M) [Machine CTX M] (α β : Type) where
   guard (m : M) (x : α) : Prop := True
   effect (m : M) (x : α) (grd : guard m x) (eff : β × M): Prop
 
+@[simp]
 def prop_NDEvent (M) [Machine CTX M] (p : α → β → Prop) : _NDEvent M α β :=
   { guard _ _ := True
     effect m x _ := fun (y, m') => (m' = m) ∧ p x y }
@@ -459,14 +460,33 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
       exists y ; exists z ; exists t ; exists m'
       simp [*]
 
-/-  Other misc. combinators -/
+/-  ArrowChoice -/
 
-def dlfNDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β)
+def altNDEvent [Machine CTX M] (evl : _NDEvent M α β) (evr : _NDEvent M γ δ)
+  : _NDEvent M (Sum α γ) (Sum β δ) :=
+  {
+    guard := fun m x => match x with
+                        | .inl l => evl.guard m l
+                        | .inr r => evr.guard m r
+    effect := fun m x grd (y,m') =>
+       match x with
+       | .inl xl => ∀ yl, evl.effect m xl grd (yl, m')
+                          → y = Sum.inl yl
+       | .inr xr => ∀ yr, evr.effect m xr grd (yr, m')
+                          → y = Sum.inr yr
+  }
+
+instance [Machine CTX M] [Semigroup M]: ArrowChoice (_NDEvent M) where
+  splitIn := altNDEvent
+
+
+/-  Conjoin events -/
+
+def conjNDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β)
   : _NDEvent M α β :=
   {
     guard := fun m x => ev₁.guard m x ∨ ev₂.guard m x
     effect := fun m x _ (y, m') =>
       ((grd₁ : ev₁.guard m x) → ev₁.effect m x grd₁ (y, m'))
       ∧ ((grd₂ : ev₂.guard m x) → ev₂.effect m x grd₂ (y, m'))
-
   }

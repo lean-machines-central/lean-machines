@@ -328,9 +328,9 @@ variable (γ)
 #check (Arrow.arrow f : _KEvent M γ α β)
 -/
 
--- Arrows are less powerful (but more general) than Monads
--- but Events are monads in their output type
--- and both monads and arrows do not apply on input types
+-- Arrows are in a way less powerful (but more general) than Monads
+-- but Events are monads only considering their output type
+-- while arrows apply to both input and output types
 
 instance [Machine CTX M]: Category (_Event M) where
   id := fun_Event M id
@@ -419,6 +419,25 @@ instance [Machine CTX M]: LawfulArrow (_Event M) where
     apply _Event.ext'
     simp [Arrow.arrow, Arrow.first]
 
+/-  ArrowChoice -/
+
+def altEvent [Machine CTX M] (evl : _Event M α β) (evr : _Event M γ δ)
+  : _Event M (Sum α γ) (Sum β δ) :=
+  {
+    guard := fun m x => match x with
+                        | .inl l => evl.guard m l
+                        | .inr r => evr.guard m r
+    action := fun m x grd => match x with
+                        | .inl l => let (y, m') := evl.action m l grd
+                                    (Sum.inl y, m')
+                        | .inr r => let (y, m') := evr.action m r grd
+                                    (Sum.inr y, m')
+  }
+
+instance [Machine CTX M]: ArrowChoice (_Event M) where
+  splitIn := altEvent
+
+
 /- ContravariantFunctor functor -/
 
 abbrev _CoEvent (M) [Machine CTX M] (α) (β) :=
@@ -471,22 +490,3 @@ instance [Machine CTX M] : StrongProfunctor (_Event M) where
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (_Event M) where
-
-
-/-  Other combinators -/
-
-
-open Either
-
-def altEvent [Machine CTX M] (evl : _Event M α α') (evr : _Event M β β')
-  : _Event M (Either α β) (Either α' β') :=
-  {
-    guard := fun m x => match x with
-                        | left l => evl.guard m l
-                        | right r => evr.guard m r
-    action := fun m x grd => match x with
-                        | left l => let (y, m') := evl.action m l grd
-                                    (left y, m')
-                        | right r => let (y, m') := evr.action m r grd
-                                    (right y, m')
-  }

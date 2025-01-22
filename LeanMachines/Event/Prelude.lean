@@ -14,8 +14,3 @@ theorem And_eq_assoc (P Q R : Prop):
 theorem Eq_fun (e₁ : α → β) (e₂ : α → β):
   (fun x : α => e₁ x) = (fun y : α => e₂ y)
   → e₁ = e₂ := fun Heq ↦ Heq
-
-inductive Either (α β : Type) where
-| left : α → Either α β
-| right : β → Either α β
-deriving Repr
