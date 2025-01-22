@@ -190,3 +190,21 @@ def quasi_pure_from_arrow [Arrow arr] (x : α) : arr Unit α :=
 def apply_from_arrow [Arrow arr] (af : arr γ (α → β)) (ax : arr γ α) : arr γ β :=
   by sorry
 -/
+
+def untag (s : Sum α α) : α :=
+  match s with
+  | .inl x => x
+  | .inr x => x
+
+class ArrowChoice (arr : Type u → Type u → Type v) extends Arrow arr where
+  splitIn : arr α β → arr γ δ → arr (Sum α γ) (Sum β δ)
+  left : arr α β → arr (Sum α γ) (Sum β γ) := fun x => splitIn x Category.id
+  right : arr α β → arr (Sum γ α) (Sum γ β) := let ia : arr γ γ := Category.id
+                                               splitIn ia
+  fanIn (f : arr α β) (g : arr γ β) : arr (Sum α γ) β :=
+    (splitIn f g) (>>>) (arrow untag)
+
+instance: ArrowChoice (·→·) where
+  splitIn f g := fun x => match x with
+                          | .inl x => Sum.inl (f x)
+                          | .inr y => Sum.inr (g y)
