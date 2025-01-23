@@ -490,3 +490,7 @@ def conjNDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M �
       ((grd₁ : ev₁.guard m x) → ev₁.effect m x grd₁ (y, m'))
       ∧ ((grd₂ : ev₂.guard m x) → ev₂.effect m x grd₂ (y, m'))
   }
+
+instance [Machine CTX M] [Semigroup M]: ArrowPlus (_NDEvent M) where
+  zero := skip_NDEvent
+  conjoin := conjNDEvent

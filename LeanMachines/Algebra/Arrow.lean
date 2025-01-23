@@ -208,3 +208,9 @@ instance: ArrowChoice (·→·) where
   splitIn f g := fun x => match x with
                           | .inl x => Sum.inl (f x)
                           | .inr y => Sum.inr (g y)
+
+class ArrowZero (arr : Type u → Type u → Type v) extends Arrow arr where
+  zero : arr α β
+
+class ArrowPlus (arr : Type u → Type u → Type v) extends ArrowZero arr where
+  conjoin : arr α β → arr α β → arr α β
