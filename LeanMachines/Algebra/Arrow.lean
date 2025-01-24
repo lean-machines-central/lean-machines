@@ -37,7 +37,7 @@ end CatFun
 
 class Arrow (arr : Type u → Type u → Type v) extends Category arr where
   arrow : (α → β) → arr α β
-  split {α α' β β' : Type u}: arr α β → arr α' β' → arr (α × α') (β × β')
+  split {α γ β δ : Type u}: arr α β → arr γ δ → arr (α × γ) (β × δ)
 
   first {α β γ : Type u} (x : arr α β) : arr (α × γ) (β × γ) :=
     let cid : arr γ γ := id
