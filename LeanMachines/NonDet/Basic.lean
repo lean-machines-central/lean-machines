@@ -482,7 +482,7 @@ instance [Machine CTX M] [Semigroup M]: ArrowChoice (_NDEvent M) where
 
 /-  Conjoin events -/
 
-def conjNDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β)
+def conj_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β)
   : _NDEvent M α β :=
   {
     guard := fun m x => ev₁.guard m x ∨ ev₂.guard m x
@@ -493,4 +493,4 @@ def conjNDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M �
 
 instance [Machine CTX M] [Semigroup M]: ArrowPlus (_NDEvent M) where
   zero := skip_NDEvent
-  conjoin := conjNDEvent
+  conjoin := conj_NDEvent
