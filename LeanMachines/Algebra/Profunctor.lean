@@ -1,4 +1,6 @@
 
+import LeanMachines.Algebra.Arrow
+
 /- Profunctor and optics -/
 
 -- cf. https://github.com/hablapps/DontFearTheProfunctorOptics
@@ -73,3 +75,10 @@ instance: StrongProfunctor (·→·) where
 instance: LawfulStrongProfunctor (·→·) where
 
 end ProFun
+
+
+-- Reconstruct a profunctor from an arrow
+instance [Arrow arr]: Profunctor arr where
+  dimap {α β γ δ}
+        (f: β → α) (g: γ → δ) (x : arr α γ) : arr β δ :=
+    (Arrow.arrow f) (>>>) x (>>>) (Arrow.arrow g)
