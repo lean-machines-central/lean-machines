@@ -53,7 +53,7 @@ structure OrdinaryRDetEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: R
 
 @[simp]
 def OrdinaryRDetEvent.toOrdinaryEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (ev : OrdinaryRDetEvent AM M α β) : OrdinaryEvent M α β :=
+  (ev : OrdinaryRDetEvent AM M α β α' β') : OrdinaryEvent M α β :=
   {
     to_Event := ev.to_Event
     po := ev.po.to_EventPO
@@ -222,7 +222,7 @@ structure InitRDetEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refin
 
 @[simp]
 def InitRDetEvent.toInitEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (ev : InitRDetEvent AM M α β) : InitEvent M α β :=
+  (ev : InitRDetEvent AM M α β α' β') : InitEvent M α β :=
   {
     to_InitEvent := ev.to_InitEvent
     po := ev.po.to_InitEventPO
