@@ -17,10 +17,8 @@ is not demonstrated anticipated or convergent
 
 -/
 
-/-- The internal representation of proof obligations for ordinary
-deterministic events. -/
 
-class SafeEvent [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
+class SafeEvent [Machine CTX M] {α β} (ev : _Event M α β) where
   safety (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
@@ -76,7 +74,11 @@ structure EventSpec (M) [Machine CTX M] (α) (β) where
     → (grd : guard m x)
     → Machine.invariant (action m x grd).2
 
-
+def mkSpec [Machine CTX M] (ev : _Event M α β) [SafeEvent ev] : EventSpec M α β := {
+  guard := ev.guard
+  action := ev.action
+  safety := SafeEvent.safety
+}
 
 @[simp]
 def _Event.toEventSpec [Machine CTX M]
@@ -93,6 +95,8 @@ def EventSpec.to_Event [Machine CTX M] (ev : EventSpec M α β) : _Event M α β
   { guard := ev.guard
     action := ev.action
   }
+
+
 
 /-============================== ∧ we're keeping this part ∧ ==============================-/
 
@@ -281,8 +285,11 @@ def mapEvent [Machine CTX M] (f : α → β) (ev : OrdinaryEvent M γ α) : Ordi
   }
 }
 
+/-Au moment de passer aux typeclass, ça passera entre crochets-/
 instance [Machine CTX M] : Functor (OrdinaryEvent M γ) where
   map := mapEvent
+
+
 
 instance [Machine CTX M] : LawfulFunctor (OrdinaryEvent M γ) where
   map_const := rfl
