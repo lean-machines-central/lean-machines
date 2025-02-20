@@ -19,11 +19,30 @@ is not demonstrated anticipated or convergent
 
 /-- The internal representation of proof obligations for ordinary
 deterministic events. -/
+
+class SafeEvent [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
+  safety (m : M) (x : α):
+    Machine.invariant m
+    → (grd : ev.guard m x)
+    → Machine.invariant (ev.action m x grd).snd
+
+/-
+SafeEvent.{u_1, u_2} {CTX : Type u_1} {M : Type u_2} {α β : Type} [Machine CTX M] (ev : _Event M α β)
+  (kind : EventKind) : Prop
+-/
+#check SafeEvent
+
 structure _EventPO [Machine CTX M] (ev : _Event M α β) (kind : EventKind) where
   safety (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
     → Machine.invariant (ev.action m x grd).snd
+
+/-
+_EventPO.{u_1, u_2} {CTX : Type u_1} {M : Type u_2} {α β : Type} [Machine CTX M] (ev : _Event M α β)
+  (kind : EventKind) : Prop
+-/
+#check _EventPO
 
 /-- The type of deterministic events without convergence properties.
 It is an event for machine type `M` with input type `α` and output type `β` -/
@@ -35,6 +54,8 @@ theorem OrdinaryEvent.ext [Machine CTX M] (ev₁ : OrdinaryEvent M α β) (ev₂
   → ev₁ = ev₂ :=
 by
   cases ev₁ ; cases ev₂ ; simp
+
+/-============================== ∨ we're keeping this part ∨ ==============================-/
 
 /-- The specification of a deterministic, ordinary event for machine `M`
 with input type `α` and output type `β`. . -/
@@ -55,6 +76,8 @@ structure EventSpec (M) [Machine CTX M] (α) (β) where
     → (grd : guard m x)
     → Machine.invariant (action m x grd).2
 
+
+
 @[simp]
 def _Event.toEventSpec [Machine CTX M]
   (ev : _Event M α β)
@@ -65,12 +88,14 @@ def _Event.toEventSpec [Machine CTX M]
     action := ev.action
     safety := Hsafe
   }
-
 @[simp]
 def EventSpec.to_Event [Machine CTX M] (ev : EventSpec M α β) : _Event M α β :=
   { guard := ev.guard
     action := ev.action
   }
+
+/-============================== ∧ we're keeping this part ∧ ==============================-/
+
 
 /-- Construction of an ordinary deterministic event from a
 `EventSpec` specification. -/
