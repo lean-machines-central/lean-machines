@@ -17,7 +17,7 @@ is not demonstrated anticipated or convergent
 
 -/
 
-
+/- Typeclass representing the proof  obligation of safety for Events -/
 class SafeEvent [Machine CTX M] {α β} (ev : Event M α β) where
   safety (m : M) (x : α):
     Machine.invariant m
@@ -36,7 +36,6 @@ SafeEvent.{u_1, u_2} {CTX : Type u_1} {M : Type u_2} {α β : Type} [Machine CTX
 /-- The specification of a deterministic, ordinary event for machine `M`
 with input type `α` and output type `β`. .
 
-!! α and β need to be of the same Type universe, otherwise the algebraic part is broken !!
 -/
 structure OrdinaryEvent (M) [Machine CTX M] (α β : Type) where
   /-- The guard property of the event, in machine state `m` with input `x`. -/
@@ -56,7 +55,7 @@ structure OrdinaryEvent (M) [Machine CTX M] (α β : Type) where
     → Machine.invariant (action m x grd).2
 
 
-
+/- Smart constructor for OrdinaryEvents using the typeclass SafeEvent to get the PO -/
 def mkOrdinaryEvent [Machine CTX M] (ev : Event M α β) [SafeEvent ev] : OrdinaryEvent M α β := {
   guard := ev.guard
   action := ev.action
