@@ -58,21 +58,28 @@ instance : SafeInitEvent (Counter0.Init (ctx := ctx)) where
 
 
 /- It's the same idea for regular events -/
-def Counter0.Set_count : Event (Counter0 ctx) Nat Unit :=
+
+/- Our counter has two kinds of evens -/
+
+/- Either we increment it by a Nat value -/
+def Counter0.Incr : Event (Counter0 ctx) Nat Unit :=
   {
     action := fun c0 v _ => ((),{cpt:= c0.cpt + v})
-    guard := fun c0 v => 0 ≤ (c0.cpt + v) ∧ (c0.cpt + v) ≤ ctx.max
+    guard := fun c0 v => (c0.cpt + v) ≤ ctx.max
   }
 
-instance : SafeEvent (Counter0.Set_count (ctx := ctx)) where
-  safety :=
-    fun m v hinvm =>
-      by
-        simp[Machine.invariant]
-        simp[Counter0.Set_count]
+instance : SafeEvent (Counter0.Incr (ctx := ctx)) where
+  safety := fun m v hinvm => by simp[Machine.invariant,Counter0.Incr]
 
-/-
-  After showing that the event is indeed safe, we can turn it into an OrdinaryEvent with the safe constructor.
-  This allows us to use the algebraic properties shown for the OrdinaryEvent structure.
--/
-def Counter0.Set_count' : OrdinaryEvent (Counter0 ctx) Nat Unit := mkOrdinaryEvent (Counter0.Set_count)
+/- Or we drecrement it by a Nat value -/
+def Counter0.Decr : Event (Counter0 ctx) Nat Unit :=
+  {
+    action := fun c0 v _ => ((),{cpt:= c0.cpt - v})
+    guard := fun _ _ => True -- No guard is necessary : we reason with Nat, if x < y then x - y = 0
+  }
+
+instance : SafeEvent (Counter0.Decr (ctx := ctx)) where
+  safety :=
+    by
+      simp[Machine.invariant,Counter0.Decr]
+      omega
