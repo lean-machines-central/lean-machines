@@ -285,3 +285,112 @@ instance : SafeREvent (Tank1.Open_Door_in (ctx:= ctx)) (Xor0.SetX_true (ctx:= ct
             simp[hgrd]
             intros
             assumption
+
+def Tank1.Close_Door_in : Event (Tank1 ctx) Unit Unit :=
+    {
+        action m _ _ := ((),{cpt:= m.cpt, st := status.CLOSED})
+        guard m _ := m.st = status.OPEN_IN
+    }
+
+instance : SafeEvent (Tank1.Close_Door_in (ctx:= ctx)) where
+    safety m x :=
+        by
+            simp[Machine.invariant,Tank1.Close_Door_in]
+            intros
+            assumption
+
+instance : SafeREvent (Tank1.Close_Door_in (ctx := ctx)) (skip_Event (Counter0 ctx) Unit) where
+    lift_in := id
+    lift_out := id
+    strengthening m x:= by simp
+    simulation := by simp[Machine.invariant,Refinement.refine,Tank1.Close_Door_in]
+
+instance : SafeREvent (Tank1.Close_Door_in (ctx:= ctx)) (Xor0.SetX_false (ctx:= ctx')) where
+    lift_in := id
+    lift_out := id
+    strengthening m x :=
+        by
+            simp[Refinement.refine,Tank1.Close_Door_in,Xor0.SetX_false]
+    simulation m x :=
+        by
+            simp[Machine.invariant,Refinement.refine,Tank1.Close_Door_in,Xor0.SetX_false]
+            intros hinv hgrd
+            simp[hgrd]
+            intros
+            assumption
+
+
+
+def Tank1.Open_Door_out : Event (Tank1 ctx) Unit Unit :=
+    {
+        action m _ _ := ((), {cpt := m.cpt, st := status.OPEN_OUT})
+        guard m _ := m.st ≠ status.OPEN_IN
+    }
+
+instance : SafeEvent (Tank1.Open_Door_out (ctx:= ctx)) where
+    safety :=
+        by
+            simp[Machine.invariant,Tank1.Open_Door_out]
+            intros m hgrd₁ _
+            assumption
+
+instance : SafeREvent (Tank1.Open_Door_out (ctx := ctx)) (skip_Event (Counter0 ctx) Unit) where
+    lift_in := id
+    lift_out := id
+    strengthening m x:= by simp
+    simulation := by simp[Machine.invariant,Refinement.refine,Tank1.Open_Door_out]
+
+instance : SafeREvent (Tank1.Open_Door_out (ctx:= ctx)) (Xor0.SetY_true (ctx:= ctx')) where
+    lift_in := id
+    lift_out := id
+    strengthening m x :=
+        by
+            simp[Refinement.refine,Tank1.Open_Door_out,Xor0.SetY_true]
+            intros hinv hgrd
+            simp[hgrd]
+            intros
+            assumption
+    simulation m x :=
+        by
+            simp[Machine.invariant,Refinement.refine,Tank1.Open_Door_out,Xor0.SetY_true]
+            intros hinv hgrd
+            simp[hgrd]
+            intros
+            assumption
+
+def Tank1.Close_Door_out : Event (Tank1 ctx) Unit Unit :=
+    {
+        action m _ _ := ((),{cpt:= m.cpt, st := status.CLOSED})
+        guard m _ := m.st = status.OPEN_OUT
+    }
+
+instance : SafeEvent (Tank1.Close_Door_out (ctx:= ctx)) where
+    safety m x :=
+        by
+            simp[Machine.invariant,Tank1.Close_Door_out]
+            intros
+            assumption
+
+instance : SafeREvent (Tank1.Close_Door_out (ctx := ctx)) (skip_Event (Counter0 ctx) Unit) where
+    lift_in := id
+    lift_out := id
+    strengthening m x:= by simp
+    simulation := by simp[Machine.invariant,Refinement.refine,Tank1.Close_Door_out]
+
+instance : SafeREvent (Tank1.Close_Door_out (ctx:= ctx)) (Xor0.SetY_false (ctx:= ctx')) where
+    lift_in := id
+    lift_out := id
+    strengthening m x :=
+        by
+            simp[Refinement.refine,Tank1.Close_Door_out,Xor0.SetY_false]
+            intros _ hgrd
+            simp[hgrd]
+            intros
+            assumption
+    simulation m x :=
+        by
+            simp[Machine.invariant,Refinement.refine,Tank1.Close_Door_out,Xor0.SetY_false]
+            intros hinv hgrd
+            simp[hgrd]
+            intros
+            assumption
