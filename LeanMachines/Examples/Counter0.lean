@@ -35,7 +35,6 @@ structure Counter0 (ctx : CountContext) where
 instance : Machine CountContext (Counter0 ctx) where
   context := ctx
   invariant c0 := c0.cpt ≤ ctx.max
-  default := {cpt :=0}
 
 
 
@@ -64,6 +63,7 @@ instance : SafeInitEvent (Counter0.Init (ctx := ctx)) where
 /- Either we increment it by a Nat value -/
 def Counter0.Incr : Event (Counter0 ctx) Nat Unit :=
   {
+    kind := EventKind.TransDet (Convergence.Ordinary)
     action := fun c0 v _ => ((),{cpt:= c0.cpt + v})
     guard := fun c0 v => (c0.cpt + v) ≤ ctx.max
   }
@@ -74,6 +74,7 @@ instance : SafeEvent (Counter0.Incr (ctx := ctx)) where
 /- Or we drecrement it by a Nat value -/
 def Counter0.Decr : Event (Counter0 ctx) Nat Unit :=
   {
+    kind := EventKind.TransDet (Convergence.Ordinary)
     action := fun c0 v _ => ((),{cpt:= c0.cpt - v})
     guard := fun _ _ => True -- No guard is necessary : we reason with Nat, if x < y then x - y = 0
   }

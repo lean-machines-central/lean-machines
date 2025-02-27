@@ -27,7 +27,6 @@ structure Xor0 (ctx : XorContext) where
 
 instance : Machine XorContext (Xor0 ctx) where
   context := ctx
-  default := { x := false, y := false}
   invariant d0 := ¬ (d0.x ∧ d0.y)
 
 
@@ -57,40 +56,44 @@ instance : SafeInitEvent (Xor0.Init (ctx := ctx)) where
 /- This event sets the first boolean with the value true -/
 def Xor0.SetX_true : Event (Xor0 ctx) Unit Unit :=
   {
+    kind := EventKind.TransDet (Convergence.Ordinary)
     action m _ _ := ((), {x:= true, y := m.y})
     guard m _ := m.y = false
   }
 
-instance : SafeEvent (Xor0.SetX_true (ctx:= ctx)) where
+instance : SafeEvent (Xor0.SetX_true (ctx:= ctx))  where
   safety := by simp[Machine.invariant,Xor0.SetX_true]
 
 /- This event sets the first boolean with the value false -/
 def Xor0.SetX_false : Event (Xor0 ctx) Unit Unit :=
   {
+    kind := EventKind.TransDet (Convergence.Ordinary)
     action m _ _ := ((), {x:= false, y := m.y})
     guard _ _ := True
   }
-instance : SafeEvent (Xor0.SetX_false (ctx:=ctx)) where
+instance : SafeEvent (Xor0.SetX_false (ctx:=ctx))  where
   safety := by simp[Machine.invariant,Xor0.SetX_false]
 
 /- This event sets the second boolean with the value true -/
 
 def Xor0.SetY_true : Event (Xor0 ctx) Unit Unit :=
   {
+    kind := EventKind.TransDet (Convergence.Ordinary)
     action m _ _ := ((), {x := m.x, y := true})
     guard m _ := m.x = false
   }
 
-instance : SafeEvent (Xor0.SetY_true (ctx:=ctx)) where
+instance : SafeEvent (Xor0.SetY_true (ctx:=ctx))  where
   safety := by simp[Machine.invariant, Xor0.SetY_true]
 
 /- This event sets the second boolean with the value false -/
 
 def Xor0.SetY_false : Event (Xor0 ctx) Unit Unit :=
   {
+    kind := EventKind.TransDet (Convergence.Ordinary)
     action m _ _ := ((), {x := m.x, y := false})
     guard m _ := m.x = false
   }
 
-instance : SafeEvent (Xor0.SetY_false (ctx:=ctx)) where
+instance : SafeEvent (Xor0.SetY_false (ctx:=ctx))  where
   safety := by simp[Machine.invariant, Xor0.SetY_false]

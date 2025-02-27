@@ -48,6 +48,7 @@ class Refinement {ACTX : outParam (Type u₁)} (AM)
 
 open Refinement
 
+
 /-!
 
 ## Event refinement
@@ -57,12 +58,13 @@ open Refinement
 -/
 
 
+
 /-
   This typeclass specifies the proof obligations for the refinement of events.
 -/
 
 class SafeREvent {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-  (ev : Event M α β) (abs : Event AM α' β') extends (SafeEvent ev) where
+  (ev : Event M α β) (abs : Event AM α' β') [SafeEvent abs] {valid_kind : ev.kind.refine? abs.kind = true} extends (SafeEvent ev ) where
 
   lift_in : α → α'
   lift_out : β → β'
@@ -77,10 +79,6 @@ class SafeREvent {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refin
     (Hinv : Machine.invariant m)
     → (Hgrd : ev.guard m x)
     → ∀ am, (Href: refine am m)
-      -- XXX : some constraint on output ?
-      --       (maybe a post_weakening requirement ?)
-      --       for now, let's go with equality because its transparent for the Event-B
-      --       refinement model
       → let (y, m') := ev.action m x Hgrd
         let (z, am') := abs.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
         lift_out y = z ∧ refine am' m'
@@ -114,8 +112,18 @@ extends SafeInitEvent ev where
       lift_out y = z ∧ refine am' m'
 
 
+class RefineDefault (AM) (M) [Machine ACTX AM] [Machine CTX M] [Inhabited AM] [Inhabited M]  [Refinement AM M] where
+  refine_default (am : AM) (m : M) : m = default → refine am m → am = default
+
+
 instance [DecidableEq M] [DecidableEq AM] [Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
-   (ev : InitEvent M α β ) (abs : InitEvent AM α' β') [instSafeInitR : SafeInitREvent ev abs]: SafeREvent ev.to_Event abs.to_Event where
+    [Inhabited AM] [Inhabited M] [instRDef : RefineDefault AM M]
+   (ev : InitEvent M α β ) (abs : InitEvent AM α' β') [SafeInitEvent abs]
+   [instSafeInitR : SafeInitREvent ev abs] :
+
+   SafeREvent ev.toEvent abs.toEvent
+    (valid_kind := by simp[EventKind.refine?]) -- The proof is not automatic
+where
     lift_in := instSafeInitR.lift_in
     lift_out := instSafeInitR.lift_out
 
@@ -125,7 +133,7 @@ instance [DecidableEq M] [DecidableEq AM] [Machine ACTX AM] [Machine CTX M] [ins
         intros hinv hdef hgrd am href
         apply And.intro
         case left =>
-          sorry
+          apply instRDef.refine_default am m hdef href
         case right =>
           exact SafeInitREvent.strengthening x hgrd
-    simulation m x hinv hgrd am href := SafeInitREvent.simulation x (InitEvent.to_Event.proof_1 ev m x hgrd)
+    simulation m x hinv hgrd am href := SafeInitREvent.simulation x (InitEvent.toEvent.proof_1 ev m x hgrd)

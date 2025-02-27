@@ -25,10 +25,6 @@ structure Tank1 (ctx : CountContext) extends (Counter0 ctx) where
 
 instance : Machine CountContext (Tank1 ctx) where
     context := ctx
-    default := {
-        cpt := 0
-        st := status.CLOSED
-    }
     invariant := fun m => (m.cpt ≤ ctx.max)
 
 /- Refinement of the counter -/
@@ -69,8 +65,9 @@ def Tank1.init : InitEvent (Tank1 ctx) Unit Unit :=
     }
 
 /- which is a safe init Event-/
-instance : SafeInitEvent (Tank1.init (ctx:= ctx)) where
+instance inst1 : SafeInitEvent (Tank1.init (ctx:= ctx)) where
     safety m _ := by simp[Machine.invariant,Tank1.init]
+
 
 /- and also a refinement of the initialisation of the counter -/
 instance : SafeInitREvent (Tank1.init (ctx:= ctx)) (Counter0.Init (ctx:= ctx)) where
@@ -90,6 +87,7 @@ instance : SafeInitREvent (Tank1.init (ctx:= ctx)) (Xor0.Init (ctx:= ctx')) wher
 /- First event : filling up the tank, without touching the doors-/
 def Tank1.fill : Event (Tank1 ctx) Nat Unit :=
   {
+    kind := EventKind.TransDet (Convergence.Ordinary)
     action := fun t1 v _ => ((),
         {   cpt:= t1.cpt + v,
             st := t1.st
@@ -98,14 +96,19 @@ def Tank1.fill : Event (Tank1 ctx) Nat Unit :=
   }
 
 /- it is a SafeEvent -/
-instance : SafeEvent (Tank1.fill (ctx:=ctx)) where
+instance : SafeEvent (Tank1.fill (ctx:=ctx))  where
     safety := fun m v =>
         by
             simp[Machine.invariant, Tank1.fill]
             omega
 
 /- It refines the Incr event of the counter -/
-instance : SafeREvent (Tank1.fill (ctx := ctx)) (Counter0.Incr (ctx :=ctx)) where
+instance : SafeREvent   (Tank1.fill (ctx := ctx)) (Counter0.Incr (ctx :=ctx))
+    (valid_kind :=
+        by
+            simp[EventKind.refine?,Tank1.fill,Counter0.Incr]
+    )
+    where
     lift_in := id
     lift_out := id
     strengthening :=
@@ -121,7 +124,10 @@ instance : SafeREvent (Tank1.fill (ctx := ctx)) (Counter0.Incr (ctx :=ctx)) wher
                 simp[Machine.invariant,Counter0.Incr,Refinement.refine,Tank1.fill]
 
 /- As we don't modify the status of the door, it refines the skip event of the Xor machine -/
-instance : SafeREvent (Tank1.fill (ctx := ctx)) (skip_Event (Xor0 ctx₀) Unit) where
+instance : SafeREvent (Tank1.fill (ctx := ctx)) (skip_Event (Xor0 ctx₀) Unit)
+    (valid_kind :=
+        by simp[EventKind.refine?,Tank1.fill]
+    ) where
     lift_in := fun _ => ()
     lift_out := id
     strengthening :=
@@ -135,6 +141,7 @@ instance : SafeREvent (Tank1.fill (ctx := ctx)) (skip_Event (Xor0 ctx₀) Unit) 
 
 def Tank1.fillUp : Event (Tank1 ctx) Nat Unit :=
     {
+        kind := EventKind.TransDet (Convergence.Ordinary)
         action _ _ _ :=
         ((),
             {
@@ -146,11 +153,13 @@ def Tank1.fillUp : Event (Tank1 ctx) Nat Unit :=
     }
 
 /- It is a SafeEvent -/
-instance : SafeEvent (Tank1.fillUp (ctx :=ctx)) where
+instance : SafeEvent (Tank1.fillUp (ctx :=ctx))  where
     safety m _ := by simp[Machine.invariant,Tank1.fillUp]
 
 /- It refines the Incr event of the counter -/
-instance : SafeREvent (Tank1.fillUp (ctx := ctx)) (Counter0.Incr (ctx:= ctx)) where
+instance : SafeREvent (Tank1.fillUp (ctx := ctx)) (Counter0.Incr (ctx:= ctx))
+    (valid_kind := by simp[EventKind.refine?,Tank1.fillUp,Counter0.Incr])
+    where
     lift_in := id
     lift_out := id
     strengthening m x:=
@@ -167,7 +176,10 @@ instance : SafeREvent (Tank1.fillUp (ctx := ctx)) (Counter0.Incr (ctx:= ctx)) wh
             assumption
 
 /- It also refines the event SetX_false of the Xor -/
-instance : SafeREvent (Tank1.fillUp (ctx:= ctx)) (Xor0.SetX_false (ctx:= ctx')) where
+instance : SafeREvent
+     (Tank1.fillUp (ctx:= ctx)) (Xor0.SetX_false (ctx:= ctx'))
+     (valid_kind := by simp[EventKind.refine?,Tank1.fillUp,Xor0.SetX_false])
+    where
     lift_in := fun _ => ()
     lift_out := id
     strengthening m x := by simp[Xor0.SetX_false]
@@ -182,17 +194,21 @@ instance : SafeREvent (Tank1.fillUp (ctx:= ctx)) (Xor0.SetX_false (ctx:= ctx')) 
 /- -/
 def Tank1.drain : Event (Tank1 ctx) Nat Unit :=
     {
+        kind := EventKind.TransDet (Convergence.Ordinary)
         action m v _ := ((),{cpt := m.cpt - v, st := m.st})
         guard m v := m.st = status.OPEN_OUT ∧ m.cpt - v > 0
     }
 
-instance : SafeEvent (Tank1.drain (ctx:=ctx)) where
+instance : SafeEvent (Tank1.drain (ctx:=ctx))  where
     safety m v :=
     by
         simp[Machine.invariant,Tank1.drain]
         omega
 
-instance : SafeREvent (Tank1.drain (ctx:= ctx)) (Counter0.Decr (ctx:=ctx)) where
+instance : SafeREvent
+    (Tank1.drain (ctx:= ctx)) (Counter0.Decr (ctx:=ctx))
+    (valid_kind := by simp[EventKind.refine?,Tank1.drain,Counter0.Decr])
+    where
     lift_in := id
     lift_out := id
     strengthening := by
@@ -203,7 +219,10 @@ instance : SafeREvent (Tank1.drain (ctx:= ctx)) (Counter0.Decr (ctx:=ctx)) where
             intros hinv hgrd₁ hgrd₂ am href
             rw[href]
 
-instance : SafeREvent (Tank1.drain (ctx:= ctx)) (skip_Event (Xor0 ctx₀) Unit) where
+instance : SafeREvent
+    (Tank1.drain (ctx:= ctx)) (skip_Event (Xor0 ctx₀) Unit)
+    (valid_kind := by simp[EventKind.refine?,Tank1.drain])
+    where
     lift_in := fun _ => ()
     lift_out := id
     strengthening m x := by simp[Machine.invariant, Refinement.refine]
@@ -213,15 +232,19 @@ instance : SafeREvent (Tank1.drain (ctx:= ctx)) (skip_Event (Xor0 ctx₀) Unit) 
 
 def Tank1.drainAll : Event (Tank1 ctx) Unit Unit :=
     {
+        kind := EventKind.TransDet (Convergence.Ordinary)
         action _ _ _ := ((), {cpt :=0,st:= status.CLOSED})
         guard m _ := m.st = status.OPEN_OUT
     }
 
 
-instance : SafeEvent (Tank1.drainAll (ctx := ctx)) where
+instance : SafeEvent (Tank1.drainAll (ctx := ctx))  where
     safety := by simp[Machine.invariant,Tank1.drainAll]
 
-instance : SafeREvent (Tank1.drainAll (ctx:=ctx)) (Counter0.Decr (ctx:=ctx)) where
+instance : SafeREvent
+    (Tank1.drainAll (ctx:=ctx)) (Counter0.Decr (ctx:=ctx))
+    (valid_kind := by simp[EventKind.refine?,Tank1.drainAll,Counter0.Decr])
+    where
     lift_in := fun _ => ctx.max -- litte trick : it works because with nats, if x ≤ y, x - y = 0
     lift_out := id
     strengthening := by simp[Machine.invariant,Refinement.refine,Counter0.Decr,Tank1.drainAll]
@@ -232,7 +255,9 @@ instance : SafeREvent (Tank1.drainAll (ctx:=ctx)) (Counter0.Decr (ctx:=ctx)) whe
             rw[href]
             omega
 
-instance : SafeREvent (Tank1.drainAll (ctx := ctx)) (Xor0.SetY_false (ctx:=ctx')) where
+instance : SafeREvent (Tank1.drainAll (ctx := ctx)) (Xor0.SetY_false (ctx:=ctx'))
+    (valid_kind := by simp[EventKind.refine?,Tank1.drainAll,Xor0.SetY_false])
+    where
     lift_in := id
     lift_out := id
     strengthening :=
@@ -251,24 +276,29 @@ instance : SafeREvent (Tank1.drainAll (ctx := ctx)) (Xor0.SetY_false (ctx:=ctx')
 
 def Tank1.Open_Door_in : Event (Tank1 ctx) Unit Unit :=
     {
+        kind := EventKind.TransDet (Convergence.Ordinary)
         action m _ _ := ((), {cpt := m.cpt, st := status.OPEN_IN})
         guard m _ := m.st ≠ status.OPEN_OUT
     }
 
-instance : SafeEvent (Tank1.Open_Door_in (ctx:= ctx)) where
+instance : SafeEvent (Tank1.Open_Door_in (ctx:= ctx))  where
     safety :=
         by
             simp[Machine.invariant,Tank1.Open_Door_in]
             intros m hgrd₁ _
             assumption
 
-instance : SafeREvent (Tank1.Open_Door_in (ctx := ctx)) (skip_Event (Counter0 ctx) Unit) where
+instance : SafeREvent (Tank1.Open_Door_in (ctx := ctx)) (skip_Event (Counter0 ctx) Unit)
+    (valid_kind := by simp[EventKind.refine?, Tank1.Open_Door_in])
+    where
     lift_in := id
     lift_out := id
     strengthening m x:= by simp
     simulation := by simp[Machine.invariant,Refinement.refine,Tank1.Open_Door_in]
 
-instance : SafeREvent (Tank1.Open_Door_in (ctx:= ctx)) (Xor0.SetX_true (ctx:= ctx')) where
+instance : SafeREvent (Tank1.Open_Door_in (ctx:= ctx)) (Xor0.SetX_true (ctx:= ctx'))
+    (valid_kind := by simp[EventKind.refine?,Tank1.Open_Door_in,Xor0.SetX_true])
+    where
     lift_in := id
     lift_out := id
     strengthening m x :=
@@ -288,24 +318,28 @@ instance : SafeREvent (Tank1.Open_Door_in (ctx:= ctx)) (Xor0.SetX_true (ctx:= ct
 
 def Tank1.Close_Door_in : Event (Tank1 ctx) Unit Unit :=
     {
+        kind := EventKind.TransDet (Convergence.Ordinary)
         action m _ _ := ((),{cpt:= m.cpt, st := status.CLOSED})
         guard m _ := m.st = status.OPEN_IN
     }
 
-instance : SafeEvent (Tank1.Close_Door_in (ctx:= ctx)) where
+instance : SafeEvent (Tank1.Close_Door_in (ctx:= ctx))  where
     safety m x :=
         by
             simp[Machine.invariant,Tank1.Close_Door_in]
             intros
             assumption
 
-instance : SafeREvent (Tank1.Close_Door_in (ctx := ctx)) (skip_Event (Counter0 ctx) Unit) where
+instance : SafeREvent (Tank1.Close_Door_in (ctx := ctx)) (skip_Event (Counter0 ctx) Unit)
+    (valid_kind := by simp[EventKind.refine?,Tank1.Close_Door_in]) where
     lift_in := id
     lift_out := id
     strengthening m x:= by simp
     simulation := by simp[Machine.invariant,Refinement.refine,Tank1.Close_Door_in]
 
-instance : SafeREvent (Tank1.Close_Door_in (ctx:= ctx)) (Xor0.SetX_false (ctx:= ctx')) where
+instance : SafeREvent (Tank1.Close_Door_in (ctx:= ctx)) (Xor0.SetX_false (ctx:= ctx'))
+    (valid_kind := by simp[EventKind.refine?,Tank1.Close_Door_in, Xor0.SetX_false])
+    where
     lift_in := id
     lift_out := id
     strengthening m x :=
@@ -323,24 +357,29 @@ instance : SafeREvent (Tank1.Close_Door_in (ctx:= ctx)) (Xor0.SetX_false (ctx:= 
 
 def Tank1.Open_Door_out : Event (Tank1 ctx) Unit Unit :=
     {
+        kind := EventKind.TransDet (Convergence.Ordinary)
         action m _ _ := ((), {cpt := m.cpt, st := status.OPEN_OUT})
         guard m _ := m.st ≠ status.OPEN_IN
     }
 
-instance : SafeEvent (Tank1.Open_Door_out (ctx:= ctx)) where
+instance : SafeEvent (Tank1.Open_Door_out (ctx:= ctx))  where
     safety :=
         by
             simp[Machine.invariant,Tank1.Open_Door_out]
             intros m hgrd₁ _
             assumption
 
-instance : SafeREvent (Tank1.Open_Door_out (ctx := ctx)) (skip_Event (Counter0 ctx) Unit) where
+instance : SafeREvent (Tank1.Open_Door_out (ctx := ctx)) (skip_Event (Counter0 ctx) Unit)
+    (valid_kind := by simp[EventKind.refine?,Tank1.Open_Door_out])
+    where
     lift_in := id
     lift_out := id
     strengthening m x:= by simp
     simulation := by simp[Machine.invariant,Refinement.refine,Tank1.Open_Door_out]
 
-instance : SafeREvent (Tank1.Open_Door_out (ctx:= ctx)) (Xor0.SetY_true (ctx:= ctx')) where
+instance : SafeREvent (Tank1.Open_Door_out (ctx:= ctx)) (Xor0.SetY_true (ctx:= ctx'))
+    (valid_kind := by simp[EventKind.refine?,Tank1.Open_Door_out,Xor0.SetY_true])
+    where
     lift_in := id
     lift_out := id
     strengthening m x :=
@@ -360,24 +399,31 @@ instance : SafeREvent (Tank1.Open_Door_out (ctx:= ctx)) (Xor0.SetY_true (ctx:= c
 
 def Tank1.Close_Door_out : Event (Tank1 ctx) Unit Unit :=
     {
+        kind := EventKind.TransDet (Convergence.Ordinary)
         action m _ _ := ((),{cpt:= m.cpt, st := status.CLOSED})
         guard m _ := m.st = status.OPEN_OUT
     }
 
-instance : SafeEvent (Tank1.Close_Door_out (ctx:= ctx)) where
+instance : SafeEvent (Tank1.Close_Door_out (ctx:= ctx))  where
     safety m x :=
         by
             simp[Machine.invariant,Tank1.Close_Door_out]
             intros
             assumption
 
-instance : SafeREvent (Tank1.Close_Door_out (ctx := ctx)) (skip_Event (Counter0 ctx) Unit) where
+instance : SafeREvent (Tank1.Close_Door_out (ctx := ctx)) (skip_Event (Counter0 ctx) Unit)
+    (valid_kind := by simp[EventKind.refine?,Tank1.Close_Door_out])
+
+    where
     lift_in := id
     lift_out := id
     strengthening m x:= by simp
     simulation := by simp[Machine.invariant,Refinement.refine,Tank1.Close_Door_out]
 
-instance : SafeREvent (Tank1.Close_Door_out (ctx:= ctx)) (Xor0.SetY_false (ctx:= ctx')) where
+instance : SafeREvent (Tank1.Close_Door_out (ctx:= ctx)) (Xor0.SetY_false (ctx:= ctx'))
+    (valid_kind := by simp[EventKind.refine?,Tank1.Close_Door_out, Xor0.SetY_false])
+
+    where
     lift_in := id
     lift_out := id
     strengthening m x :=
