@@ -64,7 +64,8 @@ open Refinement
 -/
 
 class SafeREvent {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-  (ev : Event M α β) (abs : Event AM α' β') [SafeEvent abs] {valid_kind : ev.kind.refine? abs.kind = true} extends (SafeEvent ev ) where
+  {kev kabs : EventKind}
+  (ev : Event M α β) (abs : Event AM α' β') [SafeEvent abs kabs] {valid_kind : kev.refine? kabs = true} extends (SafeEvent ev kev) where
 
   lift_in : α → α'
   lift_out : β → β'
@@ -121,7 +122,7 @@ instance [DecidableEq M] [DecidableEq AM] [Machine ACTX AM] [Machine CTX M] [ins
    (ev : InitEvent M α β ) (abs : InitEvent AM α' β') [SafeInitEvent abs]
    [instSafeInitR : SafeInitREvent ev abs] :
 
-   SafeREvent ev.toEvent abs.toEvent
+   SafeREvent ev.toEvent abs.toEvent (kev := EventKind.InitDet) (kabs := EventKind.InitDet)
     (valid_kind := by simp[EventKind.refine?]) -- The proof is not automatic
 where
     lift_in := instSafeInitR.lift_in

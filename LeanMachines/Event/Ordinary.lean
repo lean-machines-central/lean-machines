@@ -18,7 +18,7 @@ is not demonstrated anticipated or convergent
 -/
 
 /- Typeclass representing the proof  obligation of safety for Events -/
-class SafeEvent [Machine CTX M] {α β} (ev : Event M α β) where
+class SafeEvent [Machine CTX M] {α β} (ev : Event M α β) (kind : EventKind) where
   safety (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
@@ -59,7 +59,7 @@ structure OrdinaryEvent (M) [Machine CTX M] (α β : Type) where
   module Event.Algebra.Ordinary from an event and an instanciation of the typeclass specifying the
   proof obligation
 -/
-def mkOrdinaryEvent [Machine CTX M] (ev : Event M α β) [instSafe: SafeEvent ev] : OrdinaryEvent M α β := {
+def mkOrdinaryEvent [Machine CTX M] (ev : Event M α β) [instSafe: SafeEvent ev (EventKind.TransDet (Convergence.Ordinary))] : OrdinaryEvent M α β := {
   guard := ev.guard
   action := ev.action
   safety := instSafe.safety
@@ -92,7 +92,7 @@ by
 
 
 
-instance [Machine CTX M] (ev : OrdinaryEvent M α β):  SafeEvent ev.toEvent where
+instance [Machine CTX M] (ev : OrdinaryEvent M α β):  SafeEvent ev.toEvent (EventKind.TransDet (Convergence.Ordinary)) where
   safety := ev.safety
 
 
@@ -120,13 +120,13 @@ class SafeInitEvent [Machine CTX M] {α β} (ev : InitEvent M α β) where
 
 
 instance [DecidableEq M][Machine CTX M] [Inhabited M] (ev : InitEvent M α β ) [instSafeInit : SafeInitEvent ev] :
- SafeEvent ev.toEvent where
+ SafeEvent ev.toEvent (EventKind.InitDet) where
   safety m x hinv grd :=
     by simp[grd,instSafeInit.safety]
 
 
 
-instance [Machine CTX M ]: SafeEvent (skip_Event (M) α) where
+instance [Machine CTX M ]: SafeEvent (skip_Event (M) α) (EventKind.TransDet (Convergence.Ordinary))where
   safety :=
     by
       simp[Machine.invariant]
