@@ -64,8 +64,8 @@ open Refinement
 -/
 
 class SafeREvent {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-  {kev kabs : EventKind}
-  (ev : Event M α β) (abs : Event AM α' β') [SafeEvent abs kabs] {valid_kind : kev.refine? kabs = true} extends (SafeEvent ev kev) where
+  (ev : Event M α β) (abs : Event AM α' β') [instSafeAbs :SafeEvent abs kabs] [instSafeEv : SafeEvent ev kev]
+  {valid_kind : kev.refine? kabs = true} where
 
   lift_in : α → α'
   lift_out : β → β'
@@ -99,8 +99,8 @@ class SafeREvent {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refin
 -/
 
 class SafeInitREvent  {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-  (ev : InitEvent M α β) (abs : InitEvent AM α' β')
-extends SafeInitEvent ev where
+  (ev : InitEvent M α β) (abs : InitEvent AM α' β') [SafeInitEvent ev] [SafeInitEvent abs]
+where
   lift_in : α → α'
   lift_out : β → β'
 
@@ -119,7 +119,7 @@ class RefineDefault (AM) (M) [Machine ACTX AM] [Machine CTX M] [Inhabited AM] [I
 
 instance [DecidableEq M] [DecidableEq AM] [Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
     [Inhabited AM] [Inhabited M] [instRDef : RefineDefault AM M]
-   (ev : InitEvent M α β ) (abs : InitEvent AM α' β') [SafeInitEvent abs]
+   (ev : InitEvent M α β ) (abs : InitEvent AM α' β') [SafeInitEvent abs] [SafeInitEvent ev]
    [instSafeInitR : SafeInitREvent ev abs] :
 
    SafeREvent ev.toEvent abs.toEvent (kev := EventKind.InitDet) (kabs := EventKind.InitDet)

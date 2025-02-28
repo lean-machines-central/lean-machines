@@ -80,7 +80,6 @@ def OrdinaryEvent.toEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : Event M
   {
     guard := ev.guard
     action := ev.action
-    kind := EventKind.TransDet (Convergence.Ordinary)
   }
 
 
@@ -124,9 +123,10 @@ instance [DecidableEq M][Machine CTX M] [Inhabited M] (ev : InitEvent M α β ) 
   safety m x hinv grd :=
     by simp[grd,instSafeInit.safety]
 
-
-
-instance [Machine CTX M ]: SafeEvent (skip_Event (M) α) (EventKind.TransDet (Convergence.Ordinary))where
+/-!
+## Skip event
+-/
+instance instSkip [Machine CTX M ]: SafeEvent (skip_Event (M) α) (EventKind.TransDet (Convergence.Ordinary))where
   safety :=
     by
       simp[Machine.invariant]

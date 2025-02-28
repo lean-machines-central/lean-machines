@@ -101,7 +101,6 @@ This extends `_EventRoot` with a notion of (deterministic/functional) action.
 structure Event (M) [Machine CTX M] (α : Type) (β : Type) where
   guard (m : M) (x : α) : Prop := True
   action (m : M) (x : α) (grd : guard m x): (β × M)
-  kind : EventKind
 
 theorem _Guard_ext [Machine CTX M] (guard₁ : M → α → Prop) (guard₂ : M → α → Prop):
   (∀ m x, guard₁ m x = guard₂ m x)
@@ -128,31 +127,27 @@ axiom _Action_ext_ax {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: Event M α 
    → HEq ev₁.action ev₂.action
 
 theorem Event.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: Event M α β):
-  ev₁.kind = ev₂.kind ∧
   (∀ m x, ev₁.guard m x = ev₂.guard m x
           ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
   → ev₁ = ev₂ :=
 by
   intros H
-  obtain ⟨l,r⟩ := H
   have Hax := _Action_ext_ax ev₁ ev₂
   cases ev₁
-  case mk g₁ act₁ k₁=>
+  case mk g₁ act₁=>
     cases ev₂
-    case mk g₂ act₂ k₂ =>
+    case mk g₂ act₂ =>
       simp at*
       constructor
       case left =>
         apply _Guard_ext
         intros m x
-        have Hg := (r m x).1
+        have Hg := (H m x).1
         exact propext Hg
       case right =>
-        constructor
-        case left =>
-          exact Hax r
-        case right =>
-          exact l
+        exact Hax H
+
+
 
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
@@ -168,7 +163,6 @@ def InitEvent.toEvent [DecidableEq M] [Inhabited M] [Machine CTX M] (ev : InitEv
   {
     guard := fun m x => m == default ∧ ev.guard x
     action := fun m x grd => ev.init x (by simp at grd ; apply grd.2)
-    kind := InitDet
 
   }
 
@@ -180,7 +174,6 @@ Note that the output type must match the input type,
 def skip_Event (M) [Machine CTX M] (α) : Event M α α :=
 {
   action := fun m x _ => (x, m)
-  kind := TransDet (Convergence.Ordinary)
 }
 
 /-- Any type-theoretic function can be lifted to the
@@ -189,7 +182,6 @@ status of a (non-guarded) event. -/
 def fun_Event  (M) [Machine CTX M] (f : α → β) : Event M α β :=
 {
   action := fun m x _ => (f x, m)
-  kind := TransDet (Convergence.Ordinary)
 
 }
 
@@ -198,6 +190,5 @@ def fun_Event  (M) [Machine CTX M] (f : α → β) : Event M α β :=
 def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : Event M α β :=
 {
   action := fun m x _ => (xf m x, m)
-  kind := TransDet (Convergence.Ordinary)
 
 }
