@@ -2,6 +2,7 @@ import Mathlib.Tactic
 
 import LeanMachines.Event.Basic
 import LeanMachines.Event.Ordinary
+import LeanMachines.Event.Convergent
 
 
 
@@ -69,6 +70,16 @@ def Counter0.Incr : Event (Counter0 ctx) Nat Unit :=
 
 instance instIncr : SafeEvent (Counter0.Incr (ctx := ctx))  (EventKind.TransDet (Convergence.Ordinary)) where
   safety := fun m v hinvm => by simp[Machine.invariant,Counter0.Incr]
+
+
+instance instIncrCvg : AnticipatedEvent Nat (Counter0.Incr (ctx := ctx)) (EventKind.TransDet (Convergence.Anticipated)) where
+  safety := fun m v hinvm => by simp[Machine.invariant,Counter0.Incr]
+  variant := fun m => ctx.max - m.cpt
+  nonIncreasing := fun m x hinv hgrd =>
+    by
+      simp[Counter0.Incr]
+      omega
+
 
 /- Or we drecrement it by a Nat value -/
 def Counter0.Decr : Event (Counter0 ctx) Nat Unit :=

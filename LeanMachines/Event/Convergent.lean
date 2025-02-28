@@ -105,28 +105,37 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
 -/
 
 
-class ConvergentEvent (v) [Preorder v]  [WellFoundedLT v] [Machine CTX M]
-  (ev : Event M α β )
-  extends AnticipatedEvent v ev (EventKind.TransDet (Convergence.Convergent)) where
+-- class ConvergentEvent (v) [Preorder v]  [WellFoundedLT v] [Machine CTX M]
+--   (ev : Event M α β )
+--   extends AnticipatedEvent v ev (EventKind.TransDet (Convergence.Convergent)) where
 
+--   convergence (m : M) (x : α):
+--     Machine.invariant m
+--     → (grd : ev.guard m x)
+--     → let (_, m') := ev.action m x grd
+--       variant m' < variant m
+
+--   nonIncreasing (m : M) (x : α) := fun hinv hgrd => le_of_lt (convergence m x hinv hgrd)
+
+class ConvergentEvent (v) [Preorder v] [WellFoundedLT v] [instM : Machine CTX M]
+  (ev : Event M α β)
+  extends Variant v (instM := instM), SafeEvent ev (EventKind.TransDet (Convergence.Convergent)) where
   convergence (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
     → let (_, m') := ev.action m x grd
       variant m' < variant m
 
-  nonIncreasing :=
-    fun m x =>
-      by
-        simp
-        intros Hinv Hgrd
-        have Hconv := convergence m x Hinv Hgrd
-        apply le_of_lt
-        assumption
+
+instance [Preorder v] [WellFoundedLT v] [instM : Machine CTX M] (ev : Event M α β) [ConvergentEvent v ev]
+  : AnticipatedEvent (instM := instM) v ev (EventKind.TransDet (Convergence.Convergent)) where
+    nonIncreasing := fun m x hinv hgrd => le_of_lt (ConvergentEvent.convergence m x hinv hgrd)
+
 
 
 structure _ConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CTX M]
-    (α β : Type) extends _AnticipatedEvent v M α β where
+    (α β : Type) extends OrdinaryEvent M α β where
+    variant : M → v
     convergence (m : M) (x : α):
     Machine.invariant m
     → (grd : guard m x)
@@ -140,7 +149,6 @@ def mkConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CT
     action := ev.action
     safety := instConv.safety
     variant := instConv.variant
-    nonIncreasing := instConv.nonIncreasing
     convergence := instConv.convergence
   }
 
@@ -159,12 +167,6 @@ private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M}
   action := ev.action
   safety := ev.safety
   variant := variant
-  nonIncreasing := fun m x => by
-    simp
-    intros Hinv Hgrd
-    have Hconv' := Hconv m x Hinv Hgrd
-    apply le_of_lt
-    exact Hconv'
   convergence := Hconv
  }
 
@@ -183,6 +185,5 @@ private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {
     action := ev.action
     safety := ev.safety
     variant := ev.variant
-    nonIncreasing := ev.nonIncreasing
     convergence := hconv
   }

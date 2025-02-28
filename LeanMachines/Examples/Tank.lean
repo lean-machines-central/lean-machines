@@ -103,11 +103,11 @@ instance instFill : SafeEvent (Tank1.fill (ctx:=ctx)) (EventKind.TransDet (Conve
 /- It refines the Incr event of the counter -/
 instance : SafeREvent
     (instSafeEv := instFill)
-    (instSafeAbs := instIncr)
+    (instSafeAbs := instIncrCvg.toSafeEvent)
     (Tank1.fill (ctx := ctx)) (Counter0.Incr (ctx :=ctx))
     (valid_kind :=
         by
-            simp[EventKind.refine?]
+            simp[EventKind.refine?,EventKind.is_init,EventKind.get_status]
     )
     where
     lift_in := id
@@ -130,7 +130,7 @@ instance : SafeREvent
     (instSafeAbs := instSkip)
     (Tank1.fill (ctx := ctx)) (skip_Event (Xor0 ctx₀) Unit)
     (valid_kind :=
-        by simp[EventKind.refine?]
+        by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status]
     ) where
     lift_in := fun _ => ()
     lift_out := id
@@ -162,9 +162,12 @@ instance instFillUp : SafeEvent (Tank1.fillUp (ctx :=ctx)) (EventKind.TransDet (
 /- It refines the Incr event of the counter -/
 instance : SafeREvent
     (instSafeEv := instFillUp)
-    (instSafeAbs := instIncr)
+    (instSafeAbs := instIncrCvg.toSafeEvent)
     (Tank1.fillUp (ctx := ctx)) (Counter0.Incr (ctx:= ctx))
-    (valid_kind := by simp[EventKind.refine?])
+    (valid_kind :=
+        by
+            simp[EventKind.refine?,EventKind.is_init,EventKind.get_status]
+    )
     where
     lift_in := id
     lift_out := id
@@ -186,7 +189,7 @@ instance : SafeREvent
         (Tank1.fillUp (ctx:= ctx)) (Xor0.SetX_false (ctx:= ctx'))
         (instSafeEv := instFillUp)
         (instSafeAbs := instSetXf)
-        (valid_kind := by simp[EventKind.refine?,Tank1.fillUp,Xor0.SetX_false])
+        (valid_kind := by simp[EventKind.refine?,EventKind.get_status,EventKind.is_init,Tank1.fillUp,Xor0.SetX_false])
     where
     lift_in := fun _ => ()
     lift_out := id
@@ -216,7 +219,7 @@ instance : SafeREvent
     (Tank1.drain (ctx:= ctx)) (Counter0.Decr (ctx:=ctx))
     (instSafeEv := instDrain)
     (instSafeAbs := instDecr)
-    (valid_kind := by simp[EventKind.refine?,Tank1.drain,Counter0.Decr])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.drain,Counter0.Decr])
     where
     lift_in := id
     lift_out := id
@@ -232,7 +235,7 @@ instance : SafeREvent
     (instSafeEv := instDrain)
     (instSafeAbs := instSkip)
     (Tank1.drain (ctx:= ctx)) (skip_Event (Xor0 ctx₀) Unit)
-    (valid_kind := by simp[EventKind.refine?,Tank1.drain])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.drain])
     where
     lift_in := fun _ => ()
     lift_out := id
@@ -255,7 +258,7 @@ instance : SafeREvent
     (Tank1.drainAll (ctx:=ctx)) (Counter0.Decr (ctx:=ctx))
     (instSafeEv := instDrainAll)
     (instSafeAbs := instDecr)
-    (valid_kind := by simp[EventKind.refine?,Tank1.drainAll,Counter0.Decr])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.drainAll,Counter0.Decr])
     where
     lift_in := fun _ => ctx.max -- litte trick : it works because with nats, if x ≤ y, x - y = 0
     lift_out := id
@@ -270,7 +273,7 @@ instance : SafeREvent
 instance : SafeREvent (Tank1.drainAll (ctx := ctx)) (Xor0.SetY_false (ctx:=ctx'))
     (instSafeEv := instDrainAll)
     (instSafeAbs := instSetYf)
-    (valid_kind := by simp[EventKind.refine?,Tank1.drainAll,Xor0.SetY_false])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.drainAll,Xor0.SetY_false])
     where
     lift_in := id
     lift_out := id
@@ -304,7 +307,7 @@ instance instOpenIn : SafeEvent (Tank1.Open_Door_in (ctx:= ctx)) (EventKind.Tran
 instance : SafeREvent (Tank1.Open_Door_in (ctx := ctx)) (skip_Event (Counter0 ctx) Unit)
     (instSafeEv := instOpenIn)
     (instSafeAbs := instSkip)
-    (valid_kind := by simp[EventKind.refine?, Tank1.Open_Door_in])
+    (valid_kind := by simp[EventKind.refine?, EventKind.is_init,EventKind.get_status,Tank1.Open_Door_in])
     where
     lift_in := id
     lift_out := id
@@ -314,7 +317,7 @@ instance : SafeREvent (Tank1.Open_Door_in (ctx := ctx)) (skip_Event (Counter0 ct
 instance : SafeREvent (Tank1.Open_Door_in (ctx:= ctx)) (Xor0.SetX_true (ctx:= ctx'))
     (instSafeEv := instOpenIn)
     (instSafeAbs := instSetXt)
-    (valid_kind := by simp[EventKind.refine?,Tank1.Open_Door_in,Xor0.SetX_true])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.Open_Door_in,Xor0.SetX_true])
     where
     lift_in := id
     lift_out := id
@@ -349,7 +352,7 @@ instance instCloseIn : SafeEvent (Tank1.Close_Door_in (ctx:= ctx)) (EventKind.Tr
 instance : SafeREvent (Tank1.Close_Door_in (ctx := ctx)) (skip_Event (Counter0 ctx) Unit)
     (instSafeEv := instCloseIn)
     (instSafeAbs := instSkip)
-    (valid_kind := by simp[EventKind.refine?,Tank1.Close_Door_in]) where
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.Close_Door_in]) where
     lift_in := id
     lift_out := id
     strengthening m x:= by simp
@@ -358,7 +361,7 @@ instance : SafeREvent (Tank1.Close_Door_in (ctx := ctx)) (skip_Event (Counter0 c
 instance : SafeREvent (Tank1.Close_Door_in (ctx:= ctx)) (Xor0.SetX_false (ctx:= ctx'))
     (instSafeEv := instCloseIn)
     (instSafeAbs := instSetXf)
-    (valid_kind := by simp[EventKind.refine?,Tank1.Close_Door_in, Xor0.SetX_false])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.Close_Door_in, Xor0.SetX_false])
     where
     lift_in := id
     lift_out := id
@@ -391,7 +394,7 @@ instance instOpenOut : SafeEvent (Tank1.Open_Door_out (ctx:= ctx)) (EventKind.Tr
 instance : SafeREvent (Tank1.Open_Door_out (ctx := ctx)) (skip_Event (Counter0 ctx) Unit)
     (instSafeEv := instOpenOut)
     (instSafeAbs := instSkip)
-    (valid_kind := by simp[EventKind.refine?,Tank1.Open_Door_out])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.Open_Door_out])
     where
     lift_in := id
     lift_out := id
@@ -401,7 +404,7 @@ instance : SafeREvent (Tank1.Open_Door_out (ctx := ctx)) (skip_Event (Counter0 c
 instance : SafeREvent (Tank1.Open_Door_out (ctx:= ctx)) (Xor0.SetY_true (ctx:= ctx'))
     (instSafeEv := instOpenOut)
     (instSafeAbs := instSetYt)
-    (valid_kind := by simp[EventKind.refine?,Tank1.Open_Door_out,Xor0.SetY_true])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.Open_Door_out,Xor0.SetY_true])
     where
     lift_in := id
     lift_out := id
@@ -436,7 +439,7 @@ instance instCloseOut : SafeEvent (Tank1.Close_Door_out (ctx:= ctx)) (EventKind.
 instance : SafeREvent (Tank1.Close_Door_out (ctx := ctx)) (skip_Event (Counter0 ctx) Unit)
     (instSafeEv := instCloseOut)
     (instSafeAbs := instSkip)
-    (valid_kind := by simp[EventKind.refine?,Tank1.Close_Door_out])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.Close_Door_out])
 
     where
     lift_in := id
@@ -447,7 +450,7 @@ instance : SafeREvent (Tank1.Close_Door_out (ctx := ctx)) (skip_Event (Counter0 
 instance : SafeREvent (Tank1.Close_Door_out (ctx:= ctx)) (Xor0.SetY_false (ctx:= ctx'))
     (instSafeEv := instCloseOut)
     (instSafeAbs := instSetYf)
-    (valid_kind := by simp[EventKind.refine?,Tank1.Close_Door_out, Xor0.SetY_false])
+    (valid_kind := by simp[EventKind.refine?,EventKind.is_init,EventKind.get_status,Tank1.Close_Door_out, Xor0.SetY_false])
 
     where
     lift_in := id

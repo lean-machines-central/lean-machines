@@ -79,7 +79,7 @@ def EventKind.get_status k :=
 
 def EventKind.refine? (kconcr : EventKind) (kabs :EventKind) : Bool :=
   (is_init kconcr = is_init kabs)
-  ||
+  &&
   match get_status kabs, get_status kconcr with
   | Convergence.Convergent, Convergence.Ordinary => false
   | Convergence.Convergent, Convergence.Anticipated => false

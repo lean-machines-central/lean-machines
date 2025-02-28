@@ -123,7 +123,11 @@ instance [DecidableEq M] [DecidableEq AM] [Machine ACTX AM] [Machine CTX M] [ins
    [instSafeInitR : SafeInitREvent ev abs] :
 
    SafeREvent ev.toEvent abs.toEvent (kev := EventKind.InitDet) (kabs := EventKind.InitDet)
-    (valid_kind := by simp[EventKind.refine?]) -- The proof is not automatic
+    (valid_kind :=
+      by
+        simp[EventKind.refine?]
+        simp[EventKind.get_status]
+      ) -- The proof is not automatic
 where
     lift_in := instSafeInitR.lift_in
     lift_out := instSafeInitR.lift_out
