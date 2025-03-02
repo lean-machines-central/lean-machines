@@ -68,11 +68,7 @@ def Counter0.Incr : Event (Counter0 ctx) Nat Unit :=
     guard := fun c0 v => (c0.cpt + v) ≤ ctx.max
   }
 
-instance instIncr : SafeEvent (Counter0.Incr (ctx := ctx))  (EventKind.TransDet (Convergence.Ordinary)) where
-  safety := fun m v hinvm => by simp[Machine.invariant,Counter0.Incr]
-
-
-instance instIncrCvg : AnticipatedEvent Nat (Counter0.Incr (ctx := ctx)) (EventKind.TransDet (Convergence.Anticipated)) where
+instance instIncrAnt : AnticipatedEvent Nat (Counter0.Incr (ctx := ctx)) (EventKind.TransDet (Convergence.Anticipated)) where
   safety := fun m v hinvm => by simp[Machine.invariant,Counter0.Incr]
   variant := fun m => ctx.max - m.cpt
   nonIncreasing := fun m x hinv hgrd =>
@@ -85,11 +81,20 @@ instance instIncrCvg : AnticipatedEvent Nat (Counter0.Incr (ctx := ctx)) (EventK
 def Counter0.Decr : Event (Counter0 ctx) Nat Unit :=
   {
     action := fun c0 v _ => ((),{cpt:= c0.cpt - v})
-    guard := fun _ _ => True -- No guard is necessary : we reason with Nat, if x < y then x - y = 0
+    guard := fun m v => m.cpt ≥ v ∧ v > 0
   }
 
-instance instDecr : SafeEvent (Counter0.Decr (ctx := ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
+
+
+instance instDecrCvg : ConvergentEvent Nat (Counter0.Decr (ctx:= ctx)) where
   safety :=
     by
       simp[Machine.invariant,Counter0.Decr]
+      omega
+
+  variant := fun m => m.cpt -- Warning !!! The field is not required if an other event defines it, might be an issue...
+  convergence :=
+    by
+      simp[Machine.invariant,Variant.variant,Counter0.Decr]
+      intros m x hinv hgrd₁ hgrd₂
       omega
