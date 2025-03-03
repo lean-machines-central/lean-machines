@@ -39,11 +39,9 @@ natural numbers (type `Nat`), or subset ordering for finite sets
 /-- The definition of a `variant` of type `v` obtained from
 a machine pre-state. The type `v` must be a preorder
 (i.e. an instance of the `Preorder` typeclass). -/
-structure _Variant (v) [Preorder v] [instM:Machine CTX M] where
-  variant : M → v
 
 
-class Variant (v) [Preorder v] [instM : Machine CTX M] where
+class Variant (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) where
   variant : M → v
 
 /-!
@@ -52,7 +50,7 @@ class Variant (v) [Preorder v] [instM : Machine CTX M] where
 
 
 class AnticipatedEvent (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) (kind : EventKind)
-  extends Variant v (instM := instM), SafeEvent ev kind where
+  extends Variant v (instM := instM) ev, SafeEvent ev kind where
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
@@ -119,7 +117,7 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
 
 class ConvergentEvent (v) [Preorder v] [WellFoundedLT v] [instM : Machine CTX M]
   (ev : Event M α β)
-  extends Variant v (instM := instM), SafeEvent ev (EventKind.TransDet (Convergence.Convergent)) where
+  extends Variant v (instM := instM) ev, SafeEvent ev (EventKind.TransDet (Convergence.Convergent)) where
   convergence (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
