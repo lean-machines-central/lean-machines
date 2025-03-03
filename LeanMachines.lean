@@ -2,11 +2,21 @@
 -- Import modules here that should be built as part of the library.
 
 -- Abstract machines
--- import «LeanMachines».Event.Convergent
+import «LeanMachines».Event.Basic
+import «LeanMachines».Event.Ordinary
+import «LeanMachines».Event.Convergent
+
+
+-- Algebraic properties of events
+import «LeanMachines».Event.Algebra.Basic
+import «LeanMachines».Event.Algebra.Ordinary
+import «LeanMachines».Event.Algebra.Convergent
+
+
 -- import «LeanMachines».NonDet.Convergent
 
 -- Relational refinement
--- import «LeanMachines».Refinement.Relational.Abstract
+import «LeanMachines».Refinement.Relational.Basic
 -- import «LeanMachines».Refinement.Relational.Concrete
 -- import «LeanMachines».Refinement.Relational.NonDet.Abstract
 -- import «LeanMachines».Refinement.Relational.NonDet.Concrete
@@ -25,6 +35,12 @@
 -- import «LeanMachines».Refinement.Strong.NonDet.Abstract
 -- import «LeanMachines».Refinement.Strong.NonDet.Concrete
 -- import «LeanMachines».Refinement.Strong.NonDet.Det.Convergent
+
+-- Examples
+import «LeanMachines».Examples.Counter0
+import «LeanMachines».Examples.Xor0
+import «LeanMachines».Examples.Tank
+
 
 -- Versioning
 
