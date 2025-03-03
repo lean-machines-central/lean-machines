@@ -4,6 +4,7 @@ import LeanMachines.Event.Basic
 import LeanMachines.Algebra.Contravariant
 import LeanMachines.Algebra.Profunctor
 import LeanMachines.Algebra.Arrow
+import LeanMachines.Event.Algebra.Basic
 
 /-!
 # Ordinary Deterministic events

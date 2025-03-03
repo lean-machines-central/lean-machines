@@ -6,6 +6,10 @@ import LeanMachines.Algebra.Arrow
 import LeanMachines.Event.Ordinary
 import LeanMachines.Event.Convergent
 
+import LeanMachines.Event.Algebra.Ordinary
+import LeanMachines.Event.Algebra.Basic
+
+
 
 
 
