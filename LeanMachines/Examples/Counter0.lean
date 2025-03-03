@@ -59,7 +59,6 @@ instance : SafeInitEvent (Counter0.Init (ctx := ctx)) where
 
 /- It's the same idea for regular events -/
 
-/- Our counter has two kinds of evens -/
 
 /- Either we increment it by a Nat value -/
 def Counter0.Incr : Event (Counter0 ctx) Nat Unit :=
@@ -98,3 +97,16 @@ instance instDecrCvg : ConvergentEvent Nat (Counter0.Decr (ctx:= ctx)) where
       simp[Machine.invariant,Variant.variant,Counter0.Decr]
       intros m x hinv hgrd₁ hgrd₂
       omega
+
+
+def Counter0.setCount : Event (Counter0 ctx) Nat Unit :=
+  {
+    action := fun _ v _ => ((),{cpt:=v})
+    guard := fun _ v => (v ≤ ctx.max)
+  }
+
+instance instSetCountSf : SafeEvent (Counter0.setCount (ctx:=ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
+  safety :=
+  fun m x =>
+    by
+      simp[Machine.invariant,Counter0.setCount]
