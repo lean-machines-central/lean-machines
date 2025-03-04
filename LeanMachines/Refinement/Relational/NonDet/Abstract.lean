@@ -83,7 +83,7 @@ def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M
         apply ev.step_safe m x Hinv Hagrd y (ev.lift m') Heff
 
       feasibility := fun m x => by
-        simp
+        --simp
         intros Hinv Hagrd
         have Href := ev.lift_ref m Hinv
         have Hainv := refine_safe (ev.lift m) m Hinv Href
@@ -94,8 +94,7 @@ def newAbstractRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement AM M
         have Hssafe := ev.step_safe m x Hinv Hagrd y am' Hafeas
         have Hasafe' := refine_safe am' (ev.unlift (ev.lift m) am' m x) Hssafe Hsref
         have Hlu := ev.lift_unlift m (ev.lift m) am' x Hinv Hasafe'
-        rw [Hlu]
-        simp [Hafeas]
+        simp [Hafeas, Hlu]
 
       abstract := abs.to_NDEvent
 

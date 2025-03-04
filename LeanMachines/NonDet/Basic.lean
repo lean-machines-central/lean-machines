@@ -280,13 +280,6 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
   id_right ev := by
     apply _NDEvent.ext'
     simp
-    intros m x y m' grd₁ grd₂
-    constructor
-    · simp
-    · intros Heff
-      exists x
-      exists m
-      simp [Heff]
 
   id_left ev := by
     apply _NDEvent.ext'
@@ -400,29 +393,19 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
   arrow_fun f g := by
     apply _NDEvent.ext'
     simp [Arrow.arrow]
-    intros m x y m'
-    constructor
-    · intro ⟨H₁, H₂⟩
-      simp [H₁, H₂]
-      exists (f x) ; exists m
-      simp
-    · intro ⟨yy,mm',⟨⟨H₁,H₂⟩,H₃⟩⟩
-      simp [H₁,H₂,H₃]
 
   arrow_xcg ev g := by
     apply _NDEvent.ext'
     simp [Arrow.arrow, Arrow.first]
     intros m x y yy xx m' grd₁ grd₂
     constructor
-    · simp
-      intros x₁ x₂ mm Hx₁ Hx₂ Hmm Hxx
-      simp [*] at *
-      obtain ⟨Heff, Hxx⟩ := Hxx
+    · intro ⟨Heff, Hg⟩
       exists yy ; exists y ; exists m'
-      simp [Heff]
+      simp [Heff, Hg]
     · simp
-      intros z₁ z₂ mm' Heff Hz₂ H
-      exists x ; exists (g y) ; exists m
+      intros z₁ z₂ mm' Heff Hz₂
+      simp [Heff, Hz₂]
+      intros H₁ H₂ H₃
       simp [*]
 
   arrow_unit ev := by
@@ -434,14 +417,11 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
     case a.mp =>
       intro ⟨y₁, y₂, mm, ⟨H', H⟩⟩
       simp [H'] at H
-      exists x ; exists m
       simp [*]
     case a.mpr =>
-      intro ⟨xx, mm, ⟨⟨Hxx, Hmm⟩, Heff'⟩⟩
-      have Heff := Heff' ⟨Hxx, Hmm⟩ ; clear Heff'
+      intro Heff
       exists y ; exists x' ; exists m'
-      simp [Heff,←Hxx,←Hmm]
-
+      simp [Heff]
 
   arrow_assoc ev := by
     apply _NDEvent.ext'
@@ -451,12 +431,9 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
     constructor
     case a.mp =>
       intro ⟨yy,zzz,ttt,mm',⟨H₁,H₂⟩⟩
-      simp [H₁] at H₂
-      exists x ; exists z ; exists t ; exists m
-      simp [*]
+      simp [H₁, H₂]
     case a.mpr =>
-      intro ⟨xx, zzz, ttt, mm, ⟨H₁, H₂⟩⟩
-      simp [H₁] at H₂
+      intro ⟨Heff, Hzz, Htt⟩
       exists y ; exists z ; exists t ; exists m'
       simp [*]
 
