@@ -37,9 +37,9 @@ import «LeanMachines».Refinement.Relational.Basic
 -- import «LeanMachines».Refinement.Strong.NonDet.Det.Convergent
 
 -- Examples
-import «LeanMachines».Examples.Counter0
-import «LeanMachines».Examples.Xor0
-import «LeanMachines».Examples.Tank
+import «LeanMachines».Examples.Multiref.Tank.Counter0
+import «LeanMachines».Examples.Multiref.Tank.Xor0
+import «LeanMachines».Examples.Multiref.Tank.Tank
 
 
 -- Versioning
