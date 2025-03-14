@@ -49,17 +49,17 @@ class Variant (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) wher
 -/
 
 
-class AnticipatedEvent (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) (kind : EventKind)
-  extends Variant v (instM := instM) ev, SafeEvent ev kind where
+class AnticipatedEventPO (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) (kind : EventKind)
+  extends Variant v (instM := instM) ev, SafeEventPO ev kind where
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
     → let (_, m') := ev.action m x grd
       variant m' ≤ variant m
 
-/-- The "downgrading" of an anticipated event to an ordinary one is automatic because we extend the structure ! -/
-
-structure _AnticipatedEvent (v) [Preorder v] (M) [instM : Machine CTX M]
+/-- The specification of an anticipated event.
+-/
+structure AnticipatedEvent (v) [Preorder v] (M) [instM : Machine CTX M]
     (α β : Type) extends OrdinaryEvent M α β where
   variant : M → v
   nonIncreasing (m : M) (x : α):
@@ -68,9 +68,26 @@ structure _AnticipatedEvent (v) [Preorder v] (M) [instM : Machine CTX M]
     → let (_, m') := action m x grd
       variant m' ≤ variant m
 
+theorem AnticipatedEvent.ext [Preorder v] {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: AnticipatedEvent v M α β):
+  ev₁.toOrdinaryEvent = ev₂.toOrdinaryEvent
+  → ev₁.variant = ev₂.variant
+  → ev₁ = ev₂ :=
+by
+  intros Heq Hvar
+  cases ev₁
+  case mk m₁ ev₁ v₁ safe₁ =>
+  cases ev₂
+  case mk m₂ ev₂ v₂ safe₂ =>
+    simp
+    simp at Heq
+    constructor
+    · exact Heq
+    · simp at Hvar
+      exact Hvar
 
+/-- A way to rebuild an Anticipated event from the required POs. -/
 def mkAnticipatedEvent (v) [Preorder v] [Machine CTX M] (ev : Event M α β)
-  [instAnticipated : AnticipatedEvent v ev (EventKind.TransDet (Convergence.Anticipated))] : _AnticipatedEvent v M α β :=
+  [instAnticipated : AnticipatedEventPO v ev (EventKind.TransDet (Convergence.Anticipated))] : AnticipatedEvent v M α β :=
   {
     action := ev.action
     guard := ev.guard
@@ -85,7 +102,7 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
     Machine.invariant m
     → (grd : ev.guard m x)
     → let (_, m') := ev.action m x grd
-      variant m' ≤ variant m) : _AnticipatedEvent v M α β :=
+      variant m' ≤ variant m) : AnticipatedEvent v M α β :=
   {
     guard := ev.guard
     action := ev.action
@@ -93,9 +110,6 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
     variant := variant
     nonIncreasing := Hnincr
   }
-
-
-
 
 
 /-!
@@ -115,23 +129,22 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
 
 --   nonIncreasing (m : M) (x : α) := fun hinv hgrd => le_of_lt (convergence m x hinv hgrd)
 
-class ConvergentEvent (v) [Preorder v] [WellFoundedLT v] [instM : Machine CTX M]
+/-- The proof obligations for convergent events. -/
+class ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [instM : Machine CTX M]
   (ev : Event M α β)
-  extends Variant v (instM := instM) ev, SafeEvent ev (EventKind.TransDet (Convergence.Convergent)) where
+  extends Variant v (instM := instM) ev, SafeEventPO ev (EventKind.TransDet (Convergence.Convergent)) where
   convergence (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
     → let (_, m') := ev.action m x grd
       variant m' < variant m
 
+instance [Preorder v] [WellFoundedLT v] [instM : Machine CTX M] (ev : Event M α β) [ConvergentEventPO v ev]
+  : AnticipatedEventPO (instM := instM) v ev (EventKind.TransDet (Convergence.Convergent)) where
+    nonIncreasing := fun m x hinv hgrd => le_of_lt (ConvergentEventPO.convergence m x hinv hgrd)
 
-instance [Preorder v] [WellFoundedLT v] [instM : Machine CTX M] (ev : Event M α β) [ConvergentEvent v ev]
-  : AnticipatedEvent (instM := instM) v ev (EventKind.TransDet (Convergence.Convergent)) where
-    nonIncreasing := fun m x hinv hgrd => le_of_lt (ConvergentEvent.convergence m x hinv hgrd)
-
-
-
-structure _ConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CTX M]
+/-- The specification of a convergent event. -/
+structure ConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CTX M]
     (α β : Type) extends OrdinaryEvent M α β where
     variant : M → v
     convergence (m : M) (x : α):
@@ -140,9 +153,9 @@ structure _ConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machi
     → let (_, m') := action m x grd
       variant m' < variant m
 
-
-def mkConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CTX M] (α β) (ev : Event M α β) [instConv : ConvergentEvent v ev]
-  : _ConvergentEvent v M α β :=
+/-- Reconstruction of a convergent event from the required proof obligations. -/
+def mkConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CTX M] (α β) (ev : Event M α β) [instConv : ConvergentEventPO v ev]
+  : ConvergentEvent v M α β :=
   {
     action := ev.action
     safety := instConv.safety
@@ -159,7 +172,7 @@ private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M}
     → (grd : ev.guard m x)
     → let m' := (ev.action m x grd).2
       variant m' < variant m)
- : _ConvergentEvent v M α β :=
+ : ConvergentEvent v M α β :=
  {
   guard := ev.guard
   action := ev.action
@@ -172,12 +185,12 @@ private def ConvergentEvent_fromOrdinary  {v} [Preorder v] [WellFoundedLT v] {M}
 
 
 @[simp]
-private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : _AnticipatedEvent v M α β)
+private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : AnticipatedEvent v M α β)
     (hconv : (m : M) → (x : α)
     → Machine.invariant m
     → (grd : ev.guard m x)
     → let m' := (ev.action m x grd).2
-      ev.variant m' < ev.variant m) : _ConvergentEvent v M α β :=
+      ev.variant m' < ev.variant m) : ConvergentEvent v M α β :=
   {
     guard := ev.guard
     action := ev.action
@@ -185,3 +198,20 @@ private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {
     variant := ev.variant
     convergence := hconv
   }
+
+theorem ConvergentEvent.ext [Preorder v] [WellFoundedLT v] {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: ConvergentEvent v M α β):
+  ev₁.toOrdinaryEvent = ev₂.toOrdinaryEvent
+  → ev₁.variant = ev₂.variant
+  → ev₁ = ev₂ :=
+by
+  intros Heq Hvar
+  cases ev₁
+  case mk m₁ ev₁ v₁ safe₁ =>
+  cases ev₂
+  case mk m₂ ev₂ v₂ safe₂ =>
+    simp
+    simp at Heq
+    constructor
+    · exact Heq
+    · simp at Hvar
+      exact Hvar

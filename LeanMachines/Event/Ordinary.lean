@@ -19,19 +19,14 @@ is not demonstrated anticipated or convergent
 -/
 
 /- Typeclass representing the proof  obligation of safety for Events -/
-class SafeEvent [Machine CTX M] {α β} (ev : Event M α β) (kind : EventKind) where
+class SafeEventPO [Machine CTX M] {α β} (ev : Event M α β) (kind : EventKind) where
   safety (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
     → Machine.invariant (ev.action m x grd).snd
 
-
-
-
-
 /-- The specification of a deterministic, ordinary event for machine `M`
 with input type `α` and output type `β`. .
-
 -/
 structure OrdinaryEvent (M) [Machine CTX M] (α β : Type) where
   /-- The guard property of the event, in machine state `m` with input `x`. -/
@@ -50,23 +45,53 @@ structure OrdinaryEvent (M) [Machine CTX M] (α β : Type) where
     → (grd : guard m x)
     → Machine.invariant (action m x grd).2
 
+def OrdinaryEvent.toEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : Event M α β :=
+  { guard := ev.guard, action := ev.action }
 
+instance [Machine CTX M]: Coe (OrdinaryEvent M α β) (Event M α β) where
+  coe ev := ev.toEvent
 
+instance [Machine CTX M] (ev : OrdinaryEvent M α β):  SafeEventPO ev.toEvent (EventKind.TransDet (Convergence.Ordinary)) where
+  safety := ev.safety
 
-/-
-  Smart constructor for OrdinaryEvents using the typeclass SafeEvent to get the PO
+theorem OrdinaryEvent.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: OrdinaryEvent M α β):
+  (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
+  → ev₁ = ev₂ :=
+by
+  intros H
+  have Hax := _Action_ext_ax ev₁.toEvent ev₂
+  cases ev₁
+  case mk g₁ act₁ =>
+    cases ev₂
+    case mk g₂ act₂ =>
+      simp at*
+      constructor
+      case left =>
+        apply _Guard_ext
+        intros m x
+        have Hg := (H m x).1
+        exact propext Hg
+      case right =>
+        exact Hax H
 
-  It allows to get an element of the structure on which algebraic properties are shown in the
-  module Event.Algebra.Ordinary from an event and an instanciation of the typeclass specifying the
-  proof obligation
+theorem OrdinaryEvent.ext {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: OrdinaryEvent M α β):
+  ev₁.toEvent = ev₂.toEvent
+  → ev₁ = ev₂ :=
+by
+  intro Heq
+  cases ev₁
+  case mk grd₁ act₁ safe₁ =>
+  cases ev₂
+  case mk grd₂ act₁ safe₂ =>
+    simp
+    cases Heq
+    · simp
+
+/-- It is possible to reconstruct an OrdinaryEvent from a plain Event
+by providing the safety PO explicitly
+XXX: is this useful somewhere ?
 -/
-def mkOrdinaryEvent [Machine CTX M] (ev : Event M α β) [instSafe: SafeEvent ev (EventKind.TransDet (Convergence.Ordinary))] : OrdinaryEvent M α β := {
-  guard := ev.guard
-  action := ev.action
-  safety := instSafe.safety
-}
-
-@[simp]
 def Event.toOrdinaryEvent [Machine CTX M]
   (ev : Event M α β)
   (Hsafe : (m : M) → (x : α) →  Machine.invariant m
@@ -76,34 +101,67 @@ def Event.toOrdinaryEvent [Machine CTX M]
     action := ev.action
     safety := Hsafe
   }
-@[simp]
-def OrdinaryEvent.toEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : Event M α β :=
-  {
-    guard := ev.guard
-    action := ev.action
+
+
+/--
+  It is possible to reconstruct an OrdinaryEvent
+  from basic Event with associated proof obligations made
+  throught the corresponding typeclasses (SafeEvent, etc.)
+
+  It allows to get an element of the structure on which algebraic properties are shown in the
+  module Event.Algebra.Ordinary from an event and an instanciation of the typeclass specifying the
+  proof obligation
+-/
+def mkOrdinaryEvent [Machine CTX M] (ev : Event M α β) [instSafe: SafeEventPO ev (EventKind.TransDet (Convergence.Ordinary))] : OrdinaryEvent M α β := {
+  guard := ev.guard
+  action := ev.action
+  safety := instSafe.safety
+}
+
+/-- Specification of an [OrdinaryEvent] with Unit as output type.
+ (this is like a deterministic Event-B event) -/
+structure OrdinaryEvent' (M) [Machine CTX M] (α : Type) where
+  guard (m : M) (x : α) : Prop := True
+  action (m : M) (x : α) (grd : guard m x) : M
+
+  /-- The safety proof obligation. -/
+  safety (m : M) (x : α) :
+    Machine.invariant m
+    → (grd : guard m x)
+    → Machine.invariant (action m x grd)
+
+instance [Machine CTX M]: Coe (OrdinaryEvent' M α) (OrdinaryEvent M α Unit) where
+  coe ev := { guard := ev.guard
+              action m x grd := ((), ev.action m x grd)
+              safety := ev.safety }
+
+
+/-- Specification of an [OrdinaryEvent] with Unit as input an d output types -/
+structure OrdinaryEvent'' (M) [Machine CTX M] where
+  guard (m : M) : Prop := True
+  action (m : M) (grd : guard m) : M
+
+  /-- The safety proof obligation. -/
+  safety (m : M) :
+    Machine.invariant m
+    → (grd : guard m)
+    → Machine.invariant (action m grd)
+
+instance [Machine CTX M]: Coe (OrdinaryEvent'' M) (OrdinaryEvent M Unit Unit) where
+  coe ev := { guard m _ := ev.guard m
+              action m _ grd := ((), ev.action m grd)
+              safety m _ := by intros Hinv Hgrd
+                               simp
+                               exact ev.safety m Hinv Hgrd
   }
-
-
-theorem OrdinaryEvent.ext [Machine CTX M] (ev₁ : OrdinaryEvent M α β) (ev₂ : OrdinaryEvent M α β):
-  ev₁.toEvent = ev₂.toEvent
-  → ev₁ = ev₂ :=
-by
-  cases ev₁ ; cases ev₂ ; simp
-
-
-
-instance [Machine CTX M] (ev : OrdinaryEvent M α β):  SafeEvent ev.toEvent (EventKind.TransDet (Convergence.Ordinary)) where
-  safety := ev.safety
-
-
-
 
 def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   ((skip_Event M α).toOrdinaryEvent
                                  (by intros ; simp [skip_Event] ; assumption))
 
-/-!
 
+/-!
+s
 ## Initialization events (deterministic)
 
 Initialization events, of the deterministic kind,
@@ -113,21 +171,38 @@ They are represented by a typeclass with the property that if an InitEvent insta
 the conversion to Event instanciates the SafeEvent typeclass.
  -/
 
-class SafeInitEvent [Machine CTX M] {α β} (ev : InitEvent M α β) where
+/-- Proof obligation: safety for (determinstic) initialization events -/
+class SafeInitEventPO [Machine CTX M] {α β} (ev : _InitEvent M α β) where
   safety (x : α):
     (grd : ev.guard x)
     → Machine.invariant (ev.init x grd).snd
 
-
-instance [DecidableEq M][Machine CTX M] [Inhabited M] (ev : InitEvent M α β ) [instSafeInit : SafeInitEvent ev] :
- SafeEvent ev.toEvent (EventKind.InitDet) where
+instance [DecidableEq M][Machine CTX M] [Inhabited M] (ev : _InitEvent M α β ) [instSafeInit : SafeInitEventPO ev] :
+ SafeEventPO ev.toEvent (EventKind.InitDet) where
   safety m x hinv grd :=
     by simp[grd,instSafeInit.safety]
+
+/-- The specification of an initialization event. -/
+structure InitEvent (M) [Machine CTX M] (α β : Type) where
+  /-- The guard property of the event with input `x`. -/
+  guard (x : α) : Prop := True
+
+  /-- The (deterministic) action of the event, with input `x`, building a pair
+      `(y, m')` with `y` an output value and `m'` the initial machine state.
+      The `grd` parameter is an evidence that the guard is true
+      for the specified input.
+       -/
+  init (x : α) (grd : guard x) : β × M
+
+  /-- The safety proof obligation. -/
+  safety (x : α) :
+    (grd : guard x)
+    → Machine.invariant (init x grd).2
 
 /-!
 ## Skip event
 -/
-instance instSkip [Machine CTX M ]: SafeEvent (skip_Event (M) α) (EventKind.TransDet (Convergence.Ordinary))where
+instance instSkip [Machine CTX M ]: SafeEventPO (skip_Event (M) α) (EventKind.TransDet (Convergence.Ordinary))where
   safety :=
     by
       simp[Machine.invariant]

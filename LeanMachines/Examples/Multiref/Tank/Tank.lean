@@ -60,14 +60,14 @@ instance : Refinement (Xor0 ctx₀) (Tank1 ctx) where
                 assumption
 
 /- The initialisation of the tank -/
-def Tank1.init : InitEvent (Tank1 ctx) Unit Unit :=
+def Tank1.init : _InitEvent (Tank1 ctx) Unit Unit :=
     {
         init := fun _ _ => ((),{ cpt := 0 , st := status.CLOSED})
         guard _ := True
     }
 
 /- which is a safe init Event-/
-instance inst1 : SafeInitEvent (Tank1.init (ctx:= ctx)) where
+instance inst1 : SafeInitEventPO (Tank1.init (ctx:= ctx)) where
     safety m _ := by simp[Machine.invariant,Tank1.init]
 
 /- and also a refinement of the initialisation of the counter -/
@@ -97,7 +97,7 @@ def Tank1.fill : Event (Tank1 ctx) Nat Unit :=
   }
 
 /- it is a Convergent Event -/
-instance instFill : ConvergentEvent Nat (Tank1.fill (ctx:=ctx)) where
+instance instFill : ConvergentEventPO Nat (Tank1.fill (ctx:=ctx)) where
     safety := fun m v =>
         by
             simp[Machine.invariant, Tank1.fill]
@@ -171,7 +171,7 @@ def Tank1.fillUp : Event (Tank1 ctx) Unit Unit :=
     }
 
 /- It is a SafeEvent -/
-instance instFillUp : ConvergentEvent Nat (Tank1.fillUp (ctx :=ctx)) where
+instance instFillUp : ConvergentEventPO Nat (Tank1.fillUp (ctx :=ctx)) where
     variant := fun m => ctx.max - m.cpt
     safety m _ := by simp[Machine.invariant,Tank1.fillUp]
     convergence :=
@@ -228,7 +228,7 @@ def Tank1.drain : Event (Tank1 ctx) Nat Unit :=
         guard m v := m.st = status.OPEN_OUT ∧ m.cpt - v > 0 ∧ v > 0
     }
 
-instance instDrain : ConvergentEvent Nat (Tank1.drain (ctx:=ctx)) where
+instance instDrain : ConvergentEventPO Nat (Tank1.drain (ctx:=ctx)) where
     safety m v :=
     by
         simp[Machine.invariant,Tank1.drain]
@@ -287,7 +287,7 @@ def Tank1.drainAll : Event (Tank1 ctx) Unit Unit :=
     }
 
 
-instance instDrainAll : ConvergentEvent Nat (Tank1.drainAll (ctx := ctx))  where
+instance instDrainAll : ConvergentEventPO Nat (Tank1.drainAll (ctx := ctx))  where
     safety := by simp[Machine.invariant,Tank1.drainAll]
     variant := fun m => m.cpt
     convergence :=
@@ -340,7 +340,7 @@ def Tank1.Open_Door_in : Event (Tank1 ctx) Unit Unit :=
         guard m _ := m.st ≠ status.OPEN_OUT ∧ m.cpt < ctx.max
     }
 
-instance instOpenIn : SafeEvent (Tank1.Open_Door_in (ctx:= ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
+instance instOpenIn : SafeEventPO (Tank1.Open_Door_in (ctx:= ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
     safety :=
         by
             simp[Machine.invariant,Tank1.Open_Door_in]
@@ -387,7 +387,7 @@ def Tank1.Close_Door_in : Event (Tank1 ctx) Unit Unit :=
         guard m _ := m.st = status.OPEN_IN
     }
 
-instance instCloseIn : SafeEvent (Tank1.Close_Door_in (ctx:= ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
+instance instCloseIn : SafeEventPO (Tank1.Close_Door_in (ctx:= ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
     safety m x :=
         by
             simp[Machine.invariant,Tank1.Close_Door_in]
@@ -429,7 +429,7 @@ def Tank1.Open_Door_out : Event (Tank1 ctx) Unit Unit :=
         guard m _ := m.st ≠ status.OPEN_IN ∧ m.cpt > 0
     }
 
-instance instOpenOut : SafeEvent (Tank1.Open_Door_out (ctx:= ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
+instance instOpenOut : SafeEventPO (Tank1.Open_Door_out (ctx:= ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
     safety :=
         by
             simp[Machine.invariant,Tank1.Open_Door_out]
@@ -474,7 +474,7 @@ def Tank1.Close_Door_out : Event (Tank1 ctx) Unit Unit :=
         guard m _ := m.st = status.OPEN_OUT
     }
 
-instance instCloseOut : SafeEvent (Tank1.Close_Door_out (ctx:= ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
+instance instCloseOut : SafeEventPO (Tank1.Close_Door_out (ctx:= ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
     safety m x :=
         by
             simp[Machine.invariant,Tank1.Close_Door_out]

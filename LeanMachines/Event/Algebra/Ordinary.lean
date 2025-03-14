@@ -128,7 +128,7 @@ instance [Machine CTX M]: Monad (OrdinaryEvent M γ) where
 theorem OrdinaryEvent_liftBind [Machine CTX M] (ev : OrdinaryEvent M γ α) (f : α → OrdinaryEvent M γ β):
   (ev >>= f).toEvent = (ev.toEvent >>= fun x => (f x).toEvent) :=
 by
-  simp [bind, bindEvent]
+  exact rfl
 
 instance [Machine CTX M]: LawfulMonad (OrdinaryEvent M γ) where
   bind_pure_comp := by
@@ -219,19 +219,19 @@ instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
 theorem OrdinaryEvent_lift_arrow [Machine CTX M] (f : α → β):
   (instArrowOrdinaryEvent.arrow f).toEvent = (instArrowEvent (M:=M)).arrow f :=
 by
-  simp [Arrow.arrow]
+  exact rfl
 
 theorem OrdinaryEvent_lift_split [Machine CTX M] {α α' β β'} (ev₁ : OrdinaryEvent M α β) (ev₂ : OrdinaryEvent M α' β'):
   (instArrowOrdinaryEvent.split ev₁ ev₂).toEvent
   = (instArrowEvent (M:=M)).split ev₁.toEvent ev₂.toEvent :=
 by
-  simp [Arrow.split, Arrow.first]
+  exact rfl
 
 theorem OrdinaryEvent_lift_first [Machine CTX M] {α β} (ev : OrdinaryEvent M α β):
   (instArrowOrdinaryEvent.first ev (γ:=γ)).toEvent
   = (instArrowEvent (M:=M)).first (ev.toEvent) :=
 by
-  simp [Arrow.first]
+  exact rfl
 
 instance [Machine CTX M]: LawfulArrow (OrdinaryEvent M) where
   arrow_id := by simp [Arrow.arrow]

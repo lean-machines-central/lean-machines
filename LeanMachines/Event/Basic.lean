@@ -43,7 +43,8 @@ This comprises:
 
 -/
 
-class Machine (CTX : outParam (Type u)) (M) where
+class Machine (CTX : outParam (Type u)) (M)
+  extends Inhabited M where
   /-- The context (i.e. parameters) of the machine. -/
   context : CTX
   /-- The invariant property that must be satisfied
@@ -67,25 +68,6 @@ inductive EventKind where
   | TransNonDet (status : Convergence)
   deriving Repr, BEq, DecidableEq
 
-def EventKind.is_init k :=
-  match k with
-  | InitDet | InitNonDet => true
-  | _ => false
-
-def EventKind.get_status k :=
-  match k with
-  | InitDet | InitNonDet => Convergence.Ordinary
-  | TransDet s | TransNonDet s => s
-
-def EventKind.refine? (kconcr : EventKind) (kabs :EventKind) : Bool :=
-  (is_init kconcr = is_init kabs)
-  &&
-  match get_status kabs, get_status kconcr with
-  | Convergence.Convergent, Convergence.Ordinary => false
-  | Convergence.Convergent, Convergence.Anticipated => false
-  | Convergence.Anticipated, Convergence.Ordinary => false
-  | _ ,_ => true
-
 open EventKind
 
 /-!
@@ -101,6 +83,14 @@ This extends `_EventRoot` with a notion of (deterministic/functional) action.
 structure Event (M) [Machine CTX M] (α : Type) (β : Type) where
   guard (m : M) (x : α) : Prop := True
   action (m : M) (x : α) (grd : guard m x): (β × M)
+
+class _Event (M) [Machine CTX M] (α : Type) (β : Type) where
+  guard (m : M) (x : α) : Prop := True
+  action (m : M) (x : α) (grd : guard m x): (β × M)
+
+instance [Machine CTX M] (ev : Event M α β): _Event M α β where
+  guard := ev.guard
+  action := ev.action
 
 theorem _Guard_ext [Machine CTX M] (guard₁ : M → α → Prop) (guard₂ : M → α → Prop):
   (∀ m x, guard₁ m x = guard₂ m x)
@@ -134,7 +124,7 @@ by
   intros H
   have Hax := _Action_ext_ax ev₁ ev₂
   cases ev₁
-  case mk g₁ act₁=>
+  case mk g₁ act₁ =>
     cases ev₂
     case mk g₂ act₂ =>
       simp at*
@@ -154,16 +144,15 @@ with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 .-/
 @[ext]
-structure InitEvent (M) [Machine CTX M] (α) (β : Type) where
+structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard (x : α) : Prop := True
   init (x : α) (grd : guard x) : (β × M)
 
 @[simp]
-def InitEvent.toEvent [DecidableEq M] [Inhabited M] [Machine CTX M] (ev : InitEvent M α β) : Event M α β :=
+def _InitEvent.toEvent [DecidableEq M] [Machine CTX M] (ev : _InitEvent M α β) : Event M α β :=
   {
     guard := fun m x => m == default ∧ ev.guard x
     action := fun m x grd => ev.init x (by simp at grd ; apply grd.2)
-
   }
 
 /-- The deterministic skip event, that does nothing.
@@ -182,7 +171,6 @@ status of a (non-guarded) event. -/
 def fun_Event  (M) [Machine CTX M] (f : α → β) : Event M α β :=
 {
   action := fun m x _ => (f x, m)
-
 }
 
 /-- This allows to lift a "stateful" function. -/
@@ -190,5 +178,4 @@ def fun_Event  (M) [Machine CTX M] (f : α → β) : Event M α β :=
 def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : Event M α β :=
 {
   action := fun m x _ => (xf m x, m)
-
 }
