@@ -111,6 +111,45 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
     nonIncreasing := Hnincr
   }
 
+/-- The main constructor for ordinary events. -/
+def newAnticipatedEvent [Preorder v] [Machine CTX M] (ev : AnticipatedEvent v M α β) := ev
+
+structure AnticipatedEvent' (v) [Preorder v] (M) [instM : Machine CTX M]
+    (α : Type) extends OrdinaryEvent' M α where
+  variant : M → v
+  nonIncreasing (m : M) (x : α):
+    Machine.invariant m
+    → (grd : guard m x)
+    → let m' := action m x grd
+      variant m' ≤ variant m
+
+instance [Preorder v] [Machine CTX M]: Coe (AnticipatedEvent' v M α) (AnticipatedEvent v M α Unit) where
+  coe ev := { guard := ev.guard
+              action m x grd := ((), ev.action m x grd)
+              safety := ev.safety
+              variant := ev.variant
+              nonIncreasing := ev.nonIncreasing
+            }
+
+def newAnticipatedEvent' [Preorder v] [Machine CTX M] (ev : AnticipatedEvent v M α Unit) := ev
+
+structure AnticipatedEvent'' (v) [Preorder v] (M) [instM : Machine CTX M]
+    extends OrdinaryEvent'' M where
+  variant : M → v
+  nonIncreasing (m : M):
+    Machine.invariant m
+    → (grd : guard m)
+    → let m' := action m grd
+      variant m' ≤ variant m
+
+instance [Preorder v] [Machine CTX M]: Coe (AnticipatedEvent'' v M) (AnticipatedEvent v M Unit Unit) where
+  coe ev := {
+    guard m _ := ev.guard m
+    action m _ grd :=  ((), ev.action m grd)
+    safety m _ grd := ev.safety m grd
+    variant := ev.variant
+    nonIncreasing m _ grd := ev.nonIncreasing m grd
+  }
 
 /-!
 ### Convergent events
