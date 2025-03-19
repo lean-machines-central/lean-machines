@@ -118,6 +118,10 @@ def mkOrdinaryEvent [Machine CTX M] (ev : Event M α β) [instSafe: SafeEventPO 
   safety := instSafe.safety
 }
 
+
+/-- The main constructor for ordinary events. -/
+def newOrdinaryEvent [Machine CTX M] (ev : OrdinaryEvent M α β) := ev
+
 /-- Specification of an [OrdinaryEvent] with Unit as output type.
  (this is like a deterministic Event-B event) -/
 structure OrdinaryEvent' (M) [Machine CTX M] (α : Type) where
@@ -135,6 +139,9 @@ instance [Machine CTX M]: Coe (OrdinaryEvent' M α) (OrdinaryEvent M α Unit) wh
               action m x grd := ((), ev.action m x grd)
               safety := ev.safety }
 
+/-- The main constructor for ordinary events. -/
+def newOrdinaryEvent' [Machine CTX M] (ev : OrdinaryEvent' M α)
+  : OrdinaryEvent M α Unit := ev
 
 /-- Specification of an [OrdinaryEvent] with Unit as input an d output types -/
 structure OrdinaryEvent'' (M) [Machine CTX M] where
@@ -154,6 +161,10 @@ instance [Machine CTX M]: Coe (OrdinaryEvent'' M) (OrdinaryEvent M Unit Unit) wh
                                simp
                                exact ev.safety m Hinv Hgrd
   }
+
+/-- The main constructor for ordinary events. -/
+def newOrdinaryEvent'' [Machine CTX M] (ev : OrdinaryEvent'' M)
+  : OrdinaryEvent M Unit Unit := ev
 
 def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
   ((skip_Event M α).toOrdinaryEvent
@@ -198,6 +209,52 @@ structure InitEvent (M) [Machine CTX M] (α β : Type) where
   safety (x : α) :
     (grd : guard x)
     → Machine.invariant (init x grd).2
+
+instance [Machine CTX M]: Coe (InitEvent M α β) (OrdinaryEvent M α β) where
+  coe ev := {
+    guard := fun m x => m = default ∧ ev.guard x
+    action := fun m x grd => ev.init x (by simp [grd])
+    safety := fun m x => by
+      intros Hinv grd
+      apply ev.safety
+  }
+
+/-- Main constructor for (deterministic) initialization events.
+-/
+def newInitEvent [Machine CTX M] (ev : InitEvent M α β) : OrdinaryEvent M α β := ev
+
+/-- Specification of an [InitEvent] with Unit as output type. -/
+structure InitEvent' (M) [Machine CTX M] (α : Type) where
+  guard (x : α) : Prop := True
+  init (x : α) (grd : guard x) : M
+
+  /-- The safety proof obligation. -/
+  safety (x : α) :
+    (grd : guard x)
+    → Machine.invariant (init x grd)
+
+instance [Machine CTX M]: Coe (InitEvent' M α) (InitEvent M α Unit) where
+  coe ev := { guard := ev.guard
+              init x grd := ((), ev.init x grd)
+              safety := ev.safety }
+
+def newInitEvent' [Machine CTX M] (ev : InitEvent' M α) : OrdinaryEvent M α Unit := ev
+
+structure InitEvent'' (M) [Machine CTX M] where
+  guard : Prop := True
+  init (grd : guard) : M
+
+  /-- The safety proof obligation. -/
+  safety :
+    (grd : guard)
+    → Machine.invariant (init grd)
+
+instance [Machine CTX M]: Coe (InitEvent'' M) (InitEvent M Unit Unit) where
+  coe ev := { guard _ := ev.guard
+              init x grd := ((), ev.init grd)
+              safety := fun x grd => by exact ev.safety grd }
+
+def newInitEvent'' [Machine CTX M] (ev : InitEvent'' M) : OrdinaryEvent M Unit Unit := ev
 
 /-!
 ## Skip event
