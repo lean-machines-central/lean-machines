@@ -43,8 +43,7 @@ This comprises:
 
 -/
 
-class Machine (CTX : outParam (Type u)) (M)
-  extends Inhabited M where
+class Machine (CTX : outParam (Type u)) (M) where
   /-- The context (i.e. parameters) of the machine. -/
   context : CTX
   /-- The invariant property that must be satisfied
@@ -147,13 +146,6 @@ with: `M` the machine type,
 structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard (x : α) : Prop := True
   init (x : α) (grd : guard x) : (β × M)
-
-@[simp]
-def _InitEvent.toEvent [DecidableEq M] [Machine CTX M] (ev : _InitEvent M α β) : Event M α β :=
-  {
-    guard := fun m x => m == default ∧ ev.guard x
-    action := fun m x grd => ev.init x (by simp at grd ; apply grd.2)
-  }
 
 /-- The deterministic skip event, that does nothing.
 Note that the output type must match the input type,

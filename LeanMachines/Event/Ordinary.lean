@@ -188,11 +188,6 @@ class SafeInitEventPO [Machine CTX M] {α β} (ev : _InitEvent M α β) where
     (grd : ev.guard x)
     → Machine.invariant (ev.init x grd).snd
 
-instance [DecidableEq M][Machine CTX M] [Inhabited M] (ev : _InitEvent M α β ) [instSafeInit : SafeInitEventPO ev] :
- SafeEventPO ev.toEvent (EventKind.InitDet) where
-  safety m x hinv grd :=
-    by simp[grd,instSafeInit.safety]
-
 /-- The specification of an initialization event. -/
 structure InitEvent (M) [Machine CTX M] (α β : Type) where
   /-- The guard property of the event with input `x`. -/
@@ -210,18 +205,9 @@ structure InitEvent (M) [Machine CTX M] (α β : Type) where
     (grd : guard x)
     → Machine.invariant (init x grd).2
 
-instance [Machine CTX M]: Coe (InitEvent M α β) (OrdinaryEvent M α β) where
-  coe ev := {
-    guard := fun m x => m = default ∧ ev.guard x
-    action := fun m x grd => ev.init x (by simp [grd])
-    safety := fun m x => by
-      intros Hinv grd
-      apply ev.safety
-  }
-
 /-- Main constructor for (deterministic) initialization events.
 -/
-def newInitEvent [Machine CTX M] (ev : InitEvent M α β) : OrdinaryEvent M α β := ev
+def newInitEvent [Machine CTX M] (ev : InitEvent M α β) : InitEvent M α β := ev
 
 /-- Specification of an [InitEvent] with Unit as output type. -/
 structure InitEvent' (M) [Machine CTX M] (α : Type) where
@@ -238,7 +224,7 @@ instance [Machine CTX M]: Coe (InitEvent' M α) (InitEvent M α Unit) where
               init x grd := ((), ev.init x grd)
               safety := ev.safety }
 
-def newInitEvent' [Machine CTX M] (ev : InitEvent' M α) : OrdinaryEvent M α Unit := ev
+def newInitEvent' [Machine CTX M] (ev : InitEvent' M α) : InitEvent M α Unit := ev
 
 structure InitEvent'' (M) [Machine CTX M] where
   guard : Prop := True
@@ -254,7 +240,7 @@ instance [Machine CTX M]: Coe (InitEvent'' M) (InitEvent M Unit Unit) where
               init x grd := ((), ev.init grd)
               safety := fun x grd => by exact ev.safety grd }
 
-def newInitEvent'' [Machine CTX M] (ev : InitEvent'' M) : OrdinaryEvent M Unit Unit := ev
+def newInitEvent'' [Machine CTX M] (ev : InitEvent'' M) : InitEvent M Unit Unit := ev
 
 /-!
 ## Skip event
