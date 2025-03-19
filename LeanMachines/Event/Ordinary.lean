@@ -120,7 +120,7 @@ def mkOrdinaryEvent [Machine CTX M] (ev : Event M α β) [instSafe: SafeEventPO 
 
 
 /-- The main constructor for ordinary events. -/
-def newOrdinaryEvent [Machine CTX M] (ev : OrdinaryEvent M α β) := ev
+def newEvent [Machine CTX M] (ev : OrdinaryEvent M α β) := ev
 
 /-- Specification of an [OrdinaryEvent] with Unit as output type.
  (this is like a deterministic Event-B event) -/
@@ -140,7 +140,7 @@ instance [Machine CTX M]: Coe (OrdinaryEvent' M α) (OrdinaryEvent M α Unit) wh
               safety := ev.safety }
 
 /-- The main constructor for ordinary events. -/
-def newOrdinaryEvent' [Machine CTX M] (ev : OrdinaryEvent' M α)
+def newEvent' [Machine CTX M] (ev : OrdinaryEvent' M α)
   : OrdinaryEvent M α Unit := ev
 
 /-- Specification of an [OrdinaryEvent] with Unit as input an d output types -/
@@ -163,7 +163,7 @@ instance [Machine CTX M]: Coe (OrdinaryEvent'' M) (OrdinaryEvent M Unit Unit) wh
   }
 
 /-- The main constructor for ordinary events. -/
-def newOrdinaryEvent'' [Machine CTX M] (ev : OrdinaryEvent'' M)
+def newEvent'' [Machine CTX M] (ev : OrdinaryEvent'' M)
   : OrdinaryEvent M Unit Unit := ev
 
 def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
