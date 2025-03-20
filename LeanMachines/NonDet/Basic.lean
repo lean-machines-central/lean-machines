@@ -102,7 +102,7 @@ def skip_NDEvent [Machine CTX M] : NDEvent M α β :=
 
 
 -- Remark: The functor instance is existential, not surprising given the relational context
-instance [Machine CTX M] : Functor (_NDEvent M γ) where
+instance [Machine CTX M] : Functor (NDEvent M γ) where
   map f ev :=
   {
     guard := ev.guard
@@ -110,12 +110,14 @@ instance [Machine CTX M] : Functor (_NDEvent M γ) where
                                                  ∧ y = f z ∧ m' = m''
   }
 
-instance [Machine CTX M] : LawfulFunctor (_NDEvent M γ) where
+instance [Machine CTX M] : LawfulFunctor (NDEvent M γ) where
   map_const := rfl
   id_map ev := by simp [Functor.map]
 
   comp_map g h ev := by
     simp [Functor.map]
+
+
     funext m x grd (y,m')
     apply propext
     constructor
@@ -140,47 +142,44 @@ instance [Machine CTX M] : LawfulFunctor (_NDEvent M γ) where
 
 -- The first operates on the output, hence it cannot be use
 -- in a profunctor context
-instance [Machine CTX M] : ContravariantFunctor (_NDEvent M γ) where
+instance [Machine CTX M] : ContravariantFunctor (NDEvent M γ) where
   contramap f ev :=
   {
     guard := ev.guard
     effect := fun m x grd (y, m') => ev.effect m x grd ((f y), m')
   }
 
-instance [Machine CTX M] : LawfullContravariantFunctor (_NDEvent M β) where
+instance [Machine CTX M] : LawfullContravariantFunctor (NDEvent M β) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
 -- The second operates on the input
-abbrev _CoNDEvent (M) [Machine CTX M] (α) (β) := _NDEvent M β α
+abbrev CoNDEvent (M) [Machine CTX M] (α) (β) := NDEvent M β α
 
-@[simp]
-def CoNDEvent_from_NDEvent [Machine CTX M] (ev : _NDEvent M α β) : _CoNDEvent M β α :=
- ev
+instance [Machine CTX M]: Coe (NDEvent M α β) (CoNDEvent M β α) where
+  coe ev := ev
 
-@[simp]
-def NDEvent_from_CoNDEvent [Machine CTX M] (ev : _CoNDEvent M β α) : _NDEvent M α β :=
- ev
+instance [Machine CTX M]: Coe (CoNDEvent M β α) (NDEvent M α β) where
+  coe ev := ev
 
-
-instance [Machine CTX M] : ContravariantFunctor (_CoNDEvent M γ) where
+instance [Machine CTX M] : ContravariantFunctor (CoNDEvent M γ) where
   contramap f ev :=
   {
      guard := fun m x => ev.guard m (f x)
      effect := fun m x grd (y, m')  => ev.effect m (f x) grd (y, m')
   }
 
-instance [Machine CTX M] : LawfullContravariantFunctor (_CoNDEvent M γ) where
+instance [Machine CTX M] : LawfullContravariantFunctor (CoNDEvent M γ) where
   cmap_id _ := rfl
   cmap_comp _ _ := rfl
 
 -- There is a unique possible profunctor instance
-instance [Machine CTX M] : Profunctor (_NDEvent M) where
-  dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : _NDEvent M α γ) : _NDEvent M β δ :=
-  let ev' := NDEvent_from_CoNDEvent (ContravariantFunctor.contramap f (CoNDEvent_from_NDEvent ev))
+instance [Machine CTX M] : Profunctor (NDEvent M) where
+  dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : NDEvent M α γ) : NDEvent M β δ :=
+  let ev' : CoNDEvent M γ β := ContravariantFunctor.contramap f ev
   g <$> ev'
 
-instance [Machine CTX M] : LawfulProfunctor (_NDEvent M) where
+instance [Machine CTX M] : LawfulProfunctor (NDEvent M) where
   dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
                  exact fun {α β} => rfl
   dimap_comp f f' g g' := by
@@ -208,22 +207,22 @@ instance [Machine CTX M] : LawfulProfunctor (_NDEvent M) where
           exists u
           simp [Heff, Hy]
 
-instance [Machine CTX M] : StrongProfunctor (_NDEvent M) where
-  first' {α β γ} (ev : _NDEvent M α β): _NDEvent M (α × γ) (β × γ) :=
+instance [Machine CTX M] : StrongProfunctor (NDEvent M) where
+  first' {α β γ} (ev : NDEvent M α β): NDEvent M (α × γ) (β × γ) :=
     {
       guard := fun m (x, _) => ev.guard m x
       effect := fun m (x,u) grd ((y, v), m') => v = u ∧ ev.effect m x grd (y, m')
     }
 
-instance [Machine CTX M] : LawfulStrongProfunctor (_NDEvent M) where
+instance [Machine CTX M] : LawfulStrongProfunctor (NDEvent M) where
 
 
-instance [Machine CTX M]: Category (_NDEvent M) where
+instance [Machine CTX M]: Category (NDEvent M) where
   id := {
     effect := fun m x _ (y, m') => y = x ∧ m' = m
   }
 
-  comp {α β γ} (ev₂ : _NDEvent M β γ) (ev₁ : _NDEvent M α β) : _NDEvent M α γ :=
+  comp {α β γ} (ev₂ : NDEvent M β γ) (ev₁ : NDEvent M α β) : NDEvent M α γ :=
     { guard := fun m x => ev₁.guard m x
                           ∧ ((grd : ev₁.guard m x)
                              → (∀ y, ∀ m', ev₁.effect m x grd (y, m')
@@ -234,7 +233,7 @@ instance [Machine CTX M]: Category (_NDEvent M) where
                   ev₂.effect m' y (grd.2 grd.1 y m' eff₁) (z, m''))
     }
 
-theorem LawfulCategory_assoc_guard [Machine CTX M] (ev₁ : _NDEvent M γ δ) (ev₂ : _NDEvent M β γ) (ev₃ : _NDEvent M α β):
+theorem LawfulCategory_assoc_guard [Machine CTX M] (ev₁ : NDEvent M γ δ) (ev₂ : NDEvent M β γ) (ev₃ : NDEvent M α β):
   (ev₁ (<<<) ev₂ (<<<) ev₃).guard = ((ev₁ (<<<) ev₂) (<<<) ev₃).guard :=
 by
   simp
@@ -275,13 +274,13 @@ by
 
 set_option maxHeartbeats 300000
 
-instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
+instance [Machine CTX M]: LawfulCategory (NDEvent M) where
   id_right ev := by
-    apply _NDEvent.ext'
+    apply NDEvent.ext'
     simp
 
   id_left ev := by
-    apply _NDEvent.ext'
+    apply NDEvent.ext'
     simp
     intros m x y m' grd₁ grd₂
     constructor
@@ -294,7 +293,7 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
       simp [Heff₁]
 
   id_assoc ev₁ ev₂ ev₃ := by
-    apply _NDEvent.ext
+    apply NDEvent.ext
     case guard =>
       exact LawfulCategory_assoc_guard ev₁ ev₂ ev₃
 
@@ -331,14 +330,14 @@ instance [Machine CTX M]: LawfulCategory (_NDEvent M) where
 
 
 @[simp]
-def arrow_NDEvent (M) [Machine CTX M] (f : α → β) : _NDEvent M α β :=
+def arrow_NDEvent (M) [Machine CTX M] (f : α → β) : NDEvent M α β :=
   {
     effect := fun m x _ (y, m') => y = f x ∧ m' = m
   }
 
 -- Split is simply parallel composition
 @[simp]
-def split_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M γ δ) : _NDEvent M (α × γ) (β × δ) :=
+def split_NDEvent [Machine CTX M] (ev₁ : NDEvent M α β) (ev₂ : NDEvent M γ δ) : NDEvent M (α × γ) (β × δ) :=
   {
     guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
     effect := fun m (x, y) grd ((x', y'), m') => ev₁.effect m x grd.1 (x', m') ∧ ev₂.effect m y grd.2 (y', m')
@@ -346,7 +345,7 @@ def split_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M
 
 -- Remark: without an explicit first the law `arrow_unit` is not provable
 @[simp]
-def first_NDEvent [Machine CTX M] (ev : _NDEvent M α β) : _NDEvent M (α × γ) (β × γ) :=
+def first_NDEvent [Machine CTX M] (ev : NDEvent M α β) : NDEvent M (α × γ) (β × γ) :=
   {
     guard := fun m (x, _) => ev.guard m x
     effect := fun m (x, y) grd ((x', y'), m') => ev.effect m x grd (x', m') ∧ y'= y
@@ -355,7 +354,7 @@ def first_NDEvent [Machine CTX M] (ev : _NDEvent M α β) : _NDEvent M (α × γ
 -- An alternative possible definition for split based on first
 
 @[simp]
-def split_NDEvent_fromFirst [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M γ δ) : _NDEvent M (α × γ) (β × δ) :=
+def split_NDEvent_fromFirst [Machine CTX M] (ev₁ : NDEvent M α β) (ev₂ : NDEvent M γ δ) : NDEvent M (α × γ) (β × δ) :=
   Arrow.split_from_first (arrow_NDEvent M (fun (x, y) => (y, x)))
                          first_NDEvent ev₁ ev₂
 
@@ -367,20 +366,20 @@ instance [Machine CTX M]: Arrow (_NDEvent M) where
 -/
 
 -- a more direct definition
-instance [Machine CTX M] [Semigroup M]: Arrow (_NDEvent M) where
-  arrow {α β} (f : α → β) : _NDEvent M α β := {
+instance [Machine CTX M] [Semigroup M]: Arrow (NDEvent M) where
+  arrow {α β} (f : α → β) : NDEvent M α β := {
     guard := fun _ _ => True
     effect := fun m x _ (y, m') => y = f x ∧ m' = m
   }
 
-  split {α α' β β'} (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α' β') : _NDEvent M (α × α') (β × β') := {
+  split {α α' β β'} (ev₁ : NDEvent M α β) (ev₂ : NDEvent M α' β') : NDEvent M (α × α') (β × β') := {
     guard := fun m (x,y) => ev₁.guard m x ∧ ev₂.guard m y
     effect := fun m (x, y) grd ((x', y'), m') =>
                 ∃ m'₁ m'₂, ev₁.effect m x grd.1 (x', m'₁) ∧ ev₂.effect m y grd.2 (y', m'₂) ∧ m' = m'₁ * m'₂
   }
   first := first_NDEvent
 
-instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
+instance [Machine CTX M] [Semigroup M]: LawfulArrow (NDEvent M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext f := by
     simp [Arrow.arrow, Arrow.first]
@@ -390,11 +389,11 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
     <;> (intro H ; simp [H])
 
   arrow_fun f g := by
-    apply _NDEvent.ext'
+    apply NDEvent.ext'
     simp [Arrow.arrow]
 
   arrow_xcg ev g := by
-    apply _NDEvent.ext'
+    apply NDEvent.ext'
     simp [Arrow.arrow, Arrow.first]
     intros m x y yy xx m' grd₁ grd₂
     constructor
@@ -408,7 +407,7 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
       simp [*]
 
   arrow_unit ev := by
-    apply _NDEvent.ext'
+    apply NDEvent.ext'
     intro m (x, x')
     simp [Arrow.arrow, Arrow.first]
     intros y m' Hgrd Hgrd'
@@ -423,7 +422,7 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
       simp [Heff]
 
   arrow_assoc ev := by
-    apply _NDEvent.ext'
+    apply NDEvent.ext'
     intro m ((x, z), t)
     simp [Arrow.first, Arrow.arrow]
     intros y zz tt m' grd₁ grd₂
@@ -438,8 +437,8 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (_NDEvent M) where
 
 /-  ArrowChoice -/
 
-def altNDEvent [Machine CTX M] (evl : _NDEvent M α β) (evr : _NDEvent M γ δ)
-  : _NDEvent M (Sum α γ) (Sum β δ) :=
+def altNDEvent [Machine CTX M] (evl : NDEvent M α β) (evr : NDEvent M γ δ)
+  : NDEvent M (Sum α γ) (Sum β δ) :=
   {
     guard := fun m x => match x with
                         | .inl l => evl.guard m l
@@ -452,14 +451,14 @@ def altNDEvent [Machine CTX M] (evl : _NDEvent M α β) (evr : _NDEvent M γ δ)
                           → y = Sum.inr yr
   }
 
-instance [Machine CTX M] [Semigroup M]: ArrowChoice (_NDEvent M) where
+instance [Machine CTX M] [Semigroup M]: ArrowChoice (NDEvent M) where
   splitIn := altNDEvent
 
 
 /-  Conjoin events -/
 
-def conj_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M α β)
-  : _NDEvent M α β :=
+def conj_NDEvent [Machine CTX M] (ev₁ : NDEvent M α β) (ev₂ : NDEvent M α β)
+  : NDEvent M α β :=
   {
     guard := fun m x => ev₁.guard m x ∨ ev₂.guard m x
     effect := fun m x _ (y, m') =>
@@ -467,6 +466,6 @@ def conj_NDEvent [Machine CTX M] (ev₁ : _NDEvent M α β) (ev₂ : _NDEvent M 
       ∧ ((grd₂ : ev₂.guard m x) → ev₂.effect m x grd₂ (y, m'))
   }
 
-instance [Machine CTX M] [Semigroup M]: ArrowPlus (_NDEvent M) where
+instance [Machine CTX M] [Semigroup M]: ArrowPlus (NDEvent M) where
   zero := skip_NDEvent
   conjoin := conj_NDEvent
