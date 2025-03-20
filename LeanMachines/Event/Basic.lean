@@ -136,8 +136,6 @@ by
       case right =>
         exact Hax H
 
-
-
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
