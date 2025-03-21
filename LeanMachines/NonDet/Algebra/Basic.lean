@@ -123,6 +123,7 @@ instance [Machine CTX M] : LawfulStrongProfunctor (NDEvent M) where
 
 instance [Machine CTX M]: Category (NDEvent M) where
   id := {
+    guard _ _ := True
     effect := fun m x _ (y, m') => y = x ∧ m' = m
   }
 
@@ -236,6 +237,7 @@ instance [Machine CTX M]: LawfulCategory (NDEvent M) where
 @[simp]
 def arrow_NDEvent (M) [Machine CTX M] (f : α → β) : NDEvent M α β :=
   {
+    guard := fun _ _ => True
     effect := fun m x _ (y, m') => y = f x ∧ m' = m
   }
 
