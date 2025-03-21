@@ -21,7 +21,7 @@ This extends `_EventRoot` with a notion of (non-deterministic/relational) effect
 .-/
 @[ext]
 structure NDEvent (M) [Machine CTX M] (α : Type) (β : Type)
-  extends _Event_Root M α β where
+  extends _EventRoot M α where
 
   /-- The (non-deterministic) effect of the event, with
       previous machine state `m` and input `x`, with relation to  pair
@@ -36,7 +36,7 @@ instance [Machine CTX M]: Coe (Event M α β) (NDEvent M α β) where
   }
 
 class _NDEvent (M) [Machine CTX M] (α : Type) (β : Type) where
-  guard (m : M) (x : α) : Prop := True
+  guard (m : M) (x : α) : Prop
   effect (m : M) (x : α) (grd : guard m x) (eff : β × M): Prop
 
 instance [Machine CTX M] (ev : NDEvent M α β): _NDEvent M α β where
@@ -51,26 +51,51 @@ axiom _Effect_ext_ax {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: NDEvent M �
              ev₁.effect m x grd₁ (y, m') ↔ ev₂.effect m x grd₂ (y, m'))
    → HEq ev₁.effect ev₂.effect
 
+
+
+theorem Event.ext'' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: Event M α β):
+  (∀ m x, ev₁.guard m x = ev₂.guard m x
+          ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
+  → ev₁ = ev₂ :=
+by
+  have Hax := _Action_ext_ax ev₁ ev₂
+  intros H
+  cases ev₁
+  case mk evr₁ act₁ =>
+  cases ev₂
+  case mk evr₂ act₂ =>
+  simp [*] at *
+  constructor
+  case left =>
+    apply _EventRoot.ext'
+    intros m x
+    have Hmx := H m x
+    simp [Hmx]
+  case right =>
+    apply Hax
+    apply H
+
 theorem NDEvent.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: NDEvent M α β):
   (∀ m x, ev₁.guard m x = ev₂.guard m x
           ∧ ∀ y m' grd₁ grd₂, ev₁.effect m x grd₁ (y, m') ↔ ev₂.effect m x grd₂ (y, m'))
   → ev₁ = ev₂ :=
 by
-  intros H
   have Hax := _Effect_ext_ax ev₁ ev₂
+  intros H
   cases ev₁
-  case mk g₁ act₁ =>
-    cases ev₂
-    case mk g₂ act₂ =>
-      simp at*
-      constructor
-      case left =>
-        apply _Guard_ext
-        intros m x
-        have Hg := (H m x).1
-        exact propext Hg
-      case right =>
-        exact Hax H
+  case mk evr₁ act₁ =>
+  cases ev₂
+  case mk evr₂ act₂ =>
+  simp [*] at *
+  constructor
+  case left =>
+    apply _EventRoot.ext'
+    intros m x
+    have Hmx := H m x
+    simp [Hmx]
+  case right =>
+    apply Hax
+    apply H
 
 /-- The internal representation of *non-deterministic* initialization events
 with: `M` the machine type,
@@ -89,6 +114,7 @@ instance [Machine CTX M]: Coe (_InitEvent M α β) (_InitNDEvent M α β) where
 @[simp]
 def prop_NDEvent (M) [Machine CTX M] (p : α → β → Prop) : NDEvent M α β :=
   {
+    guard _ _ := True
     effect m x _ := fun (y, m') => (m' = m) ∧ p x y
   }
 
@@ -96,5 +122,6 @@ def prop_NDEvent (M) [Machine CTX M] (p : α → β → Prop) : NDEvent M α β 
 @[simp]
 def skip_NDEvent [Machine CTX M] : NDEvent M α β :=
   {
+    guard _ _ := True
     effect := fun m _ _ (_, m') => m' = m
   }

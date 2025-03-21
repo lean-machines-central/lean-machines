@@ -73,9 +73,11 @@ open EventKind
 ## Deterministic events (internal representation)
 -/
 
+/-- The common basis for event structures.
+This is in fact mostly needed for convergent events.
+-/
 structure _EventRoot (M) [Machine CTX M] (α : Type) where
   guard (m : M) (x : α) : Prop
-
 
 theorem _EventRoot.ext' {CTX} {M} [Machine CTX M] {α} (evr₁ evr₂: _EventRoot M α):
   (∀ m x, evr₁.guard m x = evr₂.guard m x)

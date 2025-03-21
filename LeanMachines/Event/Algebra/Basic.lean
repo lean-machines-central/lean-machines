@@ -45,6 +45,7 @@ instance [Machine CTX M]: LawfulFunctor (Event M γ) where
 @[simp]
 def pure_Event [Machine CTX M] (y : α) : Event M γ α :=
   {
+    guard := fun _ _ => True
     action := fun m _ _ => (y, m)
   }
 
