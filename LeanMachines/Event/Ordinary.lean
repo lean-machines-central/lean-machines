@@ -210,6 +210,26 @@ structure InitEvent (M) [Machine CTX M] (α β : Type) where
     (grd : guard x)
     → Machine.invariant (init x grd).2
 
+@[simp]
+def InitEvent.to_InitEvent [Machine CTX M] (ev : InitEvent M α β) : _InitEvent M α β := {
+  guard := ev.guard
+  init := ev.init
+}
+
+instance [Machine CTX M]: Coe (InitEvent M α β) (_InitEvent M α β) where
+  coe ev := ev.to_InitEvent
+
+instance [Machine CTX M] (ev : InitEvent M α β):  SafeInitEventPO ev.to_InitEvent where
+  safety := ev.safety
+
+
+/-- Reconstruction of an initialization from its instances. -/
+def mkInitEvent [Machine CTX M] (ev : InitEvent M α β) [instSafe: SafeInitEventPO ev.to_InitEvent] : InitEvent M α β := {
+  guard := ev.guard
+  init := ev.init
+  safety := instSafe.safety
+}
+
 /-- Main constructor for (deterministic) initialization events.
 -/
 @[simp]
