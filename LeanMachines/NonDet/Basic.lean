@@ -20,9 +20,9 @@ with: `M` the machine type,
 This extends `_EventRoot` with a notion of (non-deterministic/relational) effect.
 .-/
 @[ext]
-structure NDEvent (M) [Machine CTX M] (α : Type) (β : Type) where
-  /-- The guard property of the event, in machine state `m` with input `x`. -/
-  guard (m : M) (x : α) : Prop := True
+structure NDEvent (M) [Machine CTX M] (α : Type) (β : Type)
+  extends _Event_Root M α β where
+
   /-- The (non-deterministic) effect of the event, with
       previous machine state `m` and input `x`, with relation to  pair
       `(y, m')` with `y` an output value and `m'` the next machine state. -/
