@@ -194,27 +194,13 @@ class SafeInitEventPO [Machine CTX M] {α β} (ev : _InitEvent M α β) where
     → Machine.invariant (ev.init x grd).snd
 
 /-- The specification of an initialization event. -/
-structure InitEvent (M) [Machine CTX M] (α β : Type) where
-  /-- The guard property of the event with input `x`. -/
-  guard (x : α) : Prop := True
-
-  /-- The (deterministic) action of the event, with input `x`, building a pair
-      `(y, m')` with `y` an output value and `m'` the initial machine state.
-      The `grd` parameter is an evidence that the guard is true
-      for the specified input.
-       -/
-  init (x : α) (grd : guard x) : β × M
+structure InitEvent (M) [Machine CTX M] (α β : Type)
+  extends _InitEvent M α β where
 
   /-- The safety proof obligation. -/
   safety (x : α) :
     (grd : guard x)
     → Machine.invariant (init x grd).2
-
-@[simp]
-def InitEvent.to_InitEvent [Machine CTX M] (ev : InitEvent M α β) : _InitEvent M α β := {
-  guard := ev.guard
-  init := ev.init
-}
 
 instance [Machine CTX M]: Coe (InitEvent M α β) (_InitEvent M α β) where
   coe ev := ev.to_InitEvent

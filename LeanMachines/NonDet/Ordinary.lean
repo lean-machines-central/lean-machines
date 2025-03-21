@@ -158,11 +158,11 @@ def newNDEvent'' {M} [Machine CTX M] (ev : OrdinaryNDEvent'' M) : OrdinaryNDEven
 
 
 /-!
-## Initialiazation events
+## Initialization events
 -/
 
-/-- The internal representation of proof obligations for initialization events. -/
-structure _InitNDEventPO [Machine CTX M] (ev : _InitNDEvent M α β) (kind : EventKind) where
+/-- Proof obligation: safety for (non-determinstic) initialization events -/
+class SafeInitNDEventPO [Machine CTX M] {α β} (ev : _InitNDEvent M α β) where
   safety (x : α):
     (grd : ev.guard x)
     → ∀ y, ∀ m', ev.init x grd (y, m')
@@ -172,119 +172,92 @@ structure _InitNDEventPO [Machine CTX M] (ev : _InitNDEvent M α β) (kind : Eve
     (grd : ev.guard x)
     → ∃ y, ∃ m', ev.init x grd (y, m')
 
-/-- Type type of non-deterministic initialization events.
+/-- The specification of non-deterministic initialization events.
 It is an event for machine type `M` with input type `α` and output type `β` -/
 structure InitNDEvent (M) [Machine CTX M] (α) (β) extends _InitNDEvent M α β where
-  po : _InitNDEventPO to_InitNDEvent  EventKind.InitNonDet
+  /-- The safety requirement of non-deterministic events. -/
+  safety (x : α):
+    (grd : guard x)
+    → ∀ y, ∀ m', init x grd (y, m')
+                 → Machine.invariant m'
 
-/-- The specification of a non-deterministic intialization event for machine `M`
-with input type `α` and output type `β`.
-The effect of the event is called an `init`.
+  /-- The feasibility requirement. -/
+  feasibility (x : α):
+    (grd : guard x)
+    → ∃ y, ∃ m', init x grd (y, m')
+
+instance [Machine CTX M]: Coe (InitNDEvent M α β) (_InitNDEvent M α β) where
+  coe ev := ev.to_InitNDEvent
+
+instance [Machine CTX M] (ev : InitNDEvent M α β):  SafeInitNDEventPO ev.to_InitNDEvent where
+  safety := ev.safety
+  feasibility := ev.feasibility
+
+/-- Reconstruction of an initialization from its instances. -/
+def mkInitNDEvent [Machine CTX M] (ev : InitNDEvent M α β) [instSafe: SafeInitNDEventPO ev.to_InitNDEvent] : InitNDEvent M α β := {
+  guard := ev.guard
+  init := ev.init
+  safety := instSafe.safety
+  feasibility := instSafe.feasibility
+}
+
+/-- Main constructor for (deterministic) initialization events.
 -/
-structure InitNDEventSpec (M) [Machine CTX M] (α) (β) where
-  /-- The guard property of the event, an initialization with input `x`. -/
-  guard (x : α) : Prop := True
-  /-- The (non-deterministic) effect of the event, with
-      previous machine state `m` and input `x`, with relation to  pair
-      `(y, m')` with `y` an output value and `m'` the next machine state. -/
-  init (x : α) (grd : guard x) (_ : β × M) : Prop
-  /-- The safety proof obligation. -/
+@[simp]
+def newInitNDEvent [Machine CTX M] (ev : InitNDEvent M α β) : InitNDEvent M α β := ev
+
+/-- Specification of an [InitNDEvent] with Unit as output type. -/
+structure InitNDEvent' (M) [Machine CTX M] (α) where
+  guard: α → Prop
+  init (x : α) (grd : guard x) (m': M) : Prop
+
+  /-- The safety requirement of non-deterministic events. -/
   safety (x : α):
     (grd : guard x)
-    → ∀ y, ∀ m, init x grd (y, m)
-                → Machine.invariant m
-  /-- The feasibility proof obligation. -/
+    → ∀ m', init x grd m'
+             → Machine.invariant m'
+
+  /-- The feasibility requirement. -/
   feasibility (x : α):
     (grd : guard x)
-    → ∃ y, ∃ m, init x grd (y, m)
+    → ∃ m', init x grd m'
 
-@[simp]
-def InitNDEventSpec.to_InitNDEvent [Machine CTX M]
-  (ev : InitNDEventSpec M α β) : _InitNDEvent M α β :=
-  {
-    guard := ev.guard
-    init := ev.init
-  }
-
-/-- Construction of a on-deterministic initialization event from a
-`InitNDEventSpec` specification. -/
-@[simp]
-def newInitNDEvent {M} [Machine CTX M] (ev : InitNDEventSpec M α β) : InitNDEvent M α β :=
-  {
-    to_InitNDEvent := ev.to_InitNDEvent
-    po := {
-      safety := fun x => by simp ; intros ; apply ev.safety x <;> assumption
-      feasibility := fun x => by
-        intros Hgrd
-        exact ev.feasibility x Hgrd
-    }
-  }
-
-/-- Variant of `InitNDEventSpec` with implicit `Unit` output type -/
-structure InitNDEventSpec' (M) [Machine CTX M] (α) where
-  guard (x : α) : Prop := True
-  init (x : α) (grd : guard x) (m : M) : Prop
-
-  safety (x : α):
-    (grd : guard x)
-    → ∀ m, init x grd m
-           → Machine.invariant m
-
-  feasibility (x : α):
-    (grd : guard x)
-    → ∃ m, init x grd m
-
-@[simp]
-def InitNDEventSpec'.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEventSpec M α Unit :=
-  {
-    guard := ev.guard
-    init := fun x grd ((), m) => ev.init x grd m
-    safety := fun x => by
-      simp
-      intros Hgrd m Hini
-      apply ev.safety x Hgrd ; assumption
-    feasibility := fun x => by
-      simp
-      intros Hgrd
-      apply ev.feasibility x Hgrd
-  }
+instance [Machine CTX M]: Coe (InitNDEvent' M α) (InitNDEvent M α Unit) where
+  coe ev := { guard := ev.guard
+              init := fun x grd (_,m') => ev.init x grd m'
+              safety x grd _  := ev.safety x grd
+              feasibility := fun x grd => by exists ()
+                                             exact ev.feasibility x grd
+            }
 
 /-- Variant of `newInitNDEvent` with implicit `Unit` output type -/
 @[simp]
-def newInitNDEvent' [Machine CTX M] (ev : InitNDEventSpec' M α) : InitNDEvent M α Unit :=
-  newInitNDEvent ev.toInitNDEventSpec
+def newInitNDEvent' [Machine CTX M] (ev : InitNDEvent' M α) : InitNDEvent M α Unit := ev
 
 
-/-- Variant of `InitNDEventSpec` with implicit `Unit` input and output types -/
-structure InitNDEventSpec'' (M) [Machine CTX M] where
-  guard : Prop := True
-  init (grd : guard) (m : M) : Prop
+/-- Specification of an [InitNDEvent] with Unit as input and output types. -/
+structure InitNDEvent'' (M) [Machine CTX M] where
+  guard: Prop
+  init (grd : guard) (m': M) : Prop
 
+  /-- The safety requirement of non-deterministic events. -/
   safety:
     (grd : guard)
-    → ∀ m, init grd m
-           → Machine.invariant m
+    → ∀ m', init grd m'
+            → Machine.invariant m'
 
+  /-- The feasibility requirement. -/
   feasibility:
     (grd : guard)
-    → ∃ m, init grd m
+    → ∃ m', init grd m'
 
-@[simp]
-def InitNDEventSpec''.toInitNDEventSpec [Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEventSpec M Unit Unit :=
-  {
-    guard := fun () => ev.guard
-    init := fun () grd ((), m) => ev.init grd m
-    safety := fun x => by
-      simp
-      intros Hgrd m Hini
-      apply ev.safety Hgrd ; assumption
-    feasibility := fun x => by
-      simp
-      intros Hgrd
-      apply ev.feasibility Hgrd
-  }
-
+instance [Machine CTX M]: Coe (InitNDEvent'' M) (InitNDEvent M Unit Unit) where
+  coe ev := { guard _ := ev.guard
+              init _ := fun grd (_,m') => ev.init grd m'
+              safety _ grd _  := ev.safety grd
+              feasibility := fun x grd => by exists ()
+                                             exact ev.feasibility grd
+            }
 /-- Variant of `newInitNDEvent` with implicit `Unit` input and output types -/
 @[simp]
-def newInitNDEvent'' [Machine CTX M] (ev : InitNDEventSpec'' M) : InitNDEvent M Unit Unit :=
-  newInitNDEvent ev.toInitNDEventSpec
+def newInitNDEvent'' [Machine CTX M] (ev : InitNDEvent'' M) : InitNDEvent M Unit Unit := ev
