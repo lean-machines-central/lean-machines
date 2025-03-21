@@ -14,15 +14,20 @@ non-deterministic events.
 
 -/
 
-/-- The internal representation of all *non-deterministic* transitional events
+/-- The representation of all *non-deterministic* transitional events
 with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 This extends `_EventRoot` with a notion of (non-deterministic/relational) effect.
 .-/
 @[ext]
 structure NDEvent (M) [Machine CTX M] (α : Type) (β : Type) where
+  /-- The guard property of the event, in machine state `m` with input `x`. -/
   guard (m : M) (x : α) : Prop := True
+  /-- The (non-deterministic) effect of the event, with
+      previous machine state `m` and input `x`, with relation to  pair
+      `(y, m')` with `y` an output value and `m'` the next machine state. -/
   effect (m : M) (x : α) (grd : guard m x) (eff : β × M): Prop
+
 
 instance [Machine CTX M]: Coe (Event M α β) (NDEvent M α β) where
   coe ev := { guard := ev.guard
