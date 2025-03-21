@@ -38,10 +38,11 @@ natural numbers (type `Nat`), or subset ordering for finite sets
 
 /-- The definition of a `variant` of type `v` obtained from
 a machine pre-state. The type `v` must be a preorder
-(i.e. an instance of the `Preorder` typeclass). -/
-
-
-class Variant (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) where
+(i.e. an instance of the `Preorder` typeclass).
+Note that we add an _EventRoot parameter so that variants are
+attached to events and not machines.
+ -/
+class Variant (v) [Preorder v] [instM : Machine CTX M] (ev : _EventRoot M α) where
   variant : M → v
 
 /-!
@@ -49,7 +50,7 @@ class Variant (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) wher
 -/
 
 class AnticipatedEventPO (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) (kind : EventKind)
-  extends Variant v (instM := instM) ev, SafeEventPO ev kind where
+  extends Variant v (instM := instM) ev.to_EventRoot, SafeEventPO ev kind where
   nonIncreasing (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
@@ -164,7 +165,7 @@ def newAnticipatedEvent'' [Preorder v] [Machine CTX M] (ev : AnticipatedEvent'' 
 /-- The proof obligations for convergent events. -/
 class ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [instM : Machine CTX M]
   (ev : Event M α β)
-  extends Variant v (instM := instM) ev, SafeEventPO ev (EventKind.TransDet (Convergence.Convergent)) where
+  extends Variant v (instM := instM) ev.to_EventRoot, SafeEventPO ev (EventKind.TransDet (Convergence.Convergent)) where
   convergence (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)

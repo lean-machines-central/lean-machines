@@ -43,8 +43,7 @@ This comprises:
 
 -/
 
-class Machine (CTX : outParam (Type u)) (M)
-  extends Inhabited M where
+class Machine (CTX : outParam (Type u)) (M) where
   /-- The context (i.e. parameters) of the machine. -/
   context : CTX
   /-- The invariant property that must be satisfied
@@ -74,18 +73,40 @@ open EventKind
 ## Deterministic events (internal representation)
 -/
 
+/-- The common basis for event structures.
+This is in fact mostly needed for convergent events.
+-/
+structure _EventRoot (M) [Machine CTX M] (α : Type) where
+  guard (m : M) (x : α) : Prop
+
+theorem _EventRoot.ext' {CTX} {M} [Machine CTX M] {α} (evr₁ evr₂: _EventRoot M α):
+  (∀ m x, evr₁.guard m x = evr₂.guard m x)
+  → evr₁ = evr₂ :=
+by
+  intro Hgrd
+  cases evr₁
+  case mk grd₁ =>
+  cases evr₂
+  case mk grd₂ =>
+    simp [*] at *
+    refine funext ?_
+    intro m
+    funext y
+    exact propext (Hgrd m y)
+
 /-- The internal representation of all *deterministic* transitional events
 with: `M` the machine type,
 `α` the input type, and `β` the output type of the event
 This extends `_EventRoot` with a notion of (deterministic/functional) action.
 .-/
 @[ext]
-structure Event (M) [Machine CTX M] (α : Type) (β : Type) where
-  guard (m : M) (x : α) : Prop := True
+structure Event (M) [Machine CTX M] (α : Type) (β : Type)
+  extends _EventRoot M α where
   action (m : M) (x : α) (grd : guard m x): (β × M)
 
+-- XXX: is this class needed ?
 class _Event (M) [Machine CTX M] (α : Type) (β : Type) where
-  guard (m : M) (x : α) : Prop := True
+  guard (m : M) (x : α) : Prop
   action (m : M) (x : α) (grd : guard m x): (β × M)
 
 instance [Machine CTX M] (ev : Event M α β): _Event M α β where
@@ -121,23 +142,22 @@ theorem Event.ext' {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: Event M α β
           ∧ ∀ grd₁ grd₂, ev₁.action m x grd₁ = ev₂.action m x grd₂)
   → ev₁ = ev₂ :=
 by
-  intros H
   have Hax := _Action_ext_ax ev₁ ev₂
+  intros H
   cases ev₁
-  case mk g₁ act₁ =>
-    cases ev₂
-    case mk g₂ act₂ =>
-      simp at*
-      constructor
-      case left =>
-        apply _Guard_ext
-        intros m x
-        have Hg := (H m x).1
-        exact propext Hg
-      case right =>
-        exact Hax H
-
-
+  case mk evr₁ act₁ =>
+  cases ev₂
+  case mk evr₂ act₂ =>
+  simp [*] at *
+  constructor
+  case left =>
+    apply _EventRoot.ext'
+    intros m x
+    have Hmx := H m x
+    simp [Hmx]
+  case right =>
+    apply Hax
+    apply H
 
 /-- The internal representation of all *deterministic* initialization events
 with: `M` the machine type,
@@ -148,13 +168,6 @@ structure _InitEvent (M) [Machine CTX M] (α) (β : Type) where
   guard (x : α) : Prop := True
   init (x : α) (grd : guard x) : (β × M)
 
-@[simp]
-def _InitEvent.toEvent [DecidableEq M] [Machine CTX M] (ev : _InitEvent M α β) : Event M α β :=
-  {
-    guard := fun m x => m == default ∧ ev.guard x
-    action := fun m x grd => ev.init x (by simp at grd ; apply grd.2)
-  }
-
 /-- The deterministic skip event, that does nothing.
 Note that the output type must match the input type,
  hence a non-deterministic notion of skip event is
@@ -162,6 +175,7 @@ Note that the output type must match the input type,
 @[simp]
 def skip_Event (M) [Machine CTX M] (α) : Event M α α :=
 {
+  guard := fun _ _ => True
   action := fun m x _ => (x, m)
 }
 
@@ -170,6 +184,7 @@ status of a (non-guarded) event. -/
 @[simp]
 def fun_Event  (M) [Machine CTX M] (f : α → β) : Event M α β :=
 {
+  guard := fun _ _ => True
   action := fun m x _ => (f x, m)
 }
 
@@ -177,5 +192,6 @@ def fun_Event  (M) [Machine CTX M] (f : α → β) : Event M α β :=
 @[simp]
 def funskip_Event (M) [Machine CTX M] (xf : M → α → β) : Event M α β :=
 {
+  guard := fun _ _ => True
   action := fun m x _ => (xf m x, m)
 }

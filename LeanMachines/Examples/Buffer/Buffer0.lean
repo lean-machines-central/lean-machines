@@ -55,10 +55,9 @@ structure B0 (ctx : BufContext) where
 instance: Machine BufContext (B0 ctx) where
   context := ctx
   invariant b0 := b0.size ≤ ctx.maxSize
-  default := { size := 0 }
 
 /-- Initialization event (no parameter, empty buffer)-/
-def B0.Init : OrdinaryEvent (B0 ctx) Unit Unit :=
+def B0.Init : InitEvent (B0 ctx) Unit Unit :=
   newInitEvent'' {
     init _ :=  { size := 0 }
     safety _ := by simp [Machine.invariant]
