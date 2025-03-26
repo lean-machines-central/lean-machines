@@ -58,14 +58,39 @@ open Refinement
 -/
 
 
+@[simp]
+def EventKind.isConvergent? (k : EventKind) :=
+  match k with
+  | TransDet Convergence.Convergent => true
+  | TransNonDet Convergence.Convergent => true
+  | _ => false
 
+@[simp]
+def EventKind.isAnticipated? (k : EventKind) :=
+  match k with
+  | TransDet Convergence.Anticipated => true
+  | TransNonDet Convergence.Anticipated => true
+  | _ => false
+
+@[simp]
+def EventKind.isOrdinary? (k : EventKind) :=
+  match k with
+  | TransDet Convergence.Ordinary => true
+  | TransNonDet Convergence.Ordinary => true
+  | _ => false
+
+@[simp]
+def EventKind.canRefine? (k₁ k₂ : EventKind) : Bool :=
+  if k₁.isConvergent? then k₂.isConvergent?
+  else if k₁.isAnticipated? then (not k₂.isOrdinary?)
+       else k₂.isOrdinary?
 /-
   This typeclass specifies the proof obligations for the refinement of events.
 -/
 
 class SafeREvent {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : Event M α β) (abs : Event AM α' β') [instSafeAbs :SafeEventPO abs kabs] [instSafeEv : SafeEventPO ev kev]
-  {valid_kind : kev.refine? kabs = true} where
+  {valid_kind : kev.canRefine? kabs = true} where
 
   lift_in : α → α'
   lift_out : β → β'
@@ -83,10 +108,6 @@ class SafeREvent {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refin
       → let (y, m') := ev.action m x Hgrd
         let (z, am') := abs.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
         lift_out y = z ∧ refine am' m'
-
-
-
-
 
 /-!
 ### Ordinary initialization events
