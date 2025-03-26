@@ -42,7 +42,8 @@ instance : Machine CountContext (Counter0 ctx) where
 /- In order to define an initialisation event, we firstly create it without considering the safety proof obligation -/
 
 
-def Counter0.Init : InitEvent (Counter0 ctx) Unit Unit :=
+
+def Counter0.Init : _InitEvent (Counter0 ctx) Unit Unit :=
   {
     init _ _ :=  ((),{cpt :=0})
     guard _ := True
@@ -50,7 +51,7 @@ def Counter0.Init : InitEvent (Counter0 ctx) Unit Unit :=
 
 /- Then we instanciate the SafeInitEvent typeclass, which represents the safety proof obligation -/
 
-instance : SafeInitEvent (Counter0.Init (ctx := ctx)) where
+instance : SafeInitEventPO (Counter0.Init (ctx := ctx)) where
   safety := fun x hgrd =>
     by
       simp[Machine.invariant]
@@ -67,7 +68,7 @@ def Counter0.Incr : Event (Counter0 ctx) Nat Unit :=
     guard := fun c0 v => (c0.cpt + v) ≤ ctx.max
   }
 
-instance instIncrAnt : AnticipatedEvent Nat (Counter0.Incr (ctx := ctx)) (EventKind.TransDet (Convergence.Anticipated)) where
+instance instIncrAnt : AnticipatedEventPO Nat (Counter0.Incr (ctx := ctx)) (EventKind.TransDet (Convergence.Anticipated)) where
   safety := fun m v hinvm => by simp[Machine.invariant,Counter0.Incr]
   variant := fun m => ctx.max - m.cpt
   nonIncreasing := fun m x hinv hgrd =>
@@ -85,7 +86,7 @@ def Counter0.Decr : Event (Counter0 ctx) Nat Unit :=
 
 
 
-instance instDecrCvg : ConvergentEvent Nat (Counter0.Decr (ctx:= ctx)) where
+instance instDecrCvg : ConvergentEventPO Nat (Counter0.Decr (ctx:= ctx)) where
   safety :=
     by
       simp[Machine.invariant,Counter0.Decr]
@@ -105,7 +106,7 @@ def Counter0.setCount : Event (Counter0 ctx) Nat Unit :=
     guard := fun _ v => (v ≤ ctx.max)
   }
 
-instance instSetCountSf : SafeEvent (Counter0.setCount (ctx:=ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
+instance instSetCountSf : SafeEventPO (Counter0.setCount (ctx:=ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
   safety :=
   fun m x =>
     by
