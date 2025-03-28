@@ -48,7 +48,7 @@ class Variant (v) [Preorder v] [instM : Machine CTX M] (ev : _EventRoot M α) wh
 /-!
 ### Anticipated events
 -/
-
+-- **QUESTIONS** pourquoi ici on met le kind en argument et pas pour ConvergentEventPO ????
 class AnticipatedEventPO (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) (kind : EventKind)
   extends Variant v (instM := instM) ev.to_EventRoot, SafeEventPO ev kind where
   nonIncreasing (m : M) (x : α):
@@ -84,6 +84,8 @@ by
     · exact Heq
     · simp at Hvar
       exact Hvar
+
+
 
 /-- A way to rebuild an Anticipated event from the required POs. -/
 def mkAnticipatedEvent (v) [Preorder v] [Machine CTX M] (ev : Event M α β)
@@ -157,6 +159,12 @@ def newAnticipatedEvent'' [Preorder v] [Machine CTX M] (ev : AnticipatedEvent'' 
   : AnticipatedEvent v M Unit Unit :=
   newAnticipatedEvent ev
 
+
+instance instAnticipatedEventPO_AnticipatedEvent [Machine CTX M] [Preorder v]
+  (ev : AnticipatedEvent v M α β):  AnticipatedEventPO v ev.toEvent (EventKind.TransDet (Convergence.Anticipated)) (M := M) where
+    safety := ev.safety
+    variant := ev.variant
+    nonIncreasing := ev.nonIncreasing
 
 /-!
 ### Convergent events
@@ -292,3 +300,10 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M]:
 
 def newConvergentEvent'' [Preorder v] [WellFoundedLT v] [Machine CTX M]
   (ev : ConvergentEvent'' v M) : ConvergentEvent v M Unit Unit := newConvergentEvent ev
+
+
+instance instConvergentEventPO_ConvergentEvent [Machine CTX M] [Preorder v] [WellFoundedLT v]
+  (ev : ConvergentEvent v M α β):  ConvergentEventPO v ev.toEvent (M := M) where
+    safety := ev.safety
+    variant := ev.variant
+    convergence := ev.convergence
