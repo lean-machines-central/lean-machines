@@ -156,7 +156,18 @@ structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refi
 
 instance [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : OrdinaryREvent AM M abs):
-  SafeREventPO ev.toEvent abs.toEvent (instR:=instR) (instSafeAbs:=instSafeEventPO_OrdinaryEvent abs) where
+  SafeREventPO
+    (AM := AM) (M := M)
+    (α := α) (β := β)
+    (ev.toEvent (M := M)) (abs.toEvent (M := AM))
+    (instSafeAbs := instSafeEventPO_OrdinaryEvent abs)
+    (instSafeEv := instSafeEventPO_OrdinaryEvent ev.toOrdinaryEvent)
+    (valid_kind := by simp)
+  where
+    lift_in := ev.lift_in
+    lift_out := ev.lift_out
+    strengthening := ev.strengthening
+    simulation := ev.simulation
 
 
 
@@ -166,16 +177,7 @@ with: `abs` the (ordinary) event to refine, and
 -/
 @[simp]
 def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryEvent AM α' β') (ev : REventSpec AM M (α:=α) (β:=β) (α':=α') (β':=β') abs) : OrdinaryREvent AM M α β α' β' :=
-  {
-    to_Event := ev.to_Event
-    po := {
-      safety := ev.safety
-      abstract := abs.to_Event
-      strengthening := ev.strengthening
-      simulation := ev.simulation
-    }
-  }
+  (abs : OrdinaryEvent AM α' β') (ev :  OrdinaryREvent AM M abs (α := α) (β := β)) : OrdinaryREvent AM M abs (α := α) (β := β):= ev
 
 /-!
 ### Ordinary initialization events
@@ -202,32 +204,32 @@ where
       lift_out y = z ∧ refine am' m'
 
 
-class RefineDefault (AM) (M) [Machine ACTX AM] [Machine CTX M] [Inhabited AM] [Inhabited M]  [Refinement AM M] where
-  refine_default (am : AM) (m : M) : m = default → refine am m → am = default
+-- class RefineDefault (AM) (M) [Machine ACTX AM] [Machine CTX M] [Inhabited AM] [Inhabited M]  [Refinement AM M] where
+--   refine_default (am : AM) (m : M) : m = default → refine am m → am = default
 
 
-instance [DecidableEq M] [DecidableEq AM] [Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
-    [Inhabited AM] [Inhabited M] [instRDef : RefineDefault AM M]
-   (ev : _InitEvent M α β ) (abs : _InitEvent AM α' β') [SafeInitEventPO abs] [SafeInitEventPO ev]
-   [instSafeInitR : SafeInitREvent ev abs] :
+-- instance [DecidableEq M] [DecidableEq AM] [Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
+--     [Inhabited AM] [Inhabited M] [instRDef : RefineDefault AM M]
+--    (ev : _InitEvent M α β ) (abs : _InitEvent AM α' β') [SafeInitEventPO abs] [SafeInitEventPO ev]
+--    [instSafeInitR : SafeInitREvent ev abs] :
 
-   SafeREvent ev.toEvent abs.toEvent (kev := EventKind.InitDet) (kabs := EventKind.InitDet)
-    (valid_kind :=
-      by
-        simp[EventKind.refine?]
-        simp[EventKind.get_status]
-      ) -- The proof is not automatic
-where
-    lift_in := instSafeInitR.lift_in
-    lift_out := instSafeInitR.lift_out
+--    SafeREventPO ev abs.toEvent (kev := EventKind.InitDet) (kabs := EventKind.InitDet)
+--     (valid_kind :=
+--       by
+--         simp[EventKind.refine?]
+--         simp[EventKind.get_status]
+--       ) -- The proof is not automatic
+-- where
+--     lift_in := instSafeInitR.lift_in
+--     lift_out := instSafeInitR.lift_out
 
-    strengthening m x :=
-      by
-        simp
-        intros hinv hdef hgrd am href
-        apply And.intro
-        case left =>
-          apply instRDef.refine_default am m hdef href
-        case right =>
-          exact SafeInitREvent.strengthening x hgrd
-    simulation m x hinv hgrd am href := SafeInitREvent.simulation x (InitEvent.toEvent.proof_1 ev m x hgrd)
+--     strengthening m x :=
+--       by
+--         simp
+--         intros hinv hdef hgrd am href
+--         apply And.intro
+--         case left =>
+--           apply instRDef.refine_default am m hdef href
+--         case right =>
+--           exact SafeInitREvent.strengthening x hgrd
+--     simulation m x hinv hgrd am href := SafeInitREvent.simulation x (InitEvent.toEvent.proof_1 ev m x hgrd)
