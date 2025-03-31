@@ -178,12 +178,90 @@ with: `abs` the (ordinary) event to refine, and
 def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' β')
   (ev: OrdinaryREvent AM M abs (α := α) (β := β))
   : OrdinaryREvent AM M abs (α := α) (β := β) := ev
+
+structure OrdinaryREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  { α α' } (abs : OrdinaryEvent' AM α')
+  extends OrdinaryEvent' M α where
+  /-- Transformation of output value: how a concrete output must be interpreted
+  at the abstract level. -/
+  lift_in: α → α'
+
+  /-- Proof obligation: guard strengthening. -/
+  strengthening (m : M) (x : α ) :
+    Machine.invariant m
+    → guard m x
+    → ∀ am, refine am m
+      → abs.guard am (lift_in x)
+
+  /-- Proof obligation: action simulation. -/
+  simulation (m : M) (x : α):
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m x)
+    → ∀ am, (Href : refine am m)
+      → let m' := action m x Hgrd
+        let am' := abs.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
+        refine am' m'
+
+instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : OrdinaryEvent' AM α') :
+  Coe (OrdinaryREvent' (α := α) AM M abs) (OrdinaryREvent AM M (α := α) (β := Unit) (Ord'.coe abs) ) where
+  coe ev := {
+              lift_in := ev.lift_in
+              lift_out := fun _ => ()
+              strengthening := ev.strengthening
+              simulation :=
+              fun m x hinv hgrd am href =>
+                by
+                  simp
+                  exact ev.simulation m x hinv hgrd am href
+              guard := ev.guard
+              action m x grd := ((), ev.action m x grd)
+              safety := ev.safety
+            }
+
+
 @[simp]
-def newREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' β')
-  (ev : OrdinaryREvent AM M abs (α := Unit) (β := β)) : OrdinaryREvent AM M abs (α := Unit) (β := β) := ev
+def newREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent' AM α')
+  (ev : OrdinaryREvent' AM M abs (α := α)) : OrdinaryREvent' AM M abs (α := α) := ev
+
+
+structure OrdinaryREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  (abs : OrdinaryEvent'' AM )
+  extends OrdinaryEvent'' M  where
+
+  /-- Proof obligation: guard strengthening. -/
+  strengthening (m : M) :
+    Machine.invariant m
+    → guard m
+    → ∀ am, refine am m
+      → abs.guard am
+
+  /-- Proof obligation: action simulation. -/
+  simulation (m : M) :
+    (Hinv : Machine.invariant m)
+    → (Hgrd : guard m)
+    → ∀ am, (Href : refine am m)
+      → let m' := action m Hgrd
+        let am':= abs.action am (strengthening m Hinv Hgrd am Href)
+        refine am' m'
+
+instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : OrdinaryEvent'' AM):
+  Coe (OrdinaryREvent'' AM M abs) (OrdinaryREvent AM M (α := α) (β := Unit) (Ord''.coe abs) ) where
+  coe ev := {
+              lift_in := fun _ => ()
+              lift_out := fun _ => ()
+              strengthening m _ := ev.strengthening m
+              simulation :=
+              fun m x hinv hgrd am href =>
+                by
+                  simp
+                  exact ev.simulation m hinv hgrd am href
+              guard m := fun _ => ev.guard m
+              action m x grd := ((), ev.action m grd)
+              safety m _ := ev.safety m
+            }
 @[simp]
-def newREvent''[Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' β')
-  (ev : OrdinaryREvent AM M abs (α := Unit) (β := Unit)) : OrdinaryREvent AM M abs (α := Unit) (β := Unit) := ev
+def newREvent''[Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent'' AM )
+  (ev : OrdinaryREvent'' AM M abs) : OrdinaryREvent'' AM M abs:= ev
 
 
 -- ### Anticipated transitionnal events
@@ -233,14 +311,60 @@ def newAnticipatedREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ab
   (ev: AnticipatedREvent AM M abs (α := α) (β := β) (v := v))
   : AnticipatedREvent AM M abs (α := α) (β := β) (v := v):= ev
 
+
+
+structure AnticipatedREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] [Preorder v]
+  {α α'} (abs : OrdinaryEvent' AM α') extends AnticipatedEvent' v M α, OrdinaryREvent' AM M abs where
+
+
+instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] (abs : OrdinaryEvent' AM α') :
+  Coe (AnticipatedREvent' (α := α) (v := v) AM M abs) (AnticipatedREvent (v := v) AM M (α := α) (β := Unit) (Ord'.coe abs) ) where
+  coe ev := {
+              lift_in := ev.lift_in
+              lift_out := fun _ => ()
+              strengthening := ev.strengthening
+              simulation :=
+              fun m x hinv hgrd am href =>
+                by
+                  simp
+                  exact ev.simulation m x hinv hgrd am href
+              guard := ev.guard
+              action m x grd := ((), ev.action m x grd)
+              safety := ev.safety
+              variant := ev.variant
+              nonIncreasing := ev.nonIncreasing
+            }
+
 @[simp]
-def newAnticipatedREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' β') [Preorder v]
-  (ev: AnticipatedREvent AM M abs (α := Unit) (β := β) (v := v))
-  : AnticipatedREvent AM M abs (α := Unit) (β := β) (v := v):= ev
+def newAnticipatedREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent' AM α') [Preorder v]
+  (ev: AnticipatedREvent' AM M abs (α := α) (v := v))
+  : AnticipatedREvent' AM M abs (α := α) (v := v):= ev
+
+structure AnticipatedREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] [Preorder v]
+  (abs : OrdinaryEvent'' AM) extends AnticipatedEvent'' v M, OrdinaryREvent'' AM M abs where
+
+
+instance[Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] (abs : OrdinaryEvent'' AM) :
+  Coe (AnticipatedREvent'' (v := v) AM M abs) (AnticipatedREvent (v := v) AM M (α := Unit) (β := Unit) (Ord''.coe abs) ) where
+  coe ev := {
+              lift_in := fun _ => ()
+              lift_out := fun _ => ()
+              strengthening m x:= ev.strengthening m
+              simulation :=
+              fun m x hinv hgrd am href =>
+                by
+                  simp
+                  exact ev.simulation m hinv hgrd am href
+              guard m x := ev.guard m
+              action m x grd := ((), ev.action m grd)
+              safety m x := ev.safety m
+              variant := ev.variant
+              nonIncreasing m x := ev.nonIncreasing m
+            }
+
 @[simp]
-def newAnticipatedREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' β') [Preorder v]
-  (ev: AnticipatedREvent AM M abs (α := Unit) (β := Unit) (v := v))
-  : AnticipatedREvent AM M abs (α := Unit) (β := Unit) (v := v):= ev
+def newAnticipatedREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent'' AM) [Preorder v]
+  (ev: AnticipatedREvent'' AM M abs (v := v)) : AnticipatedREvent'' AM M abs (v := v):= ev
 
 
 -- ### Convergent transitionnal events
@@ -304,15 +428,59 @@ def newConvergentREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs
   (ev: ConvergentREvent AM M abs (α := α) (β := β) (v := v))
   : ConvergentREvent AM M abs (α := α) (β := β) (v := v):= ev
 
-@[simp]
-def newConvergentREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' β') [Preorder v] [WellFoundedLT v]
-  (ev: ConvergentREvent AM M abs (α := Unit) (β := β) (v := v))
-  : ConvergentREvent AM M abs (α := Unit) (β := β) (v := v):= ev
-@[simp]
-def newConvergentREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' β') [Preorder v] [WellFoundedLT v]
-  (ev: ConvergentREvent AM M abs (α := Unit) (β := Unit) (v := v))
-  : ConvergentREvent AM M abs (α := Unit) (β := Unit) (v := v):= ev
 
+structure ConvergentREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] [Preorder v] [WellFoundedLT v]
+  {α α'} (abs : OrdinaryEvent' AM α') extends ConvergentEvent' v M α, OrdinaryREvent' AM M abs where
+
+
+instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] [WellFoundedLT v] (abs : OrdinaryEvent' AM α') :
+  Coe (ConvergentREvent' (α := α) (v := v) AM M abs) (ConvergentREvent (v := v) AM M (α := α) (β := Unit) (Ord'.coe abs) ) where
+  coe ev := {
+              lift_in := ev.lift_in
+              lift_out := fun _ => ()
+              strengthening := ev.strengthening
+              simulation :=
+              fun m x hinv hgrd am href =>
+                by
+                  simp
+                  exact ev.simulation m x hinv hgrd am href
+              guard := ev.guard
+              action m x grd := ((), ev.action m x grd)
+              safety := ev.safety
+              variant := ev.variant
+              convergence := ev.convergence
+            }
+
+@[simp]
+def newConvergentREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent' AM α') [Preorder v][WellFoundedLT v]
+  (ev: ConvergentREvent' AM M abs (α := α) (v := v))
+  : ConvergentREvent' AM M abs (α := α) (v := v):= ev
+
+structure ConvergentREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] [Preorder v][WellFoundedLT v]
+  (abs : OrdinaryEvent'' AM) extends ConvergentEvent'' v M, OrdinaryREvent'' AM M abs where
+
+
+instance[Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] [WellFoundedLT v] (abs : OrdinaryEvent'' AM) :
+  Coe (ConvergentREvent'' (v := v) AM M abs) (ConvergentREvent (v := v) AM M (α := Unit) (β := Unit) (Ord''.coe abs) ) where
+  coe ev := {
+              lift_in := fun _ => ()
+              lift_out := fun _ => ()
+              strengthening m x:= ev.strengthening m
+              simulation :=
+              fun m x hinv hgrd am href =>
+                by
+                  simp
+                  exact ev.simulation m hinv hgrd am href
+              guard m x := ev.guard m
+              action m x grd := ((), ev.action m grd)
+              safety m x := ev.safety m
+              variant := ev.variant
+              convergence m x := ev.convergence m
+            }
+
+@[simp]
+def newConvergentREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent'' AM) [Preorder v] [WellFoundedLT v]
+  (ev: ConvergentREvent'' AM M abs (v := v)) : ConvergentREvent'' AM M abs (v := v):= ev
 
 
 
@@ -372,12 +540,81 @@ instance [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
 def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   (abs : InitEvent AM α' β') (ev : SafeInitREvent AM M abs (α := α) (β := β)) : SafeInitREvent AM M abs (α := α) (β := β) := ev
 
+structure SafeInitREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  { α α' } (abs : InitEvent' AM α')
+  extends InitEvent' M α where
+  /-- Transformation of output value: how a concrete output must be interpreted
+  at the abstract level. -/
+  lift_in: α → α'
 
-def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : InitEvent AM α' β') (ev : SafeInitREvent AM M abs (α := Unit) (β := β)) : SafeInitREvent AM M abs (α := Unit) (β := β) := ev
+  /-- Proof obligation: guard strengthening. -/
+  strengthening (x : α ) : guard x → abs.guard (lift_in x)
 
-def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : InitEvent AM α' β') (ev : SafeInitREvent AM M abs (α := Unit) (β := Unit)) : SafeInitREvent AM M abs (α := Unit) (β := Unit) := ev
+  /-- Proof obligation: action simulation. -/
+  simulation (x : α) :
+    (Hgrd : guard x) →
+      let m':= init x Hgrd
+      let am':= abs.init (lift_in x) (strengthening x Hgrd)
+      refine am' m'
+
+instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : InitEvent' AM α') :
+  Coe (SafeInitREvent' (α := α) AM M abs) (SafeInitREvent AM M (α := α) (β := Unit) (Init'.coe abs) ) where
+  coe ev := {
+              lift_in := ev.lift_in
+              lift_out := fun _ => ()
+              strengthening := ev.strengthening
+              simulation x hgrd :=
+                by
+                  simp
+                  exact ev.simulation x hgrd
+              guard := ev.guard
+              init x grd := ((), ev.init x grd)
+              safety := ev.safety
+            }
+
+
+@[simp]
+def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : InitEvent' AM α')
+  (ev : SafeInitREvent' AM M abs (α := α)) : SafeInitREvent' AM M abs (α := α) := ev
+
+
+structure SafeInitREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+  (abs : InitEvent'' AM)
+  extends InitEvent'' M where
+  /-- Transformation of output value: how a concrete output must be interpreted
+  at the abstract level. -/
+  lift_in: α → α'
+
+  /-- Proof obligation: guard strengthening. -/
+  strengthening : guard → abs.guard
+
+  /-- Proof obligation: action simulation. -/
+  simulation:
+    (Hgrd : guard ) →
+      let m':= init Hgrd
+      let am':= abs.init (strengthening Hgrd)
+      refine am' m'
+
+instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : InitEvent'' AM ) :
+  Coe (SafeInitREvent'' AM M abs) (SafeInitREvent AM M (α := α) (β := Unit) (Init''.coe abs) ) where
+  coe ev := {
+              lift_in := ev.lift_in
+              lift_out := fun _ => ()
+              strengthening _ := ev.strengthening
+              simulation :=
+              fun x hgrd =>
+                by
+                  simp
+                  exact ev.simulation hgrd
+              guard _ := ev.guard
+              init _ grd := ((), ev.init grd)
+              safety _ := ev.safety
+            }
+
+
+@[simp]
+def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : InitEvent'' AM)
+  (ev : SafeInitREvent'' AM M abs ) : SafeInitREvent'' AM M abs  := ev
 
 
 
@@ -410,6 +647,10 @@ def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
 --         case right =>
 --           exact SafeInitREvent.strengthening x hgrd
 --     simulation m x hinv hgrd am href := SafeInitREvent.simulation x (InitEvent.toEvent.proof_1 ev m x hgrd)
+
+
+
+
 
 
 
@@ -506,6 +747,8 @@ def newDoubleOrdinaryREvent [Machine ACTX₁ AM₁] [Machine ACTX₂ AM₂] [Mac
   (abs₂ : OrdinaryEvent AM₂ α'₂ β'₂)
   (ev: DoubleOrdinaryREvent AM₁ AM₂ M abs₁ abs₂ (α := α) (β := β))
   :  DoubleOrdinaryREvent AM₁ AM₂ M abs₁ abs₂ (α := α) (β := β) := ev
+
+
 @[simp]
 def newDoubleOrdinaryREvent' [Machine ACTX₁ AM₁] [Machine ACTX₂ AM₂] [Machine CTX M] [Refinement AM₁ M] [Refinement AM₂ M]
   (abs₁ : OrdinaryEvent AM₁ α'₁ β'₁)
