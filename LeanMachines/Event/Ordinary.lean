@@ -206,7 +206,7 @@ structure InitEvent (M) [Machine CTX M] (α β : Type)
 instance [Machine CTX M]: Coe (InitEvent M α β) (_InitEvent M α β) where
   coe ev := ev.to_InitEvent
 
-instance [Machine CTX M] (ev : InitEvent M α β):  SafeInitEventPO ev.to_InitEvent where
+instance safeInitEventPO_InitEvent[Machine CTX M] (ev : InitEvent M α β):  SafeInitEventPO ev.to_InitEvent where
   safety := ev.safety
 
 
