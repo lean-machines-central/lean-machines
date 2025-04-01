@@ -30,66 +30,59 @@ instance : Machine XorContext (Xor0 ctx) where
   invariant d0 := ¬ (d0.x ∧ d0.y)
 
 
-/- In order to define an initialisation event, we firstly create it without considering the safety proof obligation -/
 
-def Xor0.Init : InitEvent (Xor0 ctx) Unit Unit :=
+def Xor0.Init : InitEvent'' (Xor0 ctx) :=
+  newInitEvent''
   {
-    init _ _ := ((),{x := false, y := false})
-    guard _ := True
+    init _ := {x := false, y := false}
+    guard := True
+    safety := fun _ => by simp[Machine.invariant]
   }
 
-/- Then we instanciate the SafeInitEvent typeclass, which represents the safety proof obligation -/
 
-instance : SafeInitEvent (Xor0.Init (ctx := ctx)) where
-  safety := fun x hgrd =>
-    by
-      simp[Machine.invariant]
-      intro hf
-      simp[Xor0.Init]
-
-
-/- It's the same idea for regular events -/
 
 
 /- Setters for the first boolean -/
 
 /- This event sets the first boolean with the value true -/
-def Xor0.SetX_true : Event (Xor0 ctx) Unit Unit :=
+def Xor0.SetX_true : OrdinaryEvent (Xor0 ctx) Unit Unit :=
+  newEvent''
   {
-    action m _ _ := ((), {x:= true, y := m.y})
-    guard m _ := m.y = false
+    action m _ := {x:= true, y := m.y}
+    guard m := m.y = false
+    safety :=
+      by
+        simp[Machine.invariant]
   }
 
-instance instSetXt: SafeEvent (Xor0.SetX_true (ctx:= ctx))  (EventKind.TransDet (Convergence.Ordinary)) where
-  safety := by simp[Machine.invariant,Xor0.SetX_true]
 
 /- This event sets the first boolean with the value false -/
-def Xor0.SetX_false : Event (Xor0 ctx) Unit Unit :=
+def Xor0.SetX_false : OrdinaryEvent (Xor0 ctx) Unit Unit :=
+  newEvent''
   {
-    action m _ _ := ((), {x:= false, y := m.y})
-    guard _ _ := True
+    action m _ := {x:= false, y := m.y}
+    guard _ := True
+    safety := by simp[Machine.invariant]
   }
-instance instSetXf : SafeEvent (Xor0.SetX_false (ctx:=ctx)) (EventKind.TransDet (Convergence.Ordinary))  where
-  safety := by simp[Machine.invariant,Xor0.SetX_false]
 
 /- This event sets the second boolean with the value true -/
 
-def Xor0.SetY_true : Event (Xor0 ctx) Unit Unit :=
+def Xor0.SetY_true : OrdinaryEvent (Xor0 ctx) Unit Unit :=
+  newEvent''
   {
-    action m _ _ := ((), {x := m.x, y := true})
-    guard m _ := m.x = false
+    action m _ := {x := m.x, y := true}
+    guard m := m.x = false
+    safety := by simp[Machine.invariant]
   }
 
-instance instSetYt : SafeEvent (Xor0.SetY_true (ctx:=ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
-  safety := by simp[Machine.invariant, Xor0.SetY_true]
 
 /- This event sets the second boolean with the value false -/
 
-def Xor0.SetY_false : Event (Xor0 ctx) Unit Unit :=
+def Xor0.SetY_false : OrdinaryEvent (Xor0 ctx) Unit Unit :=
+  newEvent''
   {
-    action m _ _ := ((), {x := m.x, y := false})
-    guard m _ := m.x = false
-  }
+    action m _ := {x := m.x, y := false}
+    guard m := m.x = false
+    safety := by simp[Machine.invariant]
 
-instance instSetYf : SafeEvent (Xor0.SetY_false (ctx:=ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
-  safety := by simp[Machine.invariant, Xor0.SetY_false]
+  }
