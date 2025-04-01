@@ -255,7 +255,7 @@ instance Init'' [Machine CTX M]: Coe (InitEvent'' M) (InitEvent M Unit Unit) whe
               safety := fun x grd => by exact ev.safety grd }
 
 @[simp]
-def newInitEvent'' [Machine CTX M] (ev : InitEvent'' M) : InitEvent M Unit Unit := ev
+def newInitEvent'' [Machine CTX M] (ev : InitEvent'' M) : InitEvent'' M := ev
 
 /-!
 ## Skip event
