@@ -64,7 +64,7 @@ instance : Refinement (Xor0 ctx₀) (Tank1 ctx) where
 
 /- Init of the tank machine -/
 
-def Tank1.Init : DoubleInitREvent'' (Counter0 ctx) (Xor0 ctx₀) (Tank1 ctx) Counter0.Init Xor0.Init :=
+def Tank1.Init : DoubleInitREvent (α := Unit) (β := Unit) (Counter0 ctx) (Xor0 ctx₀) (Tank1 ctx) Counter0.Init Xor0.Init :=
     newDoubleInitREvent''
         Counter0.Init
         Xor0.Init

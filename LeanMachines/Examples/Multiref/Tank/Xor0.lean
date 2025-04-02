@@ -31,7 +31,7 @@ instance : Machine XorContext (Xor0 ctx) where
 
 
 
-def Xor0.Init : InitEvent'' (Xor0 ctx) :=
+def Xor0.Init : InitEvent (Xor0 ctx) Unit Unit:=
   newInitEvent''
   {
     init _ := {x := false, y := false}

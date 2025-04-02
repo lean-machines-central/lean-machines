@@ -112,8 +112,8 @@ structure DoubleOrdinaryREvent'
   (AM₁) [Machine ACTX₁ AM₁]
   (AM₂) [Machine ACTX₂ AM₂]
   (M) [Machine CTX M] [instR₁ : Refinement AM₁ M] [instR₂ : Refinement AM₂ M]
-  (abs₁ : OrdinaryEvent' AM₁ α'₁)
-  (abs₂ : OrdinaryEvent' AM₂ α'₂)
+  (abs₁ : OrdinaryEvent AM₁ α'₁ Unit)
+  (abs₂ : OrdinaryEvent AM₂ α'₂ Unit)
   extends OrdinaryEvent' M α
   where
     -- First refinement
@@ -131,7 +131,7 @@ structure DoubleOrdinaryREvent'
       → (Hgrd : guard m x)
       → ∀ am, (Href: refine am m)
         → let m':= action m x Hgrd
-          let am' := abs₁.action am (lift_in₁ x) (strengthening₁ m x Hinv Hgrd am Href)
+          let (_,am') := abs₁.action am (lift_in₁ x) (strengthening₁ m x Hinv Hgrd am Href)
          (refine am' m')
 
     -- Second refinement
@@ -149,13 +149,13 @@ structure DoubleOrdinaryREvent'
       → (Hgrd : guard m x)
       → ∀ am, (Href: refine am m)
         → let m' := action m x Hgrd
-          let am' := abs₂.action am (lift_in₂ x) (strengthening₂ m x Hinv Hgrd am Href)
+          let (_,am') := abs₂.action am (lift_in₂ x) (strengthening₂ m x Hinv Hgrd am Href)
           (refine am' m')
 
 
 instance {α} [Machine CTX M] [Machine ACTX₁ AM₁] [Refinement AM₁ M] [Machine ACTX₂ AM₂] [Refinement AM₂ M]
-  (abs₁ : OrdinaryEvent' AM₁ α'₁) (abs₂ : OrdinaryEvent' AM₂ α'₂):
-  Coe (DoubleOrdinaryREvent' (α := α) AM₁ AM₂ M abs₁ abs₂) (DoubleOrdinaryREvent AM₁ AM₂ M (α := α) (β := Unit) (Ord'.coe abs₁) (Ord'.coe abs₂) ) where
+  (abs₁ : OrdinaryEvent AM₁ α'₁ Unit) (abs₂ : OrdinaryEvent AM₂ α'₂ Unit):
+  Coe (DoubleOrdinaryREvent' (α := α) AM₁ AM₂ M abs₁ abs₂) (DoubleOrdinaryREvent AM₁ AM₂ M (α := α) (β := Unit) abs₁ abs₂) where
   coe ev := {
               lift_in₁ := ev.lift_in₁
               lift_in₂ := ev.lift_in₂
@@ -180,10 +180,10 @@ instance {α} [Machine CTX M] [Machine ACTX₁ AM₁] [Refinement AM₁ M] [Mach
 
 @[simp]
 def newDoubleOrdinaryREvent' [Machine ACTX₁ AM₁] [Machine ACTX₂ AM₂] [Machine CTX M] [Refinement AM₁ M] [Refinement AM₂ M]
-  (abs₁ : OrdinaryEvent' AM₁ α'₁ )
-  (abs₂ : OrdinaryEvent' AM₂ α'₂ )
+  (abs₁ : OrdinaryEvent AM₁ α'₁ Unit )
+  (abs₂ : OrdinaryEvent AM₂ α'₂ Unit )
   (ev: DoubleOrdinaryREvent' AM₁ AM₂ M abs₁ abs₂ (α := α ))
-  :  DoubleOrdinaryREvent' AM₁ AM₂ M abs₁ abs₂ (α := α ) := ev
+  :  DoubleOrdinaryREvent AM₁ AM₂ M abs₁ abs₂ (α := α ) (β := Unit) := ev
 
 
 /- Smart constructor when both the input and the output are of type Unit -/
@@ -194,8 +194,8 @@ structure DoubleOrdinaryREvent''
   (AM₁) [Machine ACTX₁ AM₁]
   (AM₂) [Machine ACTX₂ AM₂]
   (M) [Machine CTX M] [instR₁ : Refinement AM₁ M] [instR₂ : Refinement AM₂ M]
-  (abs₁ : OrdinaryEvent'' AM₁ )
-  (abs₂ : OrdinaryEvent'' AM₂ )
+  (abs₁ : OrdinaryEvent AM₁ Unit Unit )
+  (abs₂ : OrdinaryEvent AM₂ Unit Unit )
   extends OrdinaryEvent'' M
   where
     -- First refinement
@@ -205,14 +205,14 @@ structure DoubleOrdinaryREvent''
       Machine.invariant m
       → guard m
       → ∀ am, refine am m
-        → abs₁.guard am
+        → abs₁.guard am ()
 
     simulation₁ (m : M):
       (Hinv : Machine.invariant m)
       → (Hgrd : guard m )
       → ∀ am, (Href: refine am m)
         → let m':= action m Hgrd
-          let am' := abs₁.action am (strengthening₁ m Hinv Hgrd am Href)
+          let (_,am') := abs₁.action am () (strengthening₁ m Hinv Hgrd am Href)
          (refine am' m')
 
     -- Second refinement
@@ -222,20 +222,20 @@ structure DoubleOrdinaryREvent''
       Machine.invariant m
       → guard m
       → ∀ am, refine am m
-        → abs₂.guard am
+        → abs₂.guard am ()
 
     simulation₂ (m : M) :
       (Hinv : Machine.invariant m)
       → (Hgrd : guard m )
       → ∀ am, (Href: refine am m)
         → let m' := action m  Hgrd
-          let am' := abs₂.action am (strengthening₂ m  Hinv Hgrd am Href)
+          let (_,am') := abs₂.action am () (strengthening₂ m  Hinv Hgrd am Href)
           (refine am' m')
 
 
 instance [Machine CTX M] [Machine ACTX₁ AM₁] [Refinement AM₁ M] [Machine ACTX₂ AM₂] [Refinement AM₂ M]
-  (abs₁ : OrdinaryEvent'' AM₁) (abs₂ : OrdinaryEvent'' AM₂):
-  Coe (DoubleOrdinaryREvent'' AM₁ AM₂ M abs₁ abs₂) (DoubleOrdinaryREvent AM₁ AM₂ M (α := Unit) (β := Unit) (Ord''.coe abs₁) (Ord''.coe abs₂) ) where
+  (abs₁ : OrdinaryEvent AM₁ Unit Unit) (abs₂ : OrdinaryEvent AM₂ Unit Unit):
+  Coe (DoubleOrdinaryREvent'' AM₁ AM₂ M abs₁ abs₂) (DoubleOrdinaryREvent AM₁ AM₂ M (α := Unit) (β := Unit) abs₁ abs₂) where
   coe ev := {
               lift_in₁ := fun _ => ()
               lift_in₂ := fun _ => ()
@@ -260,10 +260,10 @@ instance [Machine CTX M] [Machine ACTX₁ AM₁] [Refinement AM₁ M] [Machine A
 
 @[simp]
 def newDoubleOrdinaryREvent'' [Machine ACTX₁ AM₁] [Machine ACTX₂ AM₂] [Machine CTX M] [Refinement AM₁ M] [Refinement AM₂ M]
-  (abs₁ : OrdinaryEvent'' AM₁)
-  (abs₂ : OrdinaryEvent'' AM₂)
+  (abs₁ : OrdinaryEvent AM₁ Unit Unit)
+  (abs₂ : OrdinaryEvent AM₂ Unit Unit)
   (ev: DoubleOrdinaryREvent'' AM₁ AM₂ M abs₁ abs₂ )
-  :  DoubleOrdinaryREvent'' AM₁ AM₂ M abs₁ abs₂  := ev
+  :  DoubleOrdinaryREvent AM₁ AM₂ M abs₁ abs₂ (α := Unit) (β := Unit) := ev
 
 
 -- ### Double refinement of init events
@@ -347,8 +347,8 @@ structure DoubleInitREvent'
   (AM₁) [Machine ACTX₁ AM₁]
   (AM₂) [Machine ACTX₂ AM₂]
   (M) [Machine CTX M] [instR₁ : Refinement AM₁ M] [instR₂ : Refinement AM₂ M]
-  (abs₁ : InitEvent' AM₁ α'₁)
-  (abs₂ : InitEvent' AM₂ α'₂)
+  (abs₁ : InitEvent AM₁ α'₁ Unit)
+  (abs₂ : InitEvent AM₂ α'₂ Unit)
   extends InitEvent' M α
   where
     lift_in₁ : α → α'₁
@@ -358,7 +358,7 @@ structure DoubleInitREvent'
     simulation₁ (x : α) :
       (Hgrd : guard x) →
         let m' := init x Hgrd
-        let am':= abs₁.init (lift_in₁ x) (strengthening₁ x Hgrd)
+        let (_,am') := abs₁.init (lift_in₁ x) (strengthening₁ x Hgrd)
         refine am' m'
 
     lift_in₂ : α → α'₂
@@ -368,12 +368,12 @@ structure DoubleInitREvent'
     simulation₂ (x : α) :
       (Hgrd : guard x) →
         let m' := init x Hgrd
-        let am':= abs₂.init (lift_in₂ x) (strengthening₂ x Hgrd)
+        let (_,am') := abs₂.init (lift_in₂ x) (strengthening₂ x Hgrd)
         refine am' m'
 
 instance {α} [Machine CTX M] [Machine ACTX₁ AM₁] [Refinement AM₁ M] [Machine ACTX₂ AM₂] [Refinement AM₂ M]
-  (abs₁ : InitEvent' AM₁ α'₁) (abs₂ : InitEvent' AM₂ α'₂):
-  Coe (DoubleInitREvent' (α := α) AM₁ AM₂ M abs₁ abs₂) (DoubleInitREvent AM₁ AM₂ M (α := α) (β := Unit) (Init'.coe abs₁) (Init'.coe abs₂) ) where
+  (abs₁ : InitEvent AM₁ α'₁ Unit) (abs₂ : InitEvent AM₂ α'₂ Unit):
+  Coe (DoubleInitREvent' (α := α) AM₁ AM₂ M abs₁ abs₂) (DoubleInitREvent AM₁ AM₂ M (α := α) (β := Unit) abs₁ abs₂) where
   coe ev := {
               lift_in₁ := ev.lift_in₁
               lift_in₂ := ev.lift_in₂
@@ -398,39 +398,39 @@ instance {α} [Machine CTX M] [Machine ACTX₁ AM₁] [Refinement AM₁ M] [Mach
 
 @[simp]
 def newDoubleInitREvent' [Machine ACTX₁ AM₁] [Machine ACTX₂ AM₂] [Machine CTX M] [Refinement AM₁ M] [Refinement AM₂ M]
-  (abs₁ : InitEvent' AM₁ α'₁ )
-  (abs₂ : InitEvent' AM₂ α'₂ )
+  (abs₁ : InitEvent AM₁ α'₁ Unit )
+  (abs₂ : InitEvent AM₂ α'₂ Unit )
   (ev: DoubleInitREvent' AM₁ AM₂ M abs₁ abs₂ (α := α) )
-  :  DoubleInitREvent' AM₁ AM₂ M abs₁ abs₂ (α := α ) := ev
+  :  DoubleInitREvent AM₁ AM₂ M abs₁ abs₂ (α := α ) (β := Unit) := ev
 
 
 structure DoubleInitREvent''
   (AM₁) [Machine ACTX₁ AM₁]
   (AM₂) [Machine ACTX₂ AM₂]
   (M) [Machine CTX M] [instR₁ : Refinement AM₁ M] [instR₂ : Refinement AM₂ M]
-  (abs₁ : InitEvent'' AM₁)
-  (abs₂ : InitEvent'' AM₂)
+  (abs₁ : InitEvent AM₁ Unit Unit)
+  (abs₂ : InitEvent AM₂ Unit Unit)
   extends InitEvent'' M
   where
-    strengthening₁ : guard → abs₁.guard
+    strengthening₁ : guard → abs₁.guard ()
 
     simulation₁ :
       (Hgrd : guard ) →
         let m' := init Hgrd
-        let am':= abs₁.init (strengthening₁ Hgrd)
+        let (_,am'):= abs₁.init () (strengthening₁ Hgrd)
         refine am' m'
 
-    strengthening₂  : guard → abs₂.guard
+    strengthening₂  : guard → abs₂.guard ()
 
     simulation₂ :
       (Hgrd : guard ) →
         let m' := init Hgrd
-        let am':= abs₂.init (strengthening₂ Hgrd)
+        let (_,am') := abs₂.init () (strengthening₂ Hgrd)
         refine am' m'
 
 instance [Machine CTX M] [Machine ACTX₁ AM₁] [Refinement AM₁ M] [Machine ACTX₂ AM₂] [Refinement AM₂ M]
-  (abs₁ : InitEvent'' AM₁) (abs₂ : InitEvent'' AM₂):
-  Coe (DoubleInitREvent'' AM₁ AM₂ M abs₁ abs₂) (DoubleInitREvent AM₁ AM₂ M (α := Unit) (β := Unit) (Init''.coe abs₁) (Init''.coe abs₂) ) where
+  (abs₁ : InitEvent AM₁ Unit Unit) (abs₂ : InitEvent AM₂ Unit Unit):
+  Coe (DoubleInitREvent'' AM₁ AM₂ M abs₁ abs₂) (DoubleInitREvent AM₁ AM₂ M (α := Unit) (β := Unit) abs₁ abs₂) where
   coe ev := {
               lift_in₁ := fun _ => ()
               lift_in₂ := fun _ => ()
@@ -456,10 +456,10 @@ instance [Machine CTX M] [Machine ACTX₁ AM₁] [Refinement AM₁ M] [Machine A
 
 @[simp]
 def newDoubleInitREvent'' [Machine ACTX₁ AM₁] [Machine ACTX₂ AM₂] [Machine CTX M] [Refinement AM₁ M] [Refinement AM₂ M]
-  (abs₁ : InitEvent'' AM₁)
-  (abs₂ : InitEvent'' AM₂)
+  (abs₁ : InitEvent AM₁ Unit Unit)
+  (abs₂ : InitEvent AM₂ Unit Unit)
   (ev: DoubleInitREvent'' AM₁ AM₂ M abs₁ abs₂)
-  :  DoubleInitREvent'' AM₁ AM₂ M abs₁ abs₂ := ev
+  :  DoubleInitREvent (α := Unit) (β := Unit) AM₁ AM₂ M abs₁ abs₂ := ev
 
 
 -- ### Double refinement of anticipated events

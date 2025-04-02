@@ -42,7 +42,7 @@ instance : Machine CountContext (Counter0 ctx) where
 /- In order to define an initialisation event, we firstly create it without considering the safety proof obligation -/
 
 
-def Counter0.Init: InitEvent'' (Counter0 ctx) :=
+def Counter0.Init: InitEvent (Counter0 ctx) Unit Unit :=
   newInitEvent''
   {
     init _ := {cpt :=0}

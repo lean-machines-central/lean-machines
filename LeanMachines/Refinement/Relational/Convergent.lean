@@ -58,11 +58,11 @@ def newAnticipatedREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (ab
 
 
 structure AnticipatedREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] [Preorder v]
-  {α α'} (abs : OrdinaryEvent' AM α') extends AnticipatedEvent' v M α, OrdinaryREvent' AM M abs where
+  {α α'} (abs : OrdinaryEvent AM α' Unit) extends AnticipatedEvent' v M α, OrdinaryREvent' AM M abs where
 
 
-instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] (abs : OrdinaryEvent' AM α') :
-  Coe (AnticipatedREvent' (α := α) (v := v) AM M abs) (AnticipatedREvent (v := v) AM M (α := α) (β := Unit) (Ord'.coe abs) ) where
+instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] (abs : OrdinaryEvent AM α' Unit) :
+  Coe (AnticipatedREvent' (α := α) (v := v) AM M abs) (AnticipatedREvent (v := v) AM M (α := α) (β := Unit) abs) where
   coe ev := {
               lift_in := ev.lift_in
               lift_out := fun _ => ()
@@ -80,16 +80,16 @@ instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] (
             }
 
 @[simp]
-def newAnticipatedREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent' AM α') [Preorder v]
+def newAnticipatedREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' Unit) [Preorder v]
   (ev: AnticipatedREvent' AM M abs (α := α) (v := v))
-  : AnticipatedREvent' AM M abs (α := α) (v := v):= ev
+  : AnticipatedREvent AM M abs (α := α) (β := Unit) (v := v):= ev
 
 structure AnticipatedREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] [Preorder v]
-  (abs : OrdinaryEvent'' AM) extends AnticipatedEvent'' v M, OrdinaryREvent'' AM M abs where
+  (abs : OrdinaryEvent AM Unit Unit) extends AnticipatedEvent'' v M, OrdinaryREvent'' AM M abs where
 
 
-instance[Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] (abs : OrdinaryEvent'' AM) :
-  Coe (AnticipatedREvent'' (v := v) AM M abs) (AnticipatedREvent (v := v) AM M (α := Unit) (β := Unit) (Ord''.coe abs) ) where
+instance[Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] (abs : OrdinaryEvent AM Unit Unit) :
+  Coe (AnticipatedREvent'' (v := v) AM M abs) (AnticipatedREvent (v := v) AM M (α := Unit) (β := Unit) abs ) where
   coe ev := {
               lift_in := fun _ => ()
               lift_out := fun _ => ()
@@ -107,8 +107,8 @@ instance[Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] (abs : 
             }
 
 @[simp]
-def newAnticipatedREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent'' AM) [Preorder v]
-  (ev: AnticipatedREvent'' AM M abs (v := v)) : AnticipatedREvent'' AM M abs (v := v):= ev
+def newAnticipatedREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM Unit Unit) [Preorder v]
+  (ev: AnticipatedREvent'' AM M abs (v := v)) : AnticipatedREvent AM M abs (α := Unit) (β := Unit) (v := v):= ev
 
 
 -- ### Convergent transitionnal events
@@ -174,11 +174,11 @@ def newConvergentREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs
 
 
 structure ConvergentREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] [Preorder v] [WellFoundedLT v]
-  {α α'} (abs : OrdinaryEvent' AM α') extends ConvergentEvent' v M α, OrdinaryREvent' AM M abs where
+  {α α'} (abs : OrdinaryEvent AM α' Unit) extends ConvergentEvent' v M α, OrdinaryREvent' AM M abs where
 
 
-instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] [WellFoundedLT v] (abs : OrdinaryEvent' AM α') :
-  Coe (ConvergentREvent' (α := α) (v := v) AM M abs) (ConvergentREvent (v := v) AM M (α := α) (β := Unit) (Ord'.coe abs) ) where
+instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] [WellFoundedLT v] (abs : OrdinaryEvent AM α' Unit) :
+  Coe (ConvergentREvent' (α := α) (v := v) AM M abs) (ConvergentREvent (v := v) AM M (α := α) (β := Unit) abs ) where
   coe ev := {
               lift_in := ev.lift_in
               lift_out := fun _ => ()
@@ -196,16 +196,16 @@ instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] [
             }
 
 @[simp]
-def newConvergentREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent' AM α') [Preorder v][WellFoundedLT v]
+def newConvergentREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' Unit) [Preorder v][WellFoundedLT v]
   (ev: ConvergentREvent' AM M abs (α := α) (v := v))
-  : ConvergentREvent' AM M abs (α := α) (v := v):= ev
+  : ConvergentREvent AM M abs (α := α) (β := Unit) (v := v):= ev
 
 structure ConvergentREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] [Preorder v][WellFoundedLT v]
-  (abs : OrdinaryEvent'' AM) extends ConvergentEvent'' v M, OrdinaryREvent'' AM M abs where
+  (abs : OrdinaryEvent AM Unit Unit) extends ConvergentEvent'' v M, OrdinaryREvent'' AM M abs where
 
 
-instance[Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] [WellFoundedLT v] (abs : OrdinaryEvent'' AM) :
-  Coe (ConvergentREvent'' (v := v) AM M abs) (ConvergentREvent (v := v) AM M (α := Unit) (β := Unit) (Ord''.coe abs) ) where
+instance[Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] [WellFoundedLT v] (abs : OrdinaryEvent AM Unit Unit) :
+  Coe (ConvergentREvent'' (v := v) AM M abs) (ConvergentREvent (v := v) AM M (α := Unit) (β := Unit) abs ) where
   coe ev := {
               lift_in := fun _ => ()
               lift_out := fun _ => ()
@@ -223,5 +223,5 @@ instance[Machine CTX M] [Machine ACTX AM] [Refinement AM M] [Preorder v] [WellFo
             }
 
 @[simp]
-def newConvergentREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent'' AM) [Preorder v] [WellFoundedLT v]
-  (ev: ConvergentREvent'' AM M abs (v := v)) : ConvergentREvent'' AM M abs (v := v):= ev
+def newConvergentREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM Unit Unit) [Preorder v] [WellFoundedLT v]
+  (ev: ConvergentREvent'' AM M abs (v := v)) : ConvergentREvent AM M abs (α := Unit) (β := Unit) (v := v):= ev
