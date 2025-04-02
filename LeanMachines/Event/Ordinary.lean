@@ -138,7 +138,7 @@ structure OrdinaryEvent' (M) [Machine CTX M] (α : Type) where
     → (grd : guard m x)
     → Machine.invariant (action m x grd)
 
-instance [Machine CTX M]: Coe (OrdinaryEvent' M α) (OrdinaryEvent M α Unit) where
+instance Ord' [Machine CTX M]: Coe (OrdinaryEvent' M α) (OrdinaryEvent M α Unit) where
   coe ev := { guard := ev.guard
               action m x grd := ((), ev.action m x grd)
               safety := ev.safety }
@@ -159,7 +159,7 @@ structure OrdinaryEvent'' (M) [Machine CTX M] where
     → (grd : guard m)
     → Machine.invariant (action m grd)
 
-instance [Machine CTX M]: Coe (OrdinaryEvent'' M) (OrdinaryEvent M Unit Unit) where
+instance Ord'' [Machine CTX M]: Coe (OrdinaryEvent'' M) (OrdinaryEvent M Unit Unit) where
   coe ev := { guard m _ := ev.guard m
               action m _ grd := ((), ev.action m grd)
               safety m _ := by intros Hinv Hgrd
@@ -206,7 +206,7 @@ structure InitEvent (M) [Machine CTX M] (α β : Type)
 instance [Machine CTX M]: Coe (InitEvent M α β) (_InitEvent M α β) where
   coe ev := ev.to_InitEvent
 
-instance [Machine CTX M] (ev : InitEvent M α β):  SafeInitEventPO ev.to_InitEvent where
+instance safeInitEventPO_InitEvent[Machine CTX M] (ev : InitEvent M α β):  SafeInitEventPO ev.to_InitEvent where
   safety := ev.safety
 
 
@@ -232,7 +232,7 @@ structure InitEvent' (M) [Machine CTX M] (α : Type) where
     (grd : guard x)
     → Machine.invariant (init x grd)
 
-instance [Machine CTX M]: Coe (InitEvent' M α) (InitEvent M α Unit) where
+instance Init' [Machine CTX M]: Coe (InitEvent' M α) (InitEvent M α Unit) where
   coe ev := { guard := ev.guard
               init x grd := ((), ev.init x grd)
               safety := ev.safety }
@@ -249,7 +249,7 @@ structure InitEvent'' (M) [Machine CTX M] where
     (grd : guard)
     → Machine.invariant (init grd)
 
-instance [Machine CTX M]: Coe (InitEvent'' M) (InitEvent M Unit Unit) where
+instance Init'' [Machine CTX M]: Coe (InitEvent'' M) (InitEvent M Unit Unit) where
   coe ev := { guard _ := ev.guard
               init x grd := ((), ev.init grd)
               safety := fun x grd => by exact ev.safety grd }

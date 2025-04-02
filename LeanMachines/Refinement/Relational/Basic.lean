@@ -1,7 +1,7 @@
 
 import LeanMachines.Event.Basic
 import LeanMachines.Event.Ordinary
-
+import LeanMachines.Event.Convergent
 /-!
 
 # Relational refinement
@@ -79,10 +79,11 @@ def EventKind.isOrdinary? (k : EventKind) :=
   | TransNonDet Convergence.Ordinary => true
   | _ => false
 
+/-k₁ is the concrete kind and k₂ the abstract one-/
 @[simp]
 def EventKind.canRefine? (k₁ k₂ : EventKind) : Bool :=
-  if k₁.isConvergent? then k₂.isConvergent?
-  else if k₁.isAnticipated? then (not k₂.isOrdinary?)
+  if k₂.isConvergent? then k₁.isConvergent?
+  else if k₂.isAnticipated? then (not k₁.isOrdinary?)
        else k₂.isOrdinary?
 /-
   This typeclass specifies the proof obligations for the refinement of events.
@@ -110,98 +111,10 @@ class SafeREventPO {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Ref
         let (z, am') := abs.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
         lift_out y = z ∧ refine am' m'
 
-/-- Specification of ordinary refined events.
-with: `AM` the abstact machine type, `M` the concrete maching type,
- `α` the concrete input parameter type, `α'` the corresponding abstract input type (by default, `α`)
- `β` the concrete input parameter type, `β'` the corresponding abstract input type (by default, `β`)
-The `abs` parameter is the ordinary event intended to be refined.
-
-Note that `abs` should not be anticipated nor convergent.
-
-The input and output types can be lifted to the abstract, if needed,
- using the `lift_in` and `lift_out` components.
-
-The proof obligations, beyond `safety` (of abstract events) are guard `strengthening`
-and abstract event `simulation`.
- -/
-structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  {α β α' β'} (abs : OrdinaryEvent AM α' β')
-  extends OrdinaryEvent M α β where
-
-  /-- Transformation of input parameters: how a concrete parameter must be interpreted
-  at the abstract level. -/
-  lift_in : α → α'
-
-  /-- Transformation of output value: how a concrete output must be interpreted
-  at the abstract level. -/
-  lift_out : β → β'
-
-  /-- Proof obligation: guard strengthening. -/
-  strengthening (m : M) (x : α):
-    Machine.invariant m
-    → guard m x
-    → ∀ am, refine am m
-      → abs.guard am (lift_in x)
-
-  /-- Proof obligation: action simulation. -/
-  simulation (m : M) (x : α):
-    (Hinv : Machine.invariant m)
-    → (Hgrd : guard m x)
-    → ∀ am, (Href : refine am m)
-      → let (y, m') := action m x Hgrd
-        let (z, am') := abs.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
-        lift_out y = z ∧ refine am' m'
-
-#check SafeREventPO
-
-instance [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-  (abs : OrdinaryEvent AM α' β') (ev : OrdinaryREvent AM M abs):
-  SafeREventPO
-    (AM := AM) (M := M)
-    (α := α) (β := β)
-    (ev.toEvent (M := M)) (abs.toEvent (M := AM))
-    (instSafeAbs := instSafeEventPO_OrdinaryEvent abs)
-    (instSafeEv := instSafeEventPO_OrdinaryEvent ev.toOrdinaryEvent)
-    (valid_kind := by simp)
-  where
-    lift_in := ev.lift_in
-    lift_out := ev.lift_out
-    strengthening := ev.strengthening
-    simulation := ev.simulation
 
 
 
-/-- Smart constructor for ordinary refined event,
-with: `abs` the (ordinary) event to refine, and
-  `ev` the refined event specification (cf. `REventSpec`).
--/
-@[simp]
-def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : OrdinaryEvent AM α' β') (ev :  OrdinaryREvent AM M abs (α := α) (β := β)) : OrdinaryREvent AM M abs (α := α) (β := β):= ev
 
-/-!
-### Ordinary initialization events
--/
-
-
-/-
-  We follow the same idea as for SafeInitEvent : the typeclass specifies the refinement of initialisation
-  events and then allows a conversion to regular refined events
--/
-
-class SafeInitREvent  {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-  (ev : _InitEvent M α β) (abs : _InitEvent AM α' β') [SafeInitEventPO ev] [SafeInitEventPO abs]
-where
-  lift_in : α → α'
-  lift_out : β → β'
-
-  strengthening (x : α) : ev.guard x → abs.guard (lift_in x)
-
-  simulation (x : α) :
-    (Hgrd : ev.guard x) →
-      let (y, m') := ev.init x Hgrd
-      let (z, am') := abs.init (lift_in x) (strengthening x Hgrd)
-      lift_out y = z ∧ refine am' m'
 
 
 -- class RefineDefault (AM) (M) [Machine ACTX AM] [Machine CTX M] [Inhabited AM] [Inhabited M]  [Refinement AM M] where

@@ -42,72 +42,60 @@ instance : Machine CountContext (Counter0 ctx) where
 /- In order to define an initialisation event, we firstly create it without considering the safety proof obligation -/
 
 
-
-def Counter0.Init : _InitEvent (Counter0 ctx) Unit Unit :=
+def Counter0.Init: InitEvent (Counter0 ctx) Unit Unit :=
+  newInitEvent''
   {
-    init _ _ :=  ((),{cpt :=0})
-    guard _ := True
+    init _ := {cpt :=0}
+    guard := True
+    safety := by simp[Machine.invariant]
   }
 
-/- Then we instanciate the SafeInitEvent typeclass, which represents the safety proof obligation -/
-
-instance : SafeInitEventPO (Counter0.Init (ctx := ctx)) where
-  safety := fun x hgrd =>
-    by
-      simp[Machine.invariant]
-      simp[Counter0.Init]
 
 
 /- It's the same idea for regular events -/
 
 
 /- Either we increment it by a Nat value -/
-def Counter0.Incr : Event (Counter0 ctx) Nat Unit :=
+def Counter0.Incr : AnticipatedEvent Nat (Counter0 ctx) Nat Unit :=
+  newAnticipatedEvent'
   {
-    action := fun c0 v _ => ((),{cpt:= c0.cpt + v})
+    action := fun c0 v _ => {cpt:= c0.cpt + v}
     guard := fun c0 v => (c0.cpt + v) ≤ ctx.max
+    safety := fun m v hinvm => by simp[Machine.invariant]
+    variant := fun m => ctx.max - m.cpt
+    nonIncreasing := fun m x hinv hgrd =>
+      by
+        simp
+        omega
   }
-
-instance instIncrAnt : AnticipatedEventPO Nat (Counter0.Incr (ctx := ctx)) (EventKind.TransDet (Convergence.Anticipated)) where
-  safety := fun m v hinvm => by simp[Machine.invariant,Counter0.Incr]
-  variant := fun m => ctx.max - m.cpt
-  nonIncreasing := fun m x hinv hgrd =>
-    by
-      simp[Counter0.Incr]
-      omega
-
 
 /- Or we drecrement it by a Nat value -/
-def Counter0.Decr : Event (Counter0 ctx) Nat Unit :=
+def Counter0.Decr : ConvergentEvent Nat (Counter0 ctx) Nat Unit :=
+  newConvergentEvent'
   {
-    action := fun c0 v _ => ((),{cpt:= c0.cpt - v})
+    action := fun c0 v _ => {cpt:= c0.cpt - v}
     guard := fun m v => m.cpt ≥ v ∧ v > 0
-  }
-
-
-
-instance instDecrCvg : ConvergentEventPO Nat (Counter0.Decr (ctx:= ctx)) where
-  safety :=
+    safety :=
     by
-      simp[Machine.invariant,Counter0.Decr]
+      simp[Machine.invariant]
       omega
-
-  variant := fun m => m.cpt -- Warning !!! The field is not required if an other event defines it, might be an issue...
-  convergence :=
+    variant := fun m => m.cpt
+    convergence :=
     by
-      simp[Machine.invariant,Variant.variant,Counter0.Decr]
+      simp[Machine.invariant,Variant.variant]
       intros m x hinv hgrd₁ hgrd₂
       omega
-
-
-def Counter0.setCount : Event (Counter0 ctx) Nat Unit :=
-  {
-    action := fun _ v _ => ((),{cpt:=v})
-    guard := fun _ v => (v ≤ ctx.max)
   }
 
-instance instSetCountSf : SafeEventPO (Counter0.setCount (ctx:=ctx)) (EventKind.TransDet (Convergence.Ordinary)) where
-  safety :=
-  fun m x =>
-    by
-      simp[Machine.invariant,Counter0.setCount]
+
+
+def Counter0.setCount : OrdinaryEvent (Counter0 ctx) Nat Unit :=
+  newEvent'
+  {
+    action := fun _ v _ => {cpt:=v}
+    guard := fun _ v => (v ≤ ctx.max)
+    safety :=
+      fun m x =>
+        by
+          simp[Machine.invariant]
+  }
