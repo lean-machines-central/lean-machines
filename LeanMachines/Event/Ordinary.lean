@@ -222,6 +222,12 @@ def mkInitEvent [Machine CTX M] (ev : InitEvent M α β) [instSafe: SafeInitEven
 @[simp]
 def newInitEvent [Machine CTX M] (ev : InitEvent M α β) : InitEvent M α β := ev
 
+
+instance instSafeInitEventPO_InitEvent [Machine CTX M]
+  (ev : InitEvent M α β):  SafeInitEventPO ev.to_InitEvent where
+  safety := ev.safety
+
+
 /-- Specification of an [InitEvent] with Unit as output type. -/
 structure InitEvent' (M) [Machine CTX M] (α : Type) where
   guard (x : α) : Prop := True
