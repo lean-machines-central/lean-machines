@@ -83,6 +83,7 @@ def Xor0.SetY_false : OrdinaryEvent (Xor0 ctx) Unit Unit :=
   {
     action m _ := {x := m.x, y := false}
     guard m := m.x = false
-    safety := by simp[Machine.invariant]
+    safety := by
+      simp[Machine.invariant]
 
   }
