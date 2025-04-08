@@ -3,7 +3,7 @@ import LeanMachines.Event.Ordinary
 import LeanMachines.Refinement.Relational.Basic
 import LeanMachines.Refinement.Relational.Convergent
 import LeanMachines.Refinement.Relational.Ordinary
-import LeanMachines.Refinement.Relational.Double
+import LeanMachines.Refinement.Relational.Multi
 import LeanMachines.Examples.Multiref.Tank.Counter0
 import LeanMachines.Examples.Multiref.Tank.Xor0
 
