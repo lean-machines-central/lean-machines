@@ -116,6 +116,11 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
 /-- The main constructor for ordinary events. -/
 def newAnticipatedEvent [Preorder v] [Machine CTX M] (ev : AnticipatedEvent v M α β) := ev
 
+-- Typeclass instanciation automatically acquired from the spec structure
+instance instSafeEventPO_Anticipated [Machine CTX M] [Preorder v]
+  (ev : AnticipatedEvent v M α β):  SafeEventPO ev.toEvent (EventKind.TransDet (Convergence.Anticipated)) where
+  safety := ev.safety
+
 structure AnticipatedEvent' (v) [Preorder v] (M) [instM : Machine CTX M]
     (α : Type) extends OrdinaryEvent' M α where
   variant : M → v
@@ -203,6 +208,11 @@ def mkConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CT
     variant := instConv.variant
     convergence := instConv.convergence
   }
+
+-- Typeclass instanciation automatically acquired from the spec structure
+instance instSafeEventPO_Convergent [Machine CTX M] [Preorder v] [WellFoundedLT v]
+  (ev : ConvergentEvent v M α β):  SafeEventPO ev.toEvent (EventKind.TransDet (Convergence.Convergent)) where
+  safety := ev.safety
 
 
 @[simp]

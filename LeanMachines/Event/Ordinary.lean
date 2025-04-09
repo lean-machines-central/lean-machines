@@ -52,6 +52,8 @@ def OrdinaryEvent.toEvent [Machine CTX M] (ev : OrdinaryEvent M α β) : Event M
 instance [Machine CTX M]: Coe (OrdinaryEvent M α β) (Event M α β) where
   coe ev := ev.toEvent
 
+
+-- Typeclass instanciation automatically acquired from the spec structure
 instance instSafeEventPO_OrdinaryEvent [Machine CTX M]
   (ev : OrdinaryEvent M α β):  SafeEventPO ev.toEvent (EventKind.TransDet (Convergence.Ordinary)) where
   safety := ev.safety

@@ -131,7 +131,7 @@ instance instFill : ConvergentEventPO Nat (Tank1.fill (ctx:=ctx)) where
 -- it is not an ordinary event (thus we can discharge the PO valid_kind) -/
 instance : SafeREventPO
     (instSafeEv := instFill.toSafeEventPO)
-    (instSafeAbs := instSafeEventPO_OrdinaryEvent Counter0.Incr.toOrdinaryEvent)
+    (instSafeAbs := instSafeEventPO_Anticipated Counter0.Incr)
     (Tank1.fill (ctx := ctx)) (Counter0.Incr (ctx :=ctx)).toEvent
     (valid_kind := by simp)
     where
@@ -265,10 +265,12 @@ instance instDrain : ConvergentEventPO Nat (Tank1.drain (ctx:=ctx)) where
             intros hinv₁ hinv₂ hinv₃ hgrd₁ hgrd₂ hgrd₃
             exact And.intro (hinv₃ hgrd₁) hgrd₃
 
+
+
 instance : SafeREventPO
     (Tank1.drain (ctx:= ctx)) (Counter0.Decr (ctx:=ctx)).toEvent
     (instSafeEv := instDrain.toSafeEventPO)
-    (instSafeAbs := instSafeEventPO_OrdinaryEvent (Counter0.Decr).toOrdinaryEvent)
+    (instSafeAbs := instSafeEventPO_Convergent Counter0.Decr)
     (valid_kind := by simp)
     where
     lift_in := id
