@@ -67,72 +67,33 @@ instance : Refinement (Xor0 ctx₀) (Tank1 ctx) where
 
 /- Init -/
 
-def Tank1.Init {ctx ctx'}:=
+def Tank1.Init :
+  MultiInitREvent (Counter0 ctx) (Xor0 ctx') (Tank1 ctx) (Counter0.Init) (Xor0.Init) Unit Unit  :=
   newMultiInitREvent''
-  (Counter0.Init) (Xor0.Init)
-  (M := Tank1 ctx)
-  (AM₁ := Counter0 ctx)
-  (AM₂ := Xor0 ctx')
   {
     init := sorry
     safety := sorry
     ref₁ := sorry
     ref₂ := sorry
   }
-  -- {
-  --   init := fun _ => { cpt := 0, st := status.CLOSED}
-  --   safety m := by simp[Machine.invariant]
-  --   ref₁ :=
-  --     {
-  --         strengthening := by simp[Counter0.Init]
-  --         simulation := by simp[Refinement.refine,Counter0.Init]
-  --     }
-  --   ref₂ :=
-  --     {
-  --         strengthening := by simp[Xor0.Init]
-  --         simulation := by simp[Refinement.refine,Xor0.Init]
-  --     }
-  -- }
 
--- #check newMultiOrdinaryREvent
--- def Tank1.fill {ctx ctx'} :=
---   newMultiOrdinaryREvent
---   (AM₁ := Counter0 ctx)
---   (AM₂ := Xor0 ctx')
---   (M := Tank1 ctx)
---   (α := Nat)
---   (β := Unit)
---   {
---     abs₁ := Counter0.Incr.toOrdinaryEvent
---     abs₂ := {
---       action := (skip_Event (Xor0 ctx') Unit).action
---       safety := by simp[Machine.invariant]
---     }
---     action := sorry
---     safety := sorry
---     ref₁ := sorry
---     ref₂ := sorry
-
---   }
-
-def skipOrdinary {ctx}: OrdinaryEvent (Xor0 ctx) Unit Unit :=
-  {
-    action := fun m _ _ => ((),m)
-    safety := by simp
-  }
-
-def Tank1.fill {ctx ctx'} :=
-  newMultiOrdinaryREvent
-  (AM₁ := Counter0 ctx)
-  (AM₂ := Xor0 ctx')
-  Counter0.setCount
-  (skipOrdinary (ctx := ctx'))
-  (M := Tank1 ctx)
-  (α := Nat)
-  (β := Unit)
+def Tank1.fill :
+  MultiOrdinaryREvent (Counter0 ctx) (Xor0 ctx')
+  (Counter0.Incr.toOrdinaryEvent) (mkOrdinaryEvent (skip_Event (Xor0 ctx') Unit))
+  (Tank1 ctx) Nat Unit
+   :=
+  newMultiOrdinaryREvent'
   {
     action := sorry
     safety := sorry
-    ref₁ := sorry
-    ref₂ := sorry
+    ref₁ := {
+      lift_in := sorry
+      strengthening := sorry
+      simulation := sorry
+    }
+    ref₂ := {
+      lift_in := sorry
+      strengthening := sorry
+      simulation := sorry
+    }
   }
