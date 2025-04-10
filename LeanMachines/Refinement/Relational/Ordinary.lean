@@ -21,7 +21,7 @@ The proof obligations, beyond `safety` (of abstract events) are guard `strengthe
 and abstract event `simulation`.
  -/
 structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  {α β α' β'} (abs : OrdinaryEvent AM α' β')
+  {α' β'} (abs : OrdinaryEvent AM α' β') (α) (β)
   extends OrdinaryEvent M α β where
 
   /-- Transformation of input parameters: how a concrete parameter must be interpreted
@@ -51,11 +51,9 @@ structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refi
 #check SafeREventPO
 
 instance [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-  (abs : OrdinaryEvent AM α' β') (ev : OrdinaryREvent AM M abs):
+  (abs : OrdinaryEvent AM α' β') (ev : OrdinaryREvent AM M abs α β):
   SafeREventPO
-    (AM := AM) (M := M)
-    (α := α) (β := β)
-    (ev.toEvent (M := M)) (abs.toEvent (M := AM))
+    (ev.toEvent) (abs.toEvent)
     (instSafeAbs := instSafeEventPO_OrdinaryEvent abs)
     (instSafeEv := instSafeEventPO_OrdinaryEvent ev.toOrdinaryEvent)
     (valid_kind := by simp)
@@ -71,11 +69,11 @@ with: `abs` the (ordinary) event to refine, and
 -/
 @[simp]
 def newREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' β')
-  (ev: OrdinaryREvent AM M abs (α := α) (β := β))
-  : OrdinaryREvent AM M abs (α := α) (β := β) := ev
+  (ev: OrdinaryREvent AM M abs α β)
+  : OrdinaryREvent AM M abs α β := ev
 
 structure OrdinaryREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  { α α' } (abs : OrdinaryEvent AM α' Unit)
+  { α' } (abs : OrdinaryEvent AM α' Unit) (α)
   extends OrdinaryEvent' M α where
   /-- Transformation of output value: how a concrete output must be interpreted
   at the abstract level. -/
@@ -98,7 +96,7 @@ structure OrdinaryREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Ref
         refine am' m'
 
 instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : OrdinaryEvent AM α' Unit) :
-  Coe (OrdinaryREvent' (α := α) AM M abs) (OrdinaryREvent AM M (α := α) (β := Unit) abs ) where
+  Coe (OrdinaryREvent' AM M abs α) (OrdinaryREvent AM M abs α Unit) where
   coe ev := {
               lift_in := ev.lift_in
               lift_out := fun _ => ()
@@ -116,7 +114,7 @@ instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : Ordinar
 
 @[simp]
 def newREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM α' Unit)
-  (ev : OrdinaryREvent' AM M abs (α := α)) : OrdinaryREvent AM M abs (α := α) (β := Unit):= ev
+  (ev : OrdinaryREvent' AM M abs α) : OrdinaryREvent AM M abs α Unit := ev
 
 
 structure OrdinaryREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
@@ -139,8 +137,8 @@ structure OrdinaryREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Re
         let (_,am'):= abs.action am () (strengthening m Hinv Hgrd am Href)
         refine am' m'
 
-instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : OrdinaryEvent AM Unit Unit):
-  Coe (OrdinaryREvent'' AM M abs) (OrdinaryREvent AM M (α := α) (β := Unit) abs) where
+instance [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : OrdinaryEvent AM Unit Unit):
+  Coe (OrdinaryREvent'' AM M abs) (OrdinaryREvent AM M abs Unit Unit) where
   coe ev := {
               lift_in := fun _ => ()
               lift_out := fun _ => ()
@@ -156,7 +154,7 @@ instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : Ordinar
             }
 @[simp]
 def newREvent''[Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : OrdinaryEvent AM Unit Unit )
-  (ev : OrdinaryREvent'' AM M abs) : OrdinaryREvent AM M abs (α := Unit) (β := Unit) := ev
+  (ev : OrdinaryREvent'' AM M abs) : OrdinaryREvent AM M abs Unit Unit := ev
 
 
 
@@ -185,7 +183,7 @@ where
       lift_out y = z ∧ refine am' m'
 
 structure SafeInitREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M]
-  {α β α' β'} (abs : InitEvent AM α' β') extends InitEvent  M α β where
+  {α' β'} (abs : InitEvent AM α' β') (α) (β) extends InitEvent  M α β where
   lift_in : α → α'
   lift_out : β → β'
 
@@ -199,11 +197,9 @@ structure SafeInitREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Ref
 
 
 instance [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
-  (abs : InitEvent AM α' β') (ev : SafeInitREvent AM M abs):
+  (abs : InitEvent AM α' β') (ev : SafeInitREvent AM M abs α β):
   SafeInitREventPO
-    (AM := AM) (M := M)
-    (α := α) (β := β)
-    (ev.to_InitEvent (M := M)) (abs.to_InitEvent (M := AM))
+    (ev.to_InitEvent ) (abs.to_InitEvent )
     (instSafeAbs := safeInitEventPO_InitEvent abs)
     (instSafeEv := safeInitEventPO_InitEvent ev.toInitEvent)
   where
@@ -214,10 +210,11 @@ instance [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
 
 
 def newInitREvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
-  (abs : InitEvent AM α' β') (ev : SafeInitREvent AM M abs (α := α) (β := β)) : SafeInitREvent AM M abs (α := α) (β := β) := ev
+  (abs : InitEvent AM α' β') (ev : SafeInitREvent AM M abs α β) :
+  SafeInitREvent AM M abs α β := ev
 
 structure SafeInitREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
-  { α α' } (abs : InitEvent AM α' Unit)
+  { α' } (abs : InitEvent AM α' Unit) (α)
   extends InitEvent' M α where
   /-- Transformation of output value: how a concrete output must be interpreted
   at the abstract level. -/
@@ -234,7 +231,7 @@ structure SafeInitREvent' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Ref
       refine am' m'
 
 instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : InitEvent AM α' Unit) :
-  Coe (SafeInitREvent' (α := α) AM M abs) (SafeInitREvent AM M (α := α) (β := Unit) abs ) where
+  Coe (SafeInitREvent' AM M abs α) (SafeInitREvent AM M abs α Unit) where
   coe ev := {
               lift_in := ev.lift_in
               lift_out := fun _ => ()
@@ -251,13 +248,12 @@ instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : InitEve
 
 @[simp]
 def newInitREvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : InitEvent AM α' Unit)
-  (ev : SafeInitREvent' AM M abs (α := α)) : SafeInitREvent AM M abs (α := α) (β := Unit) := ev
+  (ev : SafeInitREvent' AM M abs α) : SafeInitREvent AM M abs α Unit := ev
 
 
 structure SafeInitREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
   (abs : InitEvent AM Unit Unit)
   extends InitEvent'' M where
-
 
   /-- Proof obligation: guard strengthening. -/
   strengthening : guard → abs.guard ()
@@ -269,11 +265,11 @@ structure SafeInitREvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Re
       let (_,am') := abs.init () (strengthening Hgrd)
       refine am' m'
 
-instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : InitEvent AM Unit Unit) :
-  Coe (SafeInitREvent'' AM M abs) (SafeInitREvent AM M (α := α) (β := Unit) abs ) where
+instance [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : InitEvent AM Unit Unit) :
+  Coe (SafeInitREvent'' AM M abs) (SafeInitREvent AM M abs Unit Unit ) where
   coe ev := {
-              lift_in := fun _ => ()
-              lift_out := fun _ => ()
+              lift_in := id
+              lift_out := id
               strengthening _ := ev.strengthening
               simulation :=
               fun x hgrd =>
@@ -288,4 +284,4 @@ instance {α} [Machine CTX M] [Machine ACTX AM] [Refinement AM M] (abs : InitEve
 
 @[simp]
 def newInitREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : InitEvent AM Unit Unit)
-  (ev : SafeInitREvent'' AM M abs ) : SafeInitREvent AM M abs (α := Unit) (β := Unit) := ev
+  (ev : SafeInitREvent'' AM M abs ) : SafeInitREvent AM M abs Unit Unit := ev
