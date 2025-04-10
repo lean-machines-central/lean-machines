@@ -49,6 +49,9 @@ class Variant (v) [Preorder v] [instM : Machine CTX M] (ev : _EventRoot M α) wh
 ### Anticipated events
 -/
 -- **QUESTIONS** pourquoi ici on met le kind en argument et pas pour ConvergentEventPO ????
+-- **RÉPONSE** parce que au moment où on dit qu'un convergent est aussi anticipated on va instancier cette typeclass
+--             et à ce moment là on a envie de continuer à dire que l'événement a un kind convergent même s'il instancie Anticipated
+--             cf. l.~190
 class AnticipatedEventPO (v) [Preorder v] [instM : Machine CTX M] (ev : Event M α β) (kind : EventKind)
   extends Variant v (instM := instM) ev.to_EventRoot, SafeEventPO ev kind where
   nonIncreasing (m : M) (x : α):
@@ -116,11 +119,23 @@ private def AnticipatedEvent_fromOrdinary {v} [Preorder v] {M} [Machine CTX M] (
 /-- The main constructor for ordinary events. -/
 def newAnticipatedEvent [Preorder v] [Machine CTX M] (ev : AnticipatedEvent v M α β) := ev
 
--- Typeclass instanciation automatically acquired from the spec structure
+/-Parameterized instance which allows us to get an instance of AnticipatedEventPO from a spec-/
+instance instAnticipatedEventPO_AnticipatedEvent [Machine CTX M] [Preorder v]
+  (ev : AnticipatedEvent v M α β):  AnticipatedEventPO v ev.toEvent (EventKind.TransDet (Convergence.Anticipated)) (M := M) where
+    safety := ev.safety
+    variant := ev.variant
+    nonIncreasing := ev.nonIncreasing
+
+
+-- When we need an instance of the SafeEvent typeclass for an anticipated event, we use this parameterized structure
 instance instSafeEventPO_Anticipated [Machine CTX M] [Preorder v]
   (ev : AnticipatedEvent v M α β):  SafeEventPO ev.toEvent (EventKind.TransDet (Convergence.Anticipated)) where
   safety := ev.safety
 
+
+
+
+/- Alternative structure for when the output type is unit -/
 structure AnticipatedEvent' (v) [Preorder v] (M) [instM : Machine CTX M]
     (α : Type) extends OrdinaryEvent' M α where
   variant : M → v
@@ -130,6 +145,7 @@ structure AnticipatedEvent' (v) [Preorder v] (M) [instM : Machine CTX M]
     → let m' := action m x grd
       variant m' ≤ variant m
 
+/- with an automatic conversion -/
 instance [Preorder v] [Machine CTX M]: Coe (AnticipatedEvent' v M α) (AnticipatedEvent v M α Unit) where
   coe ev := { guard := ev.guard
               action m x grd := ((), ev.action m x grd)
@@ -138,10 +154,12 @@ instance [Preorder v] [Machine CTX M]: Coe (AnticipatedEvent' v M α) (Anticipat
               nonIncreasing := ev.nonIncreasing
             }
 
+/- Smart constructor for anticipated events with Unit as an output type-/
 def newAnticipatedEvent' [Preorder v] [Machine CTX M] (ev : AnticipatedEvent' v M α)
   : AnticipatedEvent v M α Unit :=
   newAnticipatedEvent ev
 
+/- Alternative structure for when both the input and output types are unit -/
 structure AnticipatedEvent'' (v) [Preorder v] (M) [instM : Machine CTX M]
     extends OrdinaryEvent'' M where
   variant : M → v
@@ -151,6 +169,7 @@ structure AnticipatedEvent'' (v) [Preorder v] (M) [instM : Machine CTX M]
     → let m' := action m grd
       variant m' ≤ variant m
 
+/- with an automatic conversion -/
 instance [Preorder v] [Machine CTX M]: Coe (AnticipatedEvent'' v M) (AnticipatedEvent v M Unit Unit) where
   coe ev := {
     guard m _ := ev.guard m
@@ -160,16 +179,10 @@ instance [Preorder v] [Machine CTX M]: Coe (AnticipatedEvent'' v M) (Anticipated
     nonIncreasing m _ grd := ev.nonIncreasing m grd
   }
 
+/- Smart constructor for anticipated events with Unit as both input and output type-/
 def newAnticipatedEvent'' [Preorder v] [Machine CTX M] (ev : AnticipatedEvent'' v M)
   : AnticipatedEvent v M Unit Unit :=
   newAnticipatedEvent ev
-
-
-instance instAnticipatedEventPO_AnticipatedEvent [Machine CTX M] [Preorder v]
-  (ev : AnticipatedEvent v M α β):  AnticipatedEventPO v ev.toEvent (EventKind.TransDet (Convergence.Anticipated)) (M := M) where
-    safety := ev.safety
-    variant := ev.variant
-    nonIncreasing := ev.nonIncreasing
 
 /-!
 ### Convergent events
@@ -185,6 +198,7 @@ class ConvergentEventPO (v) [Preorder v] [WellFoundedLT v] [instM : Machine CTX 
     → let (_, m') := ev.action m x grd
       variant m' < variant m
 
+/- A convergent event is also an anticipated event -/
 instance [Preorder v] [WellFoundedLT v] [instM : Machine CTX M] (ev : Event M α β) [ConvergentEventPO v ev]
   : AnticipatedEventPO (instM := instM) v ev (EventKind.TransDet (Convergence.Convergent)) where
     nonIncreasing := fun m x hinv hgrd => le_of_lt (ConvergentEventPO.convergence m x hinv hgrd)
@@ -209,10 +223,16 @@ def mkConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CT
     convergence := instConv.convergence
   }
 
--- Typeclass instanciation automatically acquired from the spec structure
+-- When we need an instance of the SafeEventPO typeclass for a convergent event, we use this parameterized structure
 instance instSafeEventPO_Convergent [Machine CTX M] [Preorder v] [WellFoundedLT v]
   (ev : ConvergentEvent v M α β):  SafeEventPO ev.toEvent (EventKind.TransDet (Convergence.Convergent)) where
   safety := ev.safety
+
+instance instConvergentEventPO_ConvergentEvent [Machine CTX M] [Preorder v] [WellFoundedLT v]
+  (ev : ConvergentEvent v M α β):  ConvergentEventPO v ev.toEvent (M := M) where
+    safety := ev.safety
+    variant := ev.variant
+    convergence := ev.convergence
 
 
 @[simp]
@@ -269,6 +289,8 @@ by
 def newConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M]
   (ev : ConvergentEvent v M α β) := ev
 
+
+/- Structures and smart constructors dealing with Unit as output/ input type -/
 structure ConvergentEvent' (v) [Preorder v] [WellFoundedLT v] (M) [instM : Machine CTX M]
     (α : Type) extends OrdinaryEvent' M α where
   variant : M → v
@@ -310,10 +332,3 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M]:
 
 def newConvergentEvent'' [Preorder v] [WellFoundedLT v] [Machine CTX M]
   (ev : ConvergentEvent'' v M) : ConvergentEvent v M Unit Unit := newConvergentEvent ev
-
-
-instance instConvergentEventPO_ConvergentEvent [Machine CTX M] [Preorder v] [WellFoundedLT v]
-  (ev : ConvergentEvent v M α β):  ConvergentEventPO v ev.toEvent (M := M) where
-    safety := ev.safety
-    variant := ev.variant
-    convergence := ev.convergence

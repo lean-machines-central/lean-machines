@@ -53,7 +53,11 @@ instance [Machine CTX M]: Coe (OrdinaryEvent M α β) (Event M α β) where
   coe ev := ev.toEvent
 
 
--- Typeclass instanciation automatically acquired from the spec structure
+/-
+  This instance is parameterized by the spec structure : if we defined an event with a structure
+  but later need to use the fact that it instanciates the typeclass, we can use it to get
+  an instance of SafeEventPO for our structure
+-/
 instance instSafeEventPO_OrdinaryEvent [Machine CTX M]
   (ev : OrdinaryEvent M α β):  SafeEventPO ev.toEvent (EventKind.TransDet (Convergence.Ordinary)) where
   safety := ev.safety
@@ -180,7 +184,7 @@ def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
 
 
 /-!
-s
+
 ## Initialization events (deterministic)
 
 Initialization events, of the deterministic kind,
@@ -208,6 +212,7 @@ structure InitEvent (M) [Machine CTX M] (α β : Type)
 instance [Machine CTX M]: Coe (InitEvent M α β) (_InitEvent M α β) where
   coe ev := ev.to_InitEvent
 
+/- Parameterized instance, allowing us to get an instance of the SafeInitEventPO typeclass from the InitEvent spec -/
 instance safeInitEventPO_InitEvent[Machine CTX M] (ev : InitEvent M α β):  SafeInitEventPO ev.to_InitEvent where
   safety := ev.safety
 

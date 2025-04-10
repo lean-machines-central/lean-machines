@@ -51,12 +51,8 @@ open Refinement
 
 /-!
 
-## Event refinement
-
-### Ordinary transitional events
-
+## Event Kind constraints
 -/
-
 
 @[simp]
 def EventKind.isConvergent? (k : EventKind) :=
@@ -85,11 +81,20 @@ def EventKind.canRefine? (k₁ k₂ : EventKind) : Bool :=
   if k₂.isConvergent? then k₁.isConvergent?
   else if k₂.isAnticipated? then (not k₁.isOrdinary?)
        else k₂.isOrdinary?
+
+
+
+/-!
+
+## Event refinement
+
+### Ordinary transitional events
+
+-/
+
 /-
   This typeclass specifies the proof obligations for the refinement of events.
 -/
-
-
 class SafeREventPO {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (ev : Event M α β) (abs : Event AM α' β') [instSafeAbs : SafeEventPO abs kabs] [instSafeEv : SafeEventPO ev kev]
   {valid_kind : kev.canRefine? kabs = true} where
