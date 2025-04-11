@@ -71,12 +71,29 @@ def Tank1.Init :
   MultiInitREvent (Counter0 ctx) (Xor0 ctx') (Tank1 ctx) (Counter0.Init) (Xor0.Init) Unit Unit  :=
   newMultiInitREvent''
   {
-    init := sorry
-    safety := sorry
-    ref₁ := sorry
-    ref₂ := sorry
+    init := fun _ => {cpt := 0, st := status.CLOSED}
+    safety := by simp[Machine.invariant]
+    ref₁ := {
+      simulation :=
+        by
+          simp[Refinement.refine]
+          simp[Counter0.Init]
+      strengthening :=
+        by
+          simp[Counter0.Init]
+    }
+    ref₂ := {
+      simulation :=
+        by
+          simp[Refinement.refine]
+          simp[Xor0.Init]
+      strengthening :=
+        by
+          simp[Xor0.Init]
+    }
   }
 
+/- This is a demo :-/
 def Tank1.fill :
   MultiOrdinaryREvent (Counter0 ctx) (Xor0 ctx')
   (Counter0.Incr.toOrdinaryEvent) (mkOrdinaryEvent (skip_Event (Xor0 ctx') Unit))
@@ -84,16 +101,55 @@ def Tank1.fill :
    :=
   newMultiOrdinaryREvent'
   {
-    action := sorry
-    safety := sorry
+    action t1 v _ := {cpt := t1.cpt + v, st := t1.st}
+    guard t1 v := (t1.st = status.OPEN_IN) ∧  (t1.cpt + v < ctx.max) ∧ (v > 0)
+    safety :=
+    by
+      simp[Machine.invariant]
+      omega
+
     ref₁ := {
-      lift_in := sorry
-      strengthening := sorry
-      simulation := sorry
+      lift_in := id
+      strengthening :=
+        by
+          simp[Machine.invariant,Refinement.refine,Counter0.Incr]
+          simp[newAnticipatedEvent',newAnticipatedEvent]
+          intros _ _ _ _ _ _ _ _ _ href
+          rw[href]
+          omega
+      simulation m x :=
+        by
+          simp[Machine.invariant,Counter0.Incr,Refinement.refine]
+          simp[newAnticipatedEvent',newAnticipatedEvent]
     }
     ref₂ := {
-      lift_in := sorry
+      lift_in := fun _ => ()
+      strengthening :=
+        by
+          simp[mkOrdinaryEvent]
+      simulation m x :=
+        by
+          simp[mkOrdinaryEvent,Machine.invariant,Refinement.refine]
+    }
+  }
+
+def Tank1.Open_Door_In :
+  MultiOrdinaryREvent (Counter0 ctx) (Xor0 ctx')
+  (mkOrdinaryEvent (skip_Event (Counter0 ctx) Unit))
+  (Xor0.SetX_true)
+  (Tank1 ctx)
+  Unit Unit :=
+  newMultiOrdinaryREvent''
+  {
+    action m _ := {cpt := m.cpt, st := status.CLOSED}
+    guard m := m.st ≠ status.OPEN_OUT ∧ m.cpt < ctx.max
+    safety :=
+      by
+        simp[Machine.invariant]
+        omega
+    ref₁ := {
       strengthening := sorry
       simulation := sorry
     }
+    ref₂ := sorry
   }
