@@ -255,6 +255,107 @@ instance [Machine CTX M]: LawfulArrow (OrdinaryEvent M) where
     apply OrdinaryEvent.ext
     apply LawfulArrow.arrow_assoc
 
+
+/- Arrow Choice -/
+
+def altOrdinaryEvent [Machine CTX M] (evl : OrdinaryEvent M α β) (evr : OrdinaryEvent M γ δ)
+  : OrdinaryEvent M (Sum α γ) (Sum β δ) :=
+  {
+    guard := fun m x => match x with
+                        | .inl l => evl.guard m l
+                        | .inr r => evr.guard m r
+    action := fun m x grd => match x with
+                        | .inl l => let (y, m') := evl.action m l grd
+                                    (Sum.inl y, m')
+                        | .inr r => let (y, m') := evr.action m r grd
+                                    (Sum.inr y, m')
+    safety := fun m x hinv grd =>
+      by
+        simp[Machine.invariant]
+        cases x
+        case inl val =>
+          simp
+          exact evl.safety m val hinv grd
+        case inr val =>
+          simp
+          exact evr.safety m val hinv grd
+  }
+
+instance [Machine CTX M]: ArrowChoice (OrdinaryEvent M) where
+  splitIn := altOrdinaryEvent
+
+
+
+
+instance [Machine CTX M] : LawfulArrowChoice (OrdinaryEvent M) where
+  left_arr f :=
+    by
+      apply OrdinaryEvent.ext'
+      simp
+      simp[ArrowChoice.left]
+      simp[Arrow.arrow]
+      simp[altOrdinaryEvent]
+      intros m x
+      constructor
+      · cases x
+        · simp
+        · simp
+      intro grd₁
+      cases x
+      · simp
+      simp
+  left_f_g f g :=
+    by
+      apply OrdinaryEvent.ext'
+      simp[ArrowChoice.left,Arrow.arrow,altOrdinaryEvent]
+      intros m x
+      constructor
+      · cases x
+        simp
+        simp
+      intros grd₁ grd₂
+      cases x
+      · simp
+      simp
+  arr_inl f :=
+    by
+      simp[ArrowChoice.left,Arrow.arrow,altOrdinaryEvent]
+  split f g :=
+    by
+      apply OrdinaryEvent.ext'
+      simp[ArrowChoice.left,Arrow.arrow,ArrowChoice.splitIn,altOrdinaryEvent]
+      intros m x
+      constructor
+      · cases x
+        · simp
+        · simp
+      intros grd₁ grd₂
+      cases x
+      · simp
+      simp
+  assoc f :=
+    by
+      apply OrdinaryEvent.ext'
+      simp[ArrowChoice.left,Arrow.arrow,altOrdinaryEvent,assocsum]
+      intros m x
+      constructor
+      · cases x
+        case a.left.inl val =>
+          cases val
+          · simp
+          · simp
+        · simp
+      · intro grd₁
+        cases x
+        case a.right.inl val =>
+          cases val
+          · simp
+          · simp
+        · simp
+
+
+
+
 /- Contravariant functor -/
 
 abbrev CoEvent (M) [Machine CTX M] (α) (β) :=
