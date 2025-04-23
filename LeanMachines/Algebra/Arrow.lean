@@ -259,6 +259,15 @@ class ArrowZero (arr : Type u → Type u → Type v) extends Arrow arr where
 class ArrowPlus (arr : Type u → Type u → Type v) extends ArrowZero arr where
   conjoin : arr α β → arr α β → arr α β
 
+class LawfulArrowPlus (arr : Type u → Type u → Type v) [ArrowPlus arr] extends LawfulArrow arr where
+  assoc :
+    let lh : arr α β := ArrowPlus.conjoin (ArrowPlus.conjoin a b) c
+    let rh : arr α β := ArrowPlus.conjoin a (ArrowPlus.conjoin b c)
+    lh = rh
+  comm_id :
+    let lh : arr α β := ArrowPlus.conjoin a ArrowZero.zero
+    let rh : arr α β := ArrowPlus.conjoin ArrowZero.zero a
+    lh = rh ∧ a = lh ∧ a = rh
 
 class ArrowLoop (arr : Type u → Type u → Type u) extends Arrow arr where
   loop : arr (α  × γ) (β × γ) → arr α β
