@@ -276,6 +276,73 @@ instance [Machine CTX M]: ArrowChoice (Event M) where
   splitIn := altEvent
 
 
+instance [Machine CTX M] : LawfulArrowChoice (Event M) where
+  left_arr f :=
+    by
+      apply Event.ext'
+      simp
+      simp[ArrowChoice.left]
+      simp[Arrow.arrow]
+      simp[altEvent]
+      intros m x
+      constructor
+      · cases x
+        · simp
+        · simp
+      intro grd₁
+      cases x
+      · simp
+      simp
+  left_f_g f g :=
+    by
+      apply Event.ext'
+      simp[ArrowChoice.left,Arrow.arrow,altEvent]
+      intros m x
+      constructor
+      · cases x
+        simp
+        simp
+      intros grd₁ grd₂
+      cases x
+      · simp
+      simp
+  arr_inl f :=
+    by
+      simp[ArrowChoice.left,Arrow.arrow,altEvent]
+  split f g :=
+    by
+      apply Event.ext'
+      simp[ArrowChoice.left,Arrow.arrow,ArrowChoice.splitIn,altEvent]
+      intros m x
+      constructor
+      · cases x
+        · simp
+        · simp
+      intros grd₁ grd₂
+      cases x
+      · simp
+      simp
+  assoc f :=
+    by
+      apply Event.ext'
+      simp[ArrowChoice.left,Arrow.arrow,altEvent,assocsum]
+      intros m x
+      constructor
+      · cases x
+        case a.left.inl val =>
+          cases val
+          · simp
+          · simp
+        · simp
+      · intro grd₁
+        cases x
+        case a.right.inl val =>
+          cases val
+          · simp
+          · simp
+        · simp
+
+
 /- ContravariantFunctor functor -/
 
 abbrev _CoEvent (M) [Machine CTX M] (α) (β) :=

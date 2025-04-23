@@ -22,11 +22,13 @@ def Category.rcomp [Category cat] (f : cat α β) (g : cat β γ) : cat α γ :=
 
 infixr:10 " (>>>) " => Category.rcomp
 
+
 section CatFun
 
-instance: Category (·→·) where
+instance fcat: Category (·→·) where
   id := id
   comp := (·∘·)
+
 
 instance: LawfulCategory (·→·) where
   id_right _ := rfl
@@ -196,6 +198,8 @@ def untag (s : Sum α α) : α :=
   | .inl x => x
   | .inr x => x
 
+/- Variants of the Arrow Typeclass -/
+
 class ArrowChoice (arr : Type u → Type u → Type v) extends Arrow arr where
   splitIn : arr α β → arr γ δ → arr (Sum α γ) (Sum β δ)
   left : arr α β → arr (Sum α γ) (Sum β γ) := fun x => splitIn x Category.id
@@ -204,13 +208,62 @@ class ArrowChoice (arr : Type u → Type u → Type v) extends Arrow arr where
   fanIn (f : arr α β) (g : arr γ β) : arr (Sum α γ) β :=
     (splitIn f g) (>>>) (arrow untag)
 
-instance: ArrowChoice (·→·) where
+open ArrowChoice
+
+instance fc : ArrowChoice (·→·) where
   splitIn f g := fun x => match x with
                           | .inl x => Sum.inl (f x)
                           | .inr y => Sum.inr (g y)
+
+def assocsum : (Sum (Sum α β) γ) → (Sum α (Sum β γ)) :=
+  λ s =>
+  match s with
+    | .inl (.inl x)=> .inl x
+    | .inl (.inr y) => .inr (.inl y)
+    | .inr z => .inr (.inr z)
+
+class LawfulArrowChoice (arr : Type u → Type u → Type v) [ArrowChoice arr] extends LawfulArrow arr where
+  left_arr (f : α → β) : -- left (arr f) = arr (left f)
+    let lh : arr (Sum α γ) (Sum β γ) := left (arrow f)
+    let rh : arr (Sum α γ) (Sum β γ) := arrow (fc.left f)
+    lh = rh
+  left_f_g (f : α → β ) (g : β → γ) :
+    let lh : arr (Sum α ω) (Sum γ ω) := left (arrow (fcat.rcomp f g))
+    let rh : arr (Sum α ω) (Sum γ ω) := (left (arrow f)) (>>>) (left (arrow g))
+    lh = rh
+  arr_inl (f : α → β) :
+    let a : arr β  (Sum β γ ) := (arrow (Sum.inl))
+    let lh : arr α (Sum β γ ) := (arrow f) (>>>) a
+    let rh : arr α (Sum β γ ) := (arrow (Sum.inl)) (>>>) left (arrow f)
+    lh = rh
+  split (f : α → β) (g : α' → β'):
+    let leftarrf : arr (Sum α α') (Sum β α') := (left (arrow f))
+    let arridg : arr (Sum β α') (Sum β β') := arrow (fc.splitIn id g)
+    let lh := leftarrf (>>>) arridg
+    let arridg : arr (Sum α α') (Sum α β') := arrow (fc.splitIn id g)
+    let leftarrf : arr (Sum α β') (Sum β β') := (left (arrow f))
+    let rh : arr (Sum α α') (Sum β β' ):= arridg (>>>) leftarrf
+    lh = rh
+  assoc (f : α → β) :
+    let arrassocsum : arr (Sum (Sum β δ) γ) (Sum β (Sum δ γ)):= arrow assocsum
+    let llf : arr (Sum (Sum α δ) γ) (Sum (Sum β δ) γ) := left (left (arrow f))
+    let lh := llf (>>>) arrassocsum
+    let arrassocsum : arr (Sum (Sum α δ ) γ ) (Sum α (Sum δ γ)) := arrow assocsum
+    let lf : arr (Sum α (Sum δ  γ)) (Sum β (Sum δ γ )) := left (arrow f)
+    let rh := arrassocsum (>>>) lf
+    lh = rh
 
 class ArrowZero (arr : Type u → Type u → Type v) extends Arrow arr where
   zero : arr α β
 
 class ArrowPlus (arr : Type u → Type u → Type v) extends ArrowZero arr where
   conjoin : arr α β → arr α β → arr α β
+
+
+class ArrowLoop (arr : Type u → Type u → Type u) extends Arrow arr where
+  loop : arr (α  × γ) (β × γ) → arr α β
+
+-- instance : ArrowLoop (· → ·) where
+--   loop f b :=
+--     let (c,d) := f (b,d)
+--     c
