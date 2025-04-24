@@ -179,7 +179,27 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedEvent v M) 
     }
 
 instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedEvent v M) where
-  -- XXX : at some point the laws should be demonstrated
+  dimap_pi_id a :=
+  by
+    apply AnticipatedEvent.ext
+    · apply OrdinaryEvent.ext'
+      intros m x
+      constructor
+      · simp[Profunctor.dimap,StrongProfunctor.first']
+      simp[Profunctor.dimap,StrongProfunctor.first']
+    simp[Profunctor.dimap,StrongProfunctor.first']
+  first_first a :=
+  by
+    apply AnticipatedEvent.ext
+    · apply OrdinaryEvent.ext'
+      intros m x
+      constructor
+      · simp[Profunctor.dimap,StrongProfunctor.first',α_,α_inv]
+      simp[Profunctor.dimap,StrongProfunctor.first',α_,α_inv]
+    simp[Profunctor.dimap,StrongProfunctor.first',α_,α_inv]
+  dinaturality a f :=
+  by
+    simp[Profunctor.dimap,StrongProfunctor.first']
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (ConvergentEvent v M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : ConvergentEvent v M α γ) : ConvergentEvent v M β δ :=
@@ -232,7 +252,21 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
     }
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentEvent v M) where
-  -- XXX : at some point the laws should be demonstrated
+  dimap_pi_id a :=
+  by
+    apply ConvergentEvent.ext
+    · apply OrdinaryEvent.ext'
+      simp[Profunctor.dimap,StrongProfunctor.first']
+    simp[Profunctor.dimap,StrongProfunctor.first']
+  first_first a :=
+  by
+    apply ConvergentEvent.ext
+    · apply OrdinaryEvent.ext'
+      simp[Profunctor.dimap,StrongProfunctor.first',α_,α_inv]
+    simp[Profunctor.dimap,StrongProfunctor.first',α_,α_inv]
+  dinaturality a f :=
+  by
+    simp[Profunctor.dimap,StrongProfunctor.first']
 
 /-
 

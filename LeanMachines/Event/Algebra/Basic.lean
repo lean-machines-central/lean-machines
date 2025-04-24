@@ -395,3 +395,12 @@ instance [Machine CTX M] : StrongProfunctor (Event M) where
     }
 
 instance [Machine CTX M] : LawfulStrongProfunctor (Event M) where
+  dimap_pi_id a :=
+  by
+    simp[Profunctor.dimap,StrongProfunctor.first']
+  first_first a :=
+  by
+    simp[Profunctor.dimap,StrongProfunctor.first',α_,α_inv]
+  dinaturality a f :=
+  by
+    simp[Profunctor.dimap,StrongProfunctor.first']
