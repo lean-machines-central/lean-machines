@@ -235,9 +235,9 @@ class LawfulArrowChoice (arr : Type u → Type u → Type v) [ArrowChoice arr] e
     let lh : arr α (Sum β γ ) := f (>>>) (arrow (Sum.inl))
     let rh : arr α (Sum β γ ) := (arrow (Sum.inl)) (>>>) left f
     lh = rh
-  split (f : arr α β) (g : arr α' β'):
-    let lh := (left  f) (>>>) (splitIn (arrow id) g)
-    let rh : arr (Sum α α') (Sum β β' ):= (splitIn (arrow id) g) (>>>) (left f)
+  split (f : arr α β) (g : α' →  β'):
+    let lh := (left  f) (>>>) arrow (fc.splitIn id g)
+    let rh : arr (Sum α α') (Sum β β' ):=  arrow (fc.splitIn id g) (>>>) (left f)
     lh = rh
   assoc (f : arr α β) :
     let arrassocsum : arr (Sum (Sum β δ) γ) (Sum β (Sum δ γ)):= arrow assocsum
