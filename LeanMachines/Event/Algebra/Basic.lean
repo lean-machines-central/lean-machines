@@ -308,6 +308,7 @@ instance [Machine CTX M] : LawfulArrowChoice (Event M) where
       simp
   arr_inl f :=
     by
+      apply Event.ext'
       simp[ArrowChoice.left,Arrow.arrow,altEvent]
   split f g :=
     by

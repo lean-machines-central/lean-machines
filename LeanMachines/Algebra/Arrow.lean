@@ -227,30 +227,22 @@ class LawfulArrowChoice (arr : Type u → Type u → Type v) [ArrowChoice arr] e
     let lh : arr (Sum α γ) (Sum β γ) := left (arrow f)
     let rh : arr (Sum α γ) (Sum β γ) := arrow (fc.left f)
     lh = rh
-  left_f_g (f : α → β ) (g : β → γ) :
-    let lh : arr (Sum α ω) (Sum γ ω) := left (arrow (fcat.rcomp f g))
-    let rh : arr (Sum α ω) (Sum γ ω) := (left (arrow f)) (>>>) (left (arrow g))
+  left_f_g (f : arr α β) (g : arr β γ) :
+    let lh : arr (Sum α ω) (Sum γ ω) := left (f (>>>) g)
+    let rh : arr (Sum α ω) (Sum γ ω) := (left f) (>>>) (left  g)
     lh = rh
-  arr_inl (f : α → β) :
-    let a : arr β  (Sum β γ ) := (arrow (Sum.inl))
-    let lh : arr α (Sum β γ ) := (arrow f) (>>>) a
-    let rh : arr α (Sum β γ ) := (arrow (Sum.inl)) (>>>) left (arrow f)
+  arr_inl (f :arr α β) :
+    let lh : arr α (Sum β γ ) := f (>>>) (arrow (Sum.inl))
+    let rh : arr α (Sum β γ ) := (arrow (Sum.inl)) (>>>) left f
     lh = rh
-  split (f : α → β) (g : α' → β'):
-    let leftarrf : arr (Sum α α') (Sum β α') := (left (arrow f))
-    let arridg : arr (Sum β α') (Sum β β') := arrow (fc.splitIn id g)
-    let lh := leftarrf (>>>) arridg
-    let arridg : arr (Sum α α') (Sum α β') := arrow (fc.splitIn id g)
-    let leftarrf : arr (Sum α β') (Sum β β') := (left (arrow f))
-    let rh : arr (Sum α α') (Sum β β' ):= arridg (>>>) leftarrf
+  split (f : arr α β) (g : arr α' β'):
+    let lh := (left  f) (>>>) (splitIn (arrow id) g)
+    let rh : arr (Sum α α') (Sum β β' ):= (splitIn (arrow id) g) (>>>) (left f)
     lh = rh
-  assoc (f : α → β) :
+  assoc (f : arr α β) :
     let arrassocsum : arr (Sum (Sum β δ) γ) (Sum β (Sum δ γ)):= arrow assocsum
-    let llf : arr (Sum (Sum α δ) γ) (Sum (Sum β δ) γ) := left (left (arrow f))
-    let lh := llf (>>>) arrassocsum
-    let arrassocsum : arr (Sum (Sum α δ ) γ ) (Sum α (Sum δ γ)) := arrow assocsum
-    let lf : arr (Sum α (Sum δ  γ)) (Sum β (Sum δ γ )) := left (arrow f)
-    let rh := arrassocsum (>>>) lf
+    let lh := left (left f) (>>>) arrassocsum
+    let rh := arrow assocsum (>>>) left f
     lh = rh
 
 class ArrowZero (arr : Type u → Type u → Type v) extends Arrow arr where
