@@ -16,7 +16,9 @@ structure WeakReaction where
 
 instance : Machine WrCtxt WeakReaction where
   context := {}
-  invariant m := (m.cr ≤ m.ca) ∧ (m.a ∧ ¬ m.r → m.cr < m.ca)
+  invariant m :=
+    (m.cr ≤ m.ca)                 -- pat0_5
+    ∧ (m.a ∧ ¬ m.r → m.cr < m.ca) -- pat0_6
 
 def WeakReaction.Init : InitEvent WeakReaction Unit Unit :=
   newInitEvent''
