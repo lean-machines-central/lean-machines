@@ -43,7 +43,6 @@ def α_inv :  (β × (γ × δ)) → ((β × γ ) × δ) :=
   λ (b,(c,d)) => ((b,c),d)
 
 class LawfulStrongProfunctor (pf : Type u → Type u → Type w) [StrongProfunctor pf] extends LawfulProfunctor pf where
-  -- well ... there *are* laws
   -- cf. https://arxiv.org/pdf/1406.4823.pdf
   dimap_pi_id (a : pf α β) :
     let lh : pf (α × γ) β := dimap id Prod.fst (first' a)
