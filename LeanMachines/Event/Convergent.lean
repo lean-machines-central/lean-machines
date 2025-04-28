@@ -97,6 +97,7 @@ def mkAnticipatedEvent (v) [Preorder v] [Machine CTX M] (ev : Event M α β)
     action := ev.action
     guard := ev.guard
     safety := instAnticipated.safety
+    variant := instAnticipated.variant
     nonIncreasing := instAnticipated.nonIncreasing
   }
 

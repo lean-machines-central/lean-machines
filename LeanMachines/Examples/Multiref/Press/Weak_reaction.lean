@@ -26,7 +26,6 @@ def WeakReaction.Init : InitEvent WeakReaction Unit Unit :=
     init _ := ⟨false,false,0,0⟩
     safety hgrd :=
       by
-        simp
         simp[Machine.invariant]
   }
 
