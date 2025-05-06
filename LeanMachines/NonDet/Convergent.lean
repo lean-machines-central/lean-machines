@@ -67,6 +67,7 @@ def mkAnticipatedNDEvent (v) [Preorder v] [Machine CTX M] (ev : NDEvent M α β)
   {
     effect := ev.effect
     guard := ev.guard
+    variant := instAnticipated.variant
     safety := instAnticipated.safety
     feasibility := instAnticipated.feasibility
     nonIncreasing := instAnticipated.nonIncreasing
@@ -93,9 +94,9 @@ instance [Preorder v] [Machine CTX M]: Coe (AnticipatedNDEvent' v M α) (Anticip
               effect := fun m x grd ((), m') => ev.effect m x grd m'
               safety := fun m x Hinv Hgrd _ => ev.safety m x Hinv Hgrd
               feasibility := fun m x Hinv Hgrd => by
-                simp at Hgrd
                 have Hfeas := ev.feasibility m x Hinv Hgrd
                 exists ()
+
 
               variant := ev.variant
               nonIncreasing := fun m x Hinv Hgrd () =>
@@ -124,7 +125,6 @@ instance [Preorder v] [Machine CTX M]: Coe (AnticipatedNDEvent'' v M) (Anticipat
               effect := fun m _ grd ((), m') => ev.effect m grd m'
               safety := fun m _ Hinv Hgrd _ => ev.safety m Hinv Hgrd
               feasibility := fun m _ Hinv Hgrd => by
-                simp at Hgrd
                 have Hfeas := ev.feasibility m Hinv Hgrd
                 exists ()
 
@@ -203,6 +203,7 @@ def mkConvergentNDEvent (v) [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev :
   {
     effect := ev.effect
     guard := ev.guard
+    variant := instConvergent.variant
     safety := instConvergent.safety
     feasibility := instConvergent.feasibility
     convergence := instConvergent.convergence
@@ -229,7 +230,6 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: Coe (ConvergentNDEvent'
               effect := fun m x grd ((), m') => ev.effect m x grd m'
               safety := fun m x Hinv Hgrd _ => ev.safety m x Hinv Hgrd
               feasibility := fun m x Hinv Hgrd => by
-                simp at Hgrd
                 have Hfeas := ev.feasibility m x Hinv Hgrd
                 exists ()
 
@@ -260,7 +260,6 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: Coe (ConvergentNDEvent'
               effect := fun m _ grd ((), m') => ev.effect m grd m'
               safety := fun m _ Hinv Hgrd _ => ev.safety m Hinv Hgrd
               feasibility := fun m _ Hinv Hgrd => by
-                simp at Hgrd
                 have Hfeas := ev.feasibility m Hinv Hgrd
                 exists ()
 
