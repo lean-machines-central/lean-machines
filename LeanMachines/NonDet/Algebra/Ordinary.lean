@@ -91,7 +91,7 @@ instance [Machine CTX M] : ContravariantFunctor (CoOrdinaryNDEvent M γ) where
      guard := ev.guard
      effect := ev.effect
      safety := fun m x => by
-        simp
+        --simp
         revert ev
         cases event
         case mk _ev Hsafe _ =>
@@ -99,7 +99,7 @@ instance [Machine CTX M] : ContravariantFunctor (CoOrdinaryNDEvent M γ) where
           intros Hinv Hgrd y m' Heff
           apply Hsafe m (f x) Hinv Hgrd y m' Heff
      feasibility := fun m x => by
-        simp
+        --simp
         intro Hinv
         revert ev
         cases event
@@ -156,6 +156,66 @@ instance [Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
 
 
 instance [Machine CTX M] : LawfulStrongProfunctor (OrdinaryNDEvent M) where
+  dimap_pi_id :=
+    by
+      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
+      simp[ContravariantFunctor.contramap,Functor.map]
+  first_first :=
+    by
+      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
+      simp[ContravariantFunctor.contramap,Functor.map]
+      simp[α_,α_inv]
+      intros α β γ γ' a
+      refine funext ?_
+      intro m
+      refine funext ?_
+      intro x
+      refine funext ?_
+      intro grd
+      refine funext ?_
+      intro (y,m')
+      simp
+      constructor
+      · intro h
+        exists y.1.1
+        constructor
+        · exact h.2.2
+        · rw[←h.1]
+          rw[←h.2.1]
+      · intro h
+        obtain ⟨w,⟨hw₁,hw₂⟩⟩ := h
+        constructor
+        · rw[hw₂]
+        · constructor
+          · rw[hw₂]
+          · rw[hw₂]
+            exact hw₁
+  dinaturality :=
+    by
+      simp[Profunctor.dimap,StrongProfunctor.first']
+      simp[ContravariantFunctor.contramap,Functor.map]
+      intros α β γ δ a f
+      refine funext ?_
+      intro m
+      refine funext ?_
+      intro x
+      refine funext ?_
+      intro grd
+      refine funext ?_
+      intro (y,m')
+      simp
+      constructor
+      · intro h
+        exists y.1
+        constructor
+        · exact h.2
+        · rw[←h.1]
+      · intro h
+        obtain ⟨w,⟨hw₁,hw₂⟩⟩ := h
+        constructor
+        · rw[hw₂]
+        · rw[hw₂]
+          exact hw₁
 
 instance [Machine CTX M]: Category (OrdinaryNDEvent M) where
   id {α }:=
@@ -172,7 +232,7 @@ instance [Machine CTX M]: Category (OrdinaryNDEvent M) where
     { guard := ev.guard
       effect := ev.effect
       safety := fun m x => by
-          simp
+          -- simp
           intros Hinv
           have Hsafe₁ := ev₁.safety m x Hinv
           have Hsafe₂ := ev₂.safety
