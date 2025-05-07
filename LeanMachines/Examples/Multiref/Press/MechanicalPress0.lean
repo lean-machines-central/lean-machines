@@ -46,7 +46,8 @@ open Status
 
 structure MP0_ctx where
 
-structure MP0 where
+structure MP0  where
+  -- motor : StrongReaction
   motor_actuator : Status -- a
   motor_sensor : Status   -- r
   motor_cr : Nat
