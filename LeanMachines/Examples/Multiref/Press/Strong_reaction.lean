@@ -6,12 +6,11 @@ import LeanMachines.Examples.Multiref.Press.Weak_reaction
 import LeanMachines.Refinement.Relational.Basic
 import LeanMachines.Refinement.Relational.Ordinary
 
-structure SrCtxt where
 
-structure StrongReaction extends WeakReaction where
+structure StrongReaction (ctx : WrCtxt) extends WeakReaction ctx where
 
 
-instance : Machine SrCtxt StrongReaction where
+instance : Machine WrCtxt (StrongReaction ctx) where
   context := {}
   invariant m :=
     (m.cr ≤ m.ca) -- pat0_5
@@ -20,7 +19,7 @@ instance : Machine SrCtxt StrongReaction where
     ∧ ((¬ m.a ∨ m.r) → m.ca = m.cr) -- pat1_4
 
 
-instance : Refinement WeakReaction StrongReaction where
+instance : Refinement (WeakReaction ctx) (StrongReaction ctx) where
   refine wr sr := wr = sr.toWeakReaction
   refine_safe am m :=
     by
@@ -31,7 +30,7 @@ instance : Refinement WeakReaction StrongReaction where
       apply And.intro hinv₁ hinv₂
 
 def StrongReaction.Init :
-  SafeInitREvent WeakReaction StrongReaction (WeakReaction.Init) Unit Unit :=
+  SafeInitREvent (WeakReaction ctx)  (StrongReaction ctx) (WeakReaction.Init) Unit Unit :=
   newInitREvent''
   (WeakReaction.Init)
   {
@@ -47,7 +46,7 @@ def StrongReaction.Init :
         simp[Refinement.refine,WeakReaction.Init]
   }
 
-def StrongReaction.Action_on : OrdinaryREvent WeakReaction StrongReaction WeakReaction.Action_on Unit Unit :=
+def StrongReaction.Action_on : OrdinaryREvent (WeakReaction ctx)  (StrongReaction ctx) WeakReaction.Action_on Unit Unit :=
   newREvent''
   WeakReaction.Action_on
   {
@@ -77,7 +76,7 @@ def StrongReaction.Action_on : OrdinaryREvent WeakReaction StrongReaction WeakRe
         simp[Refinement.refine,WeakReaction.Action_on]
   }
 
-def StrongReaction.Action_off : OrdinaryREvent WeakReaction StrongReaction WeakReaction.Action_off Unit Unit :=
+def StrongReaction.Action_off : OrdinaryREvent (WeakReaction ctx)  (StrongReaction ctx) WeakReaction.Action_off Unit Unit :=
   newREvent''
   WeakReaction.Action_off
   {
@@ -103,7 +102,7 @@ def StrongReaction.Action_off : OrdinaryREvent WeakReaction StrongReaction WeakR
         simp[Refinement.refine,WeakReaction.Action_off]
   }
 
-def StrongReaction.Reaction_on : OrdinaryREvent WeakReaction StrongReaction WeakReaction.Reaction_on Unit Unit :=
+def StrongReaction.Reaction_on : OrdinaryREvent (WeakReaction ctx)  (StrongReaction ctx) WeakReaction.Reaction_on Unit Unit :=
   newREvent''
   WeakReaction.Reaction_on
   {
@@ -129,7 +128,7 @@ def StrongReaction.Reaction_on : OrdinaryREvent WeakReaction StrongReaction Weak
 
   }
 
-def StrongReaction.Reaction_off : OrdinaryREvent WeakReaction StrongReaction WeakReaction.Reaction_off Unit Unit :=
+def StrongReaction.Reaction_off : OrdinaryREvent (WeakReaction ctx)  (StrongReaction ctx) WeakReaction.Reaction_off Unit Unit :=
   newREvent''
   WeakReaction.Reaction_off
   {

@@ -7,20 +7,20 @@ import LeanMachines.Event.Ordinary
 structure WrCtxt where
 
 
-structure WeakReaction where
+structure WeakReaction (ctx : WrCtxt) where
   a : Bool
   r : Bool
   ca : Nat
   cr : Nat
 
 
-instance : Machine WrCtxt WeakReaction where
+instance : Machine WrCtxt (WeakReaction (ctx : WrCtxt)) where
   context := {}
   invariant m :=
     (m.cr ≤ m.ca)                 -- pat0_5
     ∧ (m.a ∧ ¬ m.r → m.cr < m.ca) -- pat0_6
 
-def WeakReaction.Init : InitEvent WeakReaction Unit Unit :=
+def WeakReaction.Init : InitEvent (WeakReaction ctx) Unit Unit :=
   newInitEvent''
   {
     init _ := ⟨false,false,0,0⟩
@@ -30,7 +30,7 @@ def WeakReaction.Init : InitEvent WeakReaction Unit Unit :=
   }
 
 
-def WeakReaction.Action_on : OrdinaryEvent WeakReaction Unit Unit :=
+def WeakReaction.Action_on : OrdinaryEvent (WeakReaction ctx) Unit Unit :=
   newEvent''
   {
     guard := fun m => ¬ m.a
@@ -46,7 +46,7 @@ def WeakReaction.Action_on : OrdinaryEvent WeakReaction Unit Unit :=
   }
 
 
-def WeakReaction.Action_off : OrdinaryEvent WeakReaction Unit Unit :=
+def WeakReaction.Action_off : OrdinaryEvent (WeakReaction ctx) Unit Unit :=
   newEvent''
   {
     action m _ := ⟨false, m.r,m.ca,m.cr⟩
@@ -58,7 +58,7 @@ def WeakReaction.Action_off : OrdinaryEvent WeakReaction Unit Unit :=
         assumption
   }
 
-def WeakReaction.Reaction_on : OrdinaryEvent WeakReaction Unit Unit :=
+def WeakReaction.Reaction_on : OrdinaryEvent (WeakReaction ctx) Unit Unit :=
   newEvent''
   {
     guard m := ¬m.r ∧ m.a
@@ -72,7 +72,7 @@ def WeakReaction.Reaction_on : OrdinaryEvent WeakReaction Unit Unit :=
 
   }
 
-def WeakReaction.Reaction_off : OrdinaryEvent WeakReaction Unit Unit :=
+def WeakReaction.Reaction_off : OrdinaryEvent (WeakReaction ctx) Unit Unit :=
   newEvent''
   {
     guard m := m.r ∧ ¬ m.a

@@ -20,9 +20,9 @@ import LeanMachines.Examples.Multiref.Press.Strong_reaction
 structure MP0_ctx where
 
 structure MP0 (ctx : MP0_ctx) where               -- We can compose abstract machines at the concrete level
-  motor_controller : StrongReaction
-  btn1 : WeakReaction
-  btn2 : WeakReaction
+  motor_controller : StrongReaction {}
+  btn1 : WeakReaction {}
+  btn2 : WeakReaction {}
 
 
 instance : Machine MP0_ctx (MP0 ctx) where
@@ -33,15 +33,15 @@ instance : Machine MP0_ctx (MP0 ctx) where
     ∧ Machine.invariant (m.btn2)
 
 
-def skip_strong := mkOrdinaryEvent (skip_Event StrongReaction Unit)
-def skip_weak := mkOrdinaryEvent (skip_Event WeakReaction Unit)
+def skip_strong := mkOrdinaryEvent (skip_Event (StrongReaction {}) Unit)
+def skip_weak := mkOrdinaryEvent (skip_Event (WeakReaction {}) Unit)
 
 
 
 def MP0.composeEvent
-  (ev_ctrl : OrdinaryEvent StrongReaction α₁ β₁)                -- [SafeEventPO ev_ctrl k₁]
-  (ev_btn1 : OrdinaryEvent WeakReaction α₂ β₂)                  -- [SafeEventPO ev_btn1 k₂]
-  (ev_btn2 : OrdinaryEvent WeakReaction α₃ β₃)                  -- [SafeEventPO ev_btn2 k₃]
+  (ev_ctrl : OrdinaryEvent (StrongReaction {}) α₁ β₁)                -- [SafeEventPO ev_ctrl k₁]
+  (ev_btn1 : OrdinaryEvent (WeakReaction {}) α₂ β₂)                  -- [SafeEventPO ev_btn1 k₂]
+  (ev_btn2 : OrdinaryEvent (WeakReaction {}) α₃ β₃)                  -- [SafeEventPO ev_btn2 k₃]
   : OrdinaryEvent (MP0 ctx) (α₁ × α₂ × α₃) (β₁×β₂×β₃) :=
   newEvent
   {
@@ -435,7 +435,7 @@ def MP0.motor_stop : OrdinaryEvent (MP0 ctx) Unit Unit :=
 -- False events (we need to add an event to the pattern Strong Reaction, which does nothing, in order
 -- to compose events)
 
-def StrongReaction.falseEv : OrdinaryEvent (StrongReaction) Unit Unit :=
+def StrongReaction.falseEv : OrdinaryEvent (StrongReaction {}) Unit Unit :=
   newEvent''
   {
     guard m   := m.a ∨ m.r
@@ -445,6 +445,23 @@ def StrongReaction.falseEv : OrdinaryEvent (StrongReaction) Unit Unit :=
       intros
       assumption
   }
+
+instance : SafeREventPO
+  StrongReaction.falseEv.toEvent
+  (instSafeEv := instSafeEventPO_OrdinaryEvent StrongReaction.falseEv)
+  (instSafeAbs := instSafeEventPO_OrdinaryEvent skip_weak)
+  (skip_weak).toEvent
+  (valid_kind := by simp)
+  where
+    lift_in := id
+    lift_out := id
+    strengthening m x :=
+      by
+        simp[StrongReaction.falseEv,Refinement.refine,skip_weak,mkOrdinaryEvent]
+    simulation :=
+      by
+        simp[StrongReaction.falseEv,Refinement.refine,skip_weak,mkOrdinaryEvent]
+
 
 def MP0.treat_push_start_motor_button_false : OrdinaryEvent (MP0 ctx) Unit Unit :=
   newEvent''
