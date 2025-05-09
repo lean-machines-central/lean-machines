@@ -19,7 +19,7 @@ is not demonstrated anticipated or convergent
 -/
 
 /- Typeclass representing the proof  obligation of safety for Events -/
-class SafeEventPO [Machine CTX M] {α β} (ev : Event M α β) (kind : EventKind) where
+class SafeEventPO [instM : Machine CTX M] {α β} (ev : Event M α β) (kind : EventKind) where
   safety (m : M) (x : α):
     Machine.invariant m
     → (grd : ev.guard m x)
@@ -28,7 +28,7 @@ class SafeEventPO [Machine CTX M] {α β} (ev : Event M α β) (kind : EventKind
 /-- The specification of a deterministic, ordinary event for machine `M`
 with input type `α` and output type `β`. .
 -/
-structure OrdinaryEvent (M) [Machine CTX M] (α β : Type) where
+structure OrdinaryEvent (M) [instM : Machine CTX M] (α β : Type) where
   /-- The guard property of the event, in machine state `m` with input `x`. -/
   guard (m : M) (x : α) : Prop := True
   /-- The (deterministic) action of the event, with
@@ -175,7 +175,7 @@ instance Ord'' [Machine CTX M]: Coe (OrdinaryEvent'' M) (OrdinaryEvent M Unit Un
 
 /-- The main constructor for ordinary events. -/
 @[simp]
-def newEvent'' [Machine CTX M] (ev : OrdinaryEvent'' M)
+def newEvent'' [instM :Machine CTX M] (ev : OrdinaryEvent'' M)
   : OrdinaryEvent M Unit Unit := ev
 
 def skipEvent (M) [Machine CTX M] (α) : OrdinaryEvent M α α :=
