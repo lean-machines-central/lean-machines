@@ -173,25 +173,23 @@ instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedNDEvent v M) wher
   g <$> ev'
 
 
-/- TODO : issue with dependent equality, should be workable ...
+
 instance  [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedNDEvent v M) where
-  dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
-                 exact fun {α β} => rfl
-  dimap_comp f f' g g' := by funext event
-                             have Hdc' := LawfulProfunctor.dimap_comp (pf:=_NDEvent M) f f' g g'
-                             have Hdc : Profunctor.dimap (f' ∘ f) (g ∘ g') event.to_NDEvent = (Profunctor.dimap f g ∘ Profunctor.dimap f' g') event.to_NDEvent := by
-                               exact congrFun Hdc' event.to_NDEvent
-                             cases event
-                             case _ ev po =>
-                               cases po
-                               case mk safe feas =>
-                                 simp at *
-                                 simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
-                                 simp [*]
-                                 clear Hdc'
-                                 -- cast_heq does not work so I'm stuck ...
-                                 sorry
--/
+  dimap_id :=
+    by
+      simp[Profunctor.dimap,ContravariantFunctor.contramap,Functor.map]
+      exact λ{α β} => rfl
+  dimap_comp f f' g g' :=
+    by
+      funext event
+      have Hdc' := LawfulProfunctor.dimap_comp (pf:=NDEvent M) f f' g g'
+      have Hdc : Profunctor.dimap (f' ∘ f) (g ∘ g') event.toNDEvent = (Profunctor.dimap f g ∘ Profunctor.dimap f' g') event.toNDEvent := by
+                               exact congrFun Hdc' event.toNDEvent
+      cases event
+      case _ ev safe feas =>
+        simp at *
+        simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
+        simp [*]
 
 instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M) where
   first' {α β γ} (event : AnticipatedNDEvent v M α β): AnticipatedNDEvent v M (α × γ) (β × γ) :=
@@ -227,8 +225,55 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M
       }
 
 
--- TODO: lawful strong profunctor
--- instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedNDEvent v M) where
+
+-- TODO: make cleaner proofs reusing the Ordinary proofs
+instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedNDEvent v M) where
+  dimap_pi_id :=
+    by
+      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
+      simp[ContravariantFunctor.contramap,Functor.map]
+  first_first :=
+    by
+      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
+      simp[ContravariantFunctor.contramap,Functor.map]
+      simp[α_,α_inv]
+      intros α β γ γ' a
+      funext m x grd (y,m')
+      simp
+      constructor
+      · intro h
+        exists y.1.1
+        constructor
+        · exact h.2.2
+        · rw[←h.1]
+          rw[←h.2.1]
+      · intro h
+        obtain ⟨w,⟨hw₁,hw₂⟩⟩ := h
+        constructor
+        · rw[hw₂]
+        · constructor
+          · rw[hw₂]
+          · rw[hw₂]
+            exact hw₁
+  dinaturality :=
+  by
+    simp[Profunctor.dimap,StrongProfunctor.first']
+    simp[ContravariantFunctor.contramap,Functor.map]
+    intros α β γ δ a f
+    funext m x grd (y,m')
+    simp
+    constructor
+    · intro h
+      exists y.1
+      constructor
+      · exact h.2
+      · rw[←h.1]
+    · intro h
+      obtain ⟨w,⟨hw₁,hw₂⟩⟩ := h
+      constructor
+      · rw[hw₂]
+      · rw[hw₂]
+        exact hw₁
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (ConvergentNDEvent v M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : ConvergentNDEvent v M α γ) : ConvergentNDEvent v M β δ :=
@@ -236,25 +281,22 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (Convergent
   g <$> ev'
 
 
-/- TODO : issue with dependent equality, should be workable ...
 instance  [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (ConvergentNDEvent v M) where
-  dimap_id := by simp [Profunctor.dimap, ContravariantFunctor.contramap]
-                 exact fun {α β} => rfl
-  dimap_comp f f' g g' := by funext event
-                             have Hdc' := LawfulProfunctor.dimap_comp (pf:=_NDEvent M) f f' g g'
-                             have Hdc : Profunctor.dimap (f' ∘ f) (g ∘ g') event.to_NDEvent = (Profunctor.dimap f g ∘ Profunctor.dimap f' g') event.to_NDEvent := by
-                               exact congrFun Hdc' event.to_NDEvent
-                             cases event
-                             case _ ev po =>
-                               cases po
-                               case mk safe feas =>
-                                 simp at *
-                                 simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
-                                 simp [*]
-                                 clear Hdc'
-                                 -- cast_heq does not work so I'm stuck ...
-                                 sorry
--/
+  dimap_id :=
+    by
+      simp[Profunctor.dimap,ContravariantFunctor.contramap,Functor.map]
+      exact λ{α β} => rfl
+  dimap_comp f f' g g' :=
+    by
+      funext event
+      have Hdc' := LawfulProfunctor.dimap_comp (pf:=NDEvent M) f f' g g'
+      have Hdc : Profunctor.dimap (f' ∘ f) (g ∘ g') event.toNDEvent = (Profunctor.dimap f g ∘ Profunctor.dimap f' g') event.toNDEvent := by
+                               exact congrFun Hdc' event.toNDEvent
+      cases event
+      case _ ev safe feas =>
+        simp at *
+        simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
+        simp [*]
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (ConvergentNDEvent v M) where
   first' {α β γ} (event : ConvergentNDEvent v M α β): ConvergentNDEvent v M (α × γ) (β × γ) :=
@@ -290,5 +332,51 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
       }
 
 
--- TODO: lawful strong profunctor
--- instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentNDEvent v M) where
+-- TODO: make cleaner proofs reusing the Ordinary proofs
+instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentNDEvent v M) where
+  dimap_pi_id :=
+    by
+      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
+      simp[ContravariantFunctor.contramap,Functor.map]
+  first_first :=
+    by
+      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
+      simp[ContravariantFunctor.contramap,Functor.map]
+      simp[α_,α_inv]
+      intros α β γ γ' a
+      funext m x grd (y,m')
+      simp
+      constructor
+      · intro h
+        exists y.1.1
+        constructor
+        · exact h.2.2
+        · rw[←h.1]
+          rw[←h.2.1]
+      · intro h
+        obtain ⟨w,⟨hw₁,hw₂⟩⟩ := h
+        constructor
+        · rw[hw₂]
+        · constructor
+          · rw[hw₂]
+          · rw[hw₂]
+            exact hw₁
+  dinaturality :=
+  by
+    simp[Profunctor.dimap,StrongProfunctor.first']
+    simp[ContravariantFunctor.contramap,Functor.map]
+    intros α β γ δ a f
+    funext m x grd (y,m')
+    simp
+    constructor
+    · intro h
+      exists y.1
+      constructor
+      · exact h.2
+      · rw[←h.1]
+    · intro h
+      obtain ⟨w,⟨hw₁,hw₂⟩⟩ := h
+      constructor
+      · rw[hw₂]
+      · rw[hw₂]
+        exact hw₁
