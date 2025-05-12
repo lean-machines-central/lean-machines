@@ -166,14 +166,7 @@ instance [Machine CTX M] : LawfulStrongProfunctor (OrdinaryNDEvent M) where
       simp[ContravariantFunctor.contramap,Functor.map]
       simp[α_,α_inv]
       intros α β γ γ' a
-      refine funext ?_
-      intro m
-      refine funext ?_
-      intro x
-      refine funext ?_
-      intro grd
-      refine funext ?_
-      intro (y,m')
+      funext m x grd (y,m')
       simp
       constructor
       · intro h
@@ -195,14 +188,7 @@ instance [Machine CTX M] : LawfulStrongProfunctor (OrdinaryNDEvent M) where
       simp[Profunctor.dimap,StrongProfunctor.first']
       simp[ContravariantFunctor.contramap,Functor.map]
       intros α β γ δ a f
-      refine funext ?_
-      intro m
-      refine funext ?_
-      intro x
-      refine funext ?_
-      intro grd
-      refine funext ?_
-      intro (y,m')
+      funext m x grd (y,m')
       simp
       constructor
       · intro h
