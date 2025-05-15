@@ -331,6 +331,8 @@ instance [Machine CTX M] [Semigroup M]: Arrow (NDEvent M) where
   }
   first := first_NDEvent
 
+
+
 instance [Machine CTX M] [Semigroup M]: LawfulArrow (NDEvent M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext f := by
@@ -409,7 +411,7 @@ instance [Machine CTX M] [Semigroup M]: ArrowChoice (NDEvent M) where
 
 /-  Conjoin events -/
 
-def conj_NDEvent [Machine CTX M] (ev₁ : NDEvent M α β) (ev₂ : NDEvent M α β)
+def conj_NDEvent [Machine CTX M]  (ev₁ : NDEvent M α β) (ev₂ : NDEvent M α β)
   : NDEvent M α β :=
   {
     guard := fun m x => ev₁.guard m x ∨ ev₂.guard m x
@@ -418,6 +420,88 @@ def conj_NDEvent [Machine CTX M] (ev₁ : NDEvent M α β) (ev₂ : NDEvent M α
       ∧ ((grd₂ : ev₂.guard m x) → ev₂.effect m x grd₂ (y, m'))
   }
 
+
+
 instance [Machine CTX M] [Semigroup M]: ArrowPlus (NDEvent M) where
-  zero := skip_NDEvent
+  zero :=
+    {
+      guard _ _ := False
+      effect := fun _ _ _ (_, _) => False
+    }
   conjoin := conj_NDEvent
+
+instance [Machine CTX M] [Semigroup M] : LawfulArrowPlus (NDEvent M) where
+    assoc :=
+    by
+      intros α β ev₁ ev₂ ev₃
+      simp[ArrowPlus.conjoin]
+      apply NDEvent.ext'
+      simp[conj_NDEvent]
+      intros m x
+      constructor
+      · constructor
+        · intro h
+          exact or_assoc.mp h
+        · intro h
+          exact or_assoc.mpr h
+      · intros y m'
+        intros grd₁ grd₂
+        constructor
+        · simp
+          intros effectₗ effectᵣ
+          constructor
+          · intro grd₁'
+            have ⟨h,_⟩ := effectₗ (Or.inl grd₁')
+            exact h grd₁'
+          · intro grd₂'
+            constructor
+            · cases grd₂'
+              case a.right.mp.right.left.inl l =>
+                exact (effectₗ (Or.inr l)).2
+              case a.right.mp.right.left.inr r =>
+                intro grd₂'
+                exact (effectₗ (Or.inr grd₂')).2 grd₂'
+            · assumption
+        · simp
+          intros effectₗ effectᵣ
+          constructor
+          · intro hgrd
+            constructor
+            · intro grd₁'
+              exact (effectₗ grd₁')
+            · intro grd₂'
+              exact ((effectᵣ (Or.inl grd₂')).1 grd₂')
+          · intro grd₃
+            exact ((effectᵣ (Or.inr grd₃)).2 grd₃)
+    comm_id :=
+      by
+        intros α β a
+        simp[ArrowZero.zero]
+        simp[ArrowPlus.conjoin]
+
+        constructor
+        · refine
+          NDEvent.ext'
+            (conj_NDEvent a { guard := fun x x => False, effect := fun m x x x => False })
+            (conj_NDEvent { guard := fun x x => False, effect := fun m x x x =>False } a) ?_
+          intros m x
+          simp[conj_NDEvent]
+        · simp[conj_NDEvent]
+          constructor
+          · refine
+            NDEvent.ext' a
+              { guard := fun m x => a.guard m x ∨ False,
+                effect := fun m x x_1 x_2 => ∀ (grd₁ : a.guard m x), a.effect m x grd₁ x_2 }
+              ?_
+            simp
+            intros m x y m' p
+            exact Or.inl p
+          · refine
+            NDEvent.ext' a
+              { guard := fun m x => False ∨ a.guard m x,
+                effect := fun m x x_1 x_2 => ∀ (grd₂ : a.guard m x), a.effect m x grd₂ x_2 }
+              ?_
+            simp
+            intros
+            apply Or.inl
+            assumption
