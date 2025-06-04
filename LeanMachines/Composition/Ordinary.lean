@@ -34,14 +34,14 @@ def composition
         · exact ev₂.safety m.2 x.2 hinv₂ hgrd.2
   }
 
-infixr:60 " © " => composition
+infixr:60 " × " => composition
 
 
 instance instCompo [Machine CTX₁ M₁] [Machine CTX₂ M₂]
   (ev₁ : Event M₁ α₁ β₁) (ev₂ : Event M₂ α₂ β₂)
   [i₁ : SafeEventPO ev₁ (EventKind.TransDet (Convergence.Ordinary))]
   [i₂ : SafeEventPO ev₂ (EventKind.TransDet (Convergence.Ordinary))]:
-  SafeEventPO (mkOrdinaryEvent ev₁ © mkOrdinaryEvent ev₂).toEvent (EventKind.TransDet (Convergence.Ordinary))
+  SafeEventPO (mkOrdinaryEvent ev₁ × mkOrdinaryEvent ev₂).toEvent (EventKind.TransDet (Convergence.Ordinary))
   (instM := prod)
   where
     safety m x :=
@@ -87,9 +87,9 @@ instance RefinementComposition [Machine CTX₁ M₁] [Machine CTX₂ M₂]
     (instSafeAbs := instSafeEventPO_OrdinaryEvent abs₂)
     (instR := ref₂)
     (valid_kind := by simp)]
-  : SafeREventPO (ev₁ © ev₂).toEvent (abs₁ © abs₂).toEvent
-    (instSafeEv := instSafeEventPO_OrdinaryEvent (ev₁ © ev₂))
-    (instSafeAbs := instSafeEventPO_OrdinaryEvent (abs₁ © abs₂))
+  : SafeREventPO (ev₁ × ev₂).toEvent (abs₁ × abs₂).toEvent
+    (instSafeEv := instSafeEventPO_OrdinaryEvent (ev₁ × ev₂))
+    (instSafeAbs := instSafeEventPO_OrdinaryEvent (abs₁ × abs₂))
     (instR := compoMachine (ref₁ := ref₁) (ref₂ := ref₂))
     (valid_kind := by simp)
   where
@@ -153,7 +153,7 @@ def Counter0.Incr : OrdinaryEvent (Counter0 ctx) Nat Unit :=
   }
 
 
-#check Counter0.Incr © Counter0.Incr
+#check Counter0.Incr × Counter0.Incr
 
 structure DoubleCpt (ctx : CountContext × CountContext) where
   cpt₁ : Counter0 ctx.1
@@ -185,11 +185,74 @@ def DoubleCpt.OrdinaryOfProd (ev : OrdinaryEvent (Counter0 ctx₁ × Counter0 ct
 
 -- Sadly, the coe doesn't work ?
 def DoubleCpt.Incr : OrdinaryEvent (Counter0 ctx₁ × Counter0 ctx₂ ) (Nat × Nat) (Unit × Unit) :=
-  Counter0.Incr (ctx := ctx₁) © Counter0.Incr (ctx := ctx₂)
+  Counter0.Incr (ctx := ctx₁) × Counter0.Incr (ctx := ctx₂)
 
 def DoubleCpt.Incr' : OrdinaryEvent (DoubleCpt ctx) (Nat × Nat) (Unit × Unit) :=
   DoubleCpt.OrdinaryOfProd DoubleCpt.Incr
 
 
 
-  -- coed.coe $ Counter0.Incr (ctx := ctx.1) © Counter0.Incr (ctx := ctx.2)
+  -- coed.coe $ Counter0.Incr (ctx := ctx.1) × Counter0.Incr (ctx := ctx.2)
+
+
+
+
+instance sum [m1 :Machine CTX₁ M₁] [ m2: Machine CTX₂ M₂] :
+  Machine (CTX₁ × CTX₂) ( M₁ ⊕ M₂) where
+  context := ⟨m1.context,m2.context⟩
+  invariant m := match m with
+    | Sum.inl ml => m1.invariant ml
+    | Sum.inr mr => m2.invariant mr
+
+
+def somme
+  [Machine CTX₁ M₁]
+  (ev₁ : OrdinaryEvent M₁ α₁ β₁)
+  [Machine CTX₂ M₂]
+  (ev₂ : OrdinaryEvent M₂ α₂ β₂)
+  : OrdinaryEvent (M₁ ⊕  M₂) (α₁ ⊕ α₂) (β₁ ⊕ β₂) :=
+  {
+    guard m x :=
+      match m,x with
+      | Sum.inl m, Sum.inl x => ev₁.guard m x
+      | Sum.inr m, Sum.inr x => ev₂.guard m x
+      | _,_ => False
+    action m x hgrd :=
+      match m, x with
+      | Sum.inl m, Sum.inl x =>
+        let (b,m') :=ev₁.action m x (
+          by
+            simp at hgrd
+            exact hgrd
+            )
+        (Sum.inl b, Sum.inl m)
+      | Sum.inr m, Sum.inr x => let (b,m') :=ev₂.action m x (
+          by
+            simp at hgrd
+            exact hgrd
+            )
+        (Sum.inr b, Sum.inr m)
+    safety m x :=
+      by
+        intros hinv hgrd
+        cases m
+        case inl m =>
+          cases x
+          case inl =>
+            simp at hgrd
+            simp[Machine.invariant] at *
+            exact hinv
+          case inr =>
+            simp at hgrd
+        case inr m =>
+          cases x
+          case inl =>
+            simp at hgrd
+          case inr =>
+            simp at hgrd
+            simp[Machine.invariant] at *
+            exact hinv
+
+  }
+
+infixr:60 "⊕" => somme
