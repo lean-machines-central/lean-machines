@@ -6,6 +6,7 @@
    "subDir": null,
    "scope": "",
    "rev": "fad288d69b6fe6c4f0e08d9ade3bbc6c2a67af39",
+
    "name": "mathlib",
    "manifestFile": "lake-manifest.json",
    "inputRev": null,

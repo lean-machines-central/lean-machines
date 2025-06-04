@@ -4,7 +4,7 @@ import LeanMachines.Event.Basic
 import LeanMachines.Algebra.Contravariant
 import LeanMachines.Algebra.Profunctor
 import LeanMachines.Algebra.Arrow
-
+import Mathlib.Algebra.Group.Defs
 
 
 /-!
@@ -221,8 +221,6 @@ instance [Machine CTX M]: Arrow (Event M) where
                            ev₁ ev₂
 -/
 
--- more explicit alternative
-
 instance [Machine CTX M]: Arrow (Event M) where
   arrow {α β} (f : α → β) := {
     guard := fun _ _ => True
@@ -231,31 +229,86 @@ instance [Machine CTX M]: Arrow (Event M) where
 
   split {α α' β β'} (ev₁ : Event M α β)  (ev₂ : Event M α' β') : Event M (α × α') (β × β') := {
     guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
-    action := fun m (x, y) grd => let (x',m') := ev₁.action m x grd.1
+    action := fun m (x, y) grd => let (x',m'₁) := ev₁.action m x grd.1
                               let (y', _) := ev₂.action m y grd.2
                               -- note : we forget the second state change
-                              ((x', y'), m')
+                              ((x', y'), m'₁)
   }
-
-
-
-instance [Machine CTX M]: LawfulArrow (Event M) where
+instance [Machine CTX M]  : LawfulArrow (Event M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext _ := by
     apply Event.ext'
     simp [Arrow.arrow, Arrow.first]
+
   arrow_fun _ _ := by
     apply Event.ext'
     simp [Arrow.arrow, Arrow.first]
   arrow_xcg _ _ := by
     apply Event.ext'
     simp [Arrow.arrow, Arrow.first]
-  arrow_unit _ := by
+  arrow_unit ev := by
     apply Event.ext'
     simp [Arrow.arrow, Arrow.first]
+
   arrow_assoc {α β γ δ} (f : Event M α β) := by
     apply Event.ext'
     simp [Arrow.arrow, Arrow.first]
+
+
+
+
+class CustomCompo (M : Type u) where
+  comp : M → M → M → M
+class LawfulCustomCompo (M : Type u) extends CustomCompo M where
+  assoc : ∀ a b c d : M, comp d a (comp d b c) = comp d (comp d a b ) c
+  idem : ∀ m d : M, comp d m m = m
+  modif (d : M) : ∀ m : M,  comp d m d = m
+-- more explicit alternative
+
+instance customCompo [Machine CTX M] [LawfulCustomCompo M]: Arrow (Event M) where
+  arrow {α β} (f : α → β) := {
+    guard := fun _ _ => True
+    action := fun m x _ => (f x, m)
+  }
+
+  split {α α' β β'} (ev₁ : Event M α β)  (ev₂ : Event M α' β') : Event M (α × α') (β × β') := {
+    guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
+    action := fun m (x, y) grd => let (x',m'₁) := ev₁.action m x grd.1
+                              let (y', m'₂) := ev₂.action m y grd.2
+                              -- note : we forget the second state change
+                              ((x', y'), CustomCompo.comp m m'₁ m'₂)
+  }
+
+
+
+
+instance [Machine CTX M] [LawfulCustomCompo M] : LawfulArrow (Event M) where
+  arrow_id := by simp [Arrow.arrow]
+  arrow_ext _ := by
+    apply Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+    intros m' a b
+    exact LawfulCustomCompo.idem m' m'
+  arrow_fun _ _ := by
+    apply Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_xcg _ _ := by
+    apply Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+  arrow_unit ev := by
+    apply Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+    intros m a b grd₁ grd₂
+
+    have h := LawfulCustomCompo.modif m (ev.action m a grd₁).2
+    rw[h]
+  arrow_assoc {α β γ δ} (f : Event M α β) := by
+    apply Event.ext'
+    simp [Arrow.arrow, Arrow.first]
+    intros m a b d grd₁ grd₂
+    have h := LawfulCustomCompo.modif m (f.action m a grd₁).2
+    rw[h]
+    assumption
 
 /-  ArrowChoice -/
 
@@ -272,11 +325,11 @@ def altEvent [Machine CTX M] (evl : Event M α β) (evr : Event M γ δ)
                                     (Sum.inr y, m')
   }
 
-instance [Machine CTX M]: ArrowChoice (Event M) where
+instance [Machine CTX M] [LawfulCustomCompo M]: ArrowChoice (Event M) where
   splitIn := altEvent
 
 
-instance [Machine CTX M] : LawfulArrowChoice (Event M) where
+instance [Machine CTX M] [LawfulCustomCompo M]: LawfulArrowChoice (Event M) where
   left_arr f :=
     by
       apply Event.ext'
