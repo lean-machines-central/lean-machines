@@ -30,7 +30,7 @@ def MP0.push_start_motor_button
   : OrdinaryEvent ((StrongReaction {}) × (WeakReaction  {}) × (WeakReaction {}))
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-  skip_strong {} © (WeakReaction.Action_on ) © skip_weak {}
+  skip_strong {} × (WeakReaction.Action_on ) × skip_weak {}
 
 
 /-
@@ -49,7 +49,7 @@ def MP0.push_stop_motor_button :
   OrdinaryEvent ((StrongReaction {}) × (WeakReaction  {}) × (WeakReaction {}))
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-    skip_strong {} © skip_weak {} © (WeakReaction.Action_on )
+    skip_strong {} × skip_weak {} × (WeakReaction.Action_on )
 
 
 /-
@@ -68,7 +68,7 @@ def MP0.release_start_motor_button :
   OrdinaryEvent (MP0 ctx)
   (instM := prod )
   (Unit × Unit × Unit) (Unit × Unit × Unit)
-  := skip_strong ctx.1 © WeakReaction.Action_off  © skip_weak ctx.2.2
+  := skip_strong ctx.1 × WeakReaction.Action_off  × skip_weak ctx.2.2
 
 /-
 def MP0.release_stop_motor_button : OrdinaryEvent (MP0 ctx) Unit Unit :=
@@ -87,7 +87,7 @@ def MP0.release_stop_motor_button :
   (instM := prod )
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-  skip_strong ctx.1 © skip_weak ctx.2.1 © WeakReaction.Action_off
+  skip_strong ctx.1 × skip_weak ctx.2.1 × WeakReaction.Action_off
 
 
 /-
@@ -107,7 +107,7 @@ def MP0.treat_push_start_motor_button :
   (instM := prod )
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-  StrongReaction.Action_on.toOrdinaryEvent © WeakReaction.Reaction_on © skip_weak ctx.2.2
+  StrongReaction.Action_on.toOrdinaryEvent × WeakReaction.Reaction_on × skip_weak ctx.2.2
 
 /-
 def MP0.treat_push_stop_motor_button : OrdinaryEvent (MP0 ctx) Unit Unit :=
@@ -127,7 +127,7 @@ def MP0.treat_push_stop_motor_button :
   (instM := prod )
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-  StrongReaction.Action_off.toOrdinaryEvent © skip_weak ctx.2.1 © WeakReaction.Reaction_on
+  StrongReaction.Action_off.toOrdinaryEvent × skip_weak ctx.2.1 × WeakReaction.Reaction_on
 
 
 /-
@@ -147,7 +147,7 @@ def MP0.treat_release_start_motor_button :
   (instM := prod )
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-  skip_strong ctx.1 © WeakReaction.Reaction_on © skip_weak ctx.2.2
+  skip_strong ctx.1 × WeakReaction.Reaction_on × skip_weak ctx.2.2
 
 
 /-
@@ -168,7 +168,7 @@ def MP0.treat_release_stop_motor_button :
   (instM := prod )
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-  skip_strong ctx.1 © skip_weak ctx.2.1 © WeakReaction.Reaction_off
+  skip_strong ctx.1 × skip_weak ctx.2.1 × WeakReaction.Reaction_off
 
 /-
 def MP0.motor_start : OrdinaryEvent (MP0 ctx) Unit Unit :=
@@ -186,7 +186,7 @@ def MP0.motor_start :
   (instM := prod )
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-  StrongReaction.Reaction_on.toOrdinaryEvent © skip_weak ctx.2.1 © skip_weak ctx.2.2
+  StrongReaction.Reaction_on.toOrdinaryEvent × skip_weak ctx.2.1 × skip_weak ctx.2.2
 
 /-
 def MP0.motor_stop : OrdinaryEvent (MP0 ctx) Unit Unit :=
@@ -205,7 +205,7 @@ def MP0.motor_stop :
   (instM := prod)
   (Unit × Unit × Unit) (Unit × Unit × Unit)
   :=
-  StrongReaction.Reaction_off.toOrdinaryEvent © skip_weak ctx.2.1 © skip_weak ctx.2.2
+  StrongReaction.Reaction_off.toOrdinaryEvent × skip_weak ctx.2.1 × skip_weak ctx.2.2
 
 /-
       False events
