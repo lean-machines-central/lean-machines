@@ -60,6 +60,13 @@ instance [Machine CTX M] (ev : OrdinaryNDEvent M α β):  SafeNDEventPO ev.toNDE
   safety := ev.safety
   feasibility := ev.feasibility
 
+
+instance instSafeNDEventPO_OrdinaryNDEvent [Machine CTX M]
+  (ev : OrdinaryNDEvent M α β):  SafeNDEventPO ev.toNDEvent (EventKind.TransNonDet (Convergence.Ordinary)) where
+  safety := ev.safety
+  feasibility := ev.feasibility
+
+
 theorem OrdinaryNDEvent.ext [Machine CTX M] (ev₁ : OrdinaryNDEvent M α β) (ev₂ : OrdinaryNDEvent M α β):
   ev₁.toNDEvent = ev₂.toNDEvent
   → ev₁ = ev₂ :=
@@ -190,6 +197,11 @@ instance [Machine CTX M]: Coe (InitNDEvent M α β) (_InitNDEvent M α β) where
   coe ev := ev.to_InitNDEvent
 
 instance [Machine CTX M] (ev : InitNDEvent M α β):  SafeInitNDEventPO ev.to_InitNDEvent where
+  safety := ev.safety
+  feasibility := ev.feasibility
+
+
+instance safeInitNDEventPO_InitNDEvent[Machine CTX M] (ev : InitNDEvent M α β):  SafeInitNDEventPO ev.to_InitNDEvent where
   safety := ev.safety
   feasibility := ev.feasibility
 
