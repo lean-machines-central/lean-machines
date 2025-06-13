@@ -46,7 +46,7 @@ instance [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (abs : OrdinaryNDEvent AM α' β') (ev : OrdinaryRDetEvent AM M α β α' β' abs):
   SafeRDetEventPO
     (ev.toEvent) (abs.toNDEvent)
-    (instSafeAbs := instSafeNDEventPO_OrdinaryNDEvent abs)
+    (instSafeAbs := instSafeNDEventPO_Ordinary abs)
     (instSafeEv := instSafeEventPO_OrdinaryEvent ev.toOrdinaryEvent)
     (valid_kind := by simp)
   where

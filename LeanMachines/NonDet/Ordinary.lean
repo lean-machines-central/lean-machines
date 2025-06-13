@@ -61,7 +61,7 @@ instance [Machine CTX M] (ev : OrdinaryNDEvent M α β):  SafeNDEventPO ev.toNDE
   feasibility := ev.feasibility
 
 
-instance instSafeNDEventPO_OrdinaryNDEvent [Machine CTX M]
+instance instSafeNDEventPO_Ordinary [Machine CTX M]
   (ev : OrdinaryNDEvent M α β):  SafeNDEventPO ev.toNDEvent (EventKind.TransNonDet (Convergence.Ordinary)) where
   safety := ev.safety
   feasibility := ev.feasibility
