@@ -44,6 +44,14 @@ structure AnticipatedNDEvent (v) [Preorder v] (M) [instM : Machine CTX M]
     → ∀ y, ∀ m',  effect m x grd (y, m')
                    → variant m' ≤ variant m
 
+-- When we need an instance of the SafeEvent typeclass for an anticipated event, we use this parameterized structure
+instance instSafeNDEventPO_Anticipated [Machine CTX M] [Preorder v]
+  (ev : AnticipatedNDEvent v M α β):  SafeNDEventPO ev.toNDEvent (EventKind.TransNonDet (Convergence.Anticipated)) where
+  safety := ev.safety
+  feasibility := ev.feasibility
+
+
+
 theorem AnticipatedNDEvent.ext [Preorder v] {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: AnticipatedNDEvent v M α β):
   ev₁.toOrdinaryNDEvent = ev₂.toOrdinaryNDEvent
   → ev₁.variant = ev₂.variant
@@ -63,7 +71,7 @@ by
 
 /-- A way to rebuild an Anticipated event from the required POs. -/
 def mkAnticipatedNDEvent (v) [Preorder v] [Machine CTX M] (ev : NDEvent M α β)
-  [instAnticipated : AnticipatedNDEventPO v ev (EventKind.TransDet (Convergence.Anticipated))] : AnticipatedNDEvent v M α β :=
+  [instAnticipated : AnticipatedNDEventPO v ev (EventKind.TransNonDet (Convergence.Anticipated))] : AnticipatedNDEvent v M α β :=
   {
     effect := ev.effect
     guard := ev.guard
@@ -170,6 +178,13 @@ structure ConvergentNDEvent (v) [Preorder v] [WellFoundedLT v] (M) [instM : Mach
     → ∀ y, ∀ m',  effect m x grd (y, m')
                    → variant m' < variant m
 
+-- When we need an instance of the SafeEvent typeclass for an anticipated event, we use this parameterized structure
+instance instSafeNDEventPO_Convergent [Machine CTX M] [Preorder v] [WellFoundedLT v]
+  (ev : ConvergentNDEvent v M α β):  SafeNDEventPO ev.toNDEvent (EventKind.TransNonDet (Convergence.Convergent)) where
+  safety := ev.safety
+  feasibility := ev.feasibility
+
+
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M]:
   Coe (ConvergentNDEvent v M α β) (AnticipatedNDEvent v M α β) where
     coe ev := {
@@ -179,6 +194,8 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M]:
         have Hconc := ev.convergence m x Hinv Hgrd y m' Heff
         exact le_of_lt Hconc
     }
+
+
 
 theorem ConvergentNDEvent.ext [Preorder v] [WellFoundedLT v] {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: ConvergentNDEvent v M α β):
   ev₁.toOrdinaryNDEvent = ev₂.toOrdinaryNDEvent
