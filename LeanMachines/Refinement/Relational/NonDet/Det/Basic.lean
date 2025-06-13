@@ -33,5 +33,3 @@ class SafeRDetEventPO {α β α' β'} [Machine ACTX AM] [Machine CTX M] [instR: 
       → let (y, m') := ev.action m x Hgrd
         ∃ am', abs.effect am (lift_in x) (strengthening m x Hinv Hgrd am Href) (lift_out y, am')
                ∧ refine am' m'
-
-#check  SafeRDetEventPO
