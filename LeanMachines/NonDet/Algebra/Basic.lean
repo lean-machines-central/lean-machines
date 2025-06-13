@@ -327,7 +327,10 @@ instance [Machine CTX M] [Semigroup M]: Arrow (NDEvent M) where
   split {α α' β β'} (ev₁ : NDEvent M α β) (ev₂ : NDEvent M α' β') : NDEvent M (α × α') (β × β') := {
     guard := fun m (x,y) => ev₁.guard m x ∧ ev₂.guard m y
     effect := fun m (x, y) grd ((x', y'), m') =>
-                ∃ m'₁ m'₂, ev₁.effect m x grd.1 (x', m'₁) ∧ ev₂.effect m y grd.2 (y', m'₂) ∧ m' = m'₁ * m'₂
+                ∃ m'₁ m'₂,
+                ev₁.effect m x grd.1 (x', m'₁)
+                ∧ ev₂.effect m y grd.2 (y', m'₂)
+                ∧ m' = m'₁ * m'₂
   }
   first := first_NDEvent
 
@@ -420,14 +423,16 @@ def conj_NDEvent [Machine CTX M]  (ev₁ : NDEvent M α β) (ev₂ : NDEvent M �
       ∧ ((grd₂ : ev₂.guard m x) → ev₂.effect m x grd₂ (y, m'))
   }
 
+def impossible_NDEvent [Machine CTX M] : NDEvent M α β :=
+  {
+    guard _ _ := False
+    effect := fun _ _ _ (_,_) => False
+  }
+
 
 
 instance [Machine CTX M] [Semigroup M]: ArrowPlus (NDEvent M) where
-  zero :=
-    {
-      guard _ _ := False
-      effect := fun _ _ _ (_, _) => False
-    }
+  zero := impossible_NDEvent
   conjoin := conj_NDEvent
 
 instance [Machine CTX M] [Semigroup M] : LawfulArrowPlus (NDEvent M) where
@@ -486,7 +491,7 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowPlus (NDEvent M) where
             (conj_NDEvent { guard := fun x x => False, effect := fun m x x x =>False } a) ?_
           intros m x
           simp[conj_NDEvent]
-        · simp[conj_NDEvent]
+        · simp[conj_NDEvent,impossible_NDEvent]
           constructor
           · refine
             NDEvent.ext' a
