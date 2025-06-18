@@ -93,6 +93,50 @@ def AnticipatedEvent.toOrdinaryEvent [Preorder v] [Machine CTX M]
     }
   }
 
+axiom AnticipatedEvent.ext [Preorder v]{CTX} {M} [Machine CTX M] {α β}
+  (ev₁ ev₂: AnticipatedEvent v M α β):
+  ev₁.toOrdinaryEvent = ev₂.toOrdinaryEvent
+  → ev₁.po.variant = ev₂.po.variant
+  → ev₁ = ev₂
+
+-- theorem AnticipatedEvent.ext [Preorder v] [WellFoundedLT v] {CTX} {M} [Machine CTX M] {α β}
+--   (ev₁ ev₂: AnticipatedEvent v M α β):
+--   ev₁.toOrdinaryEvent = ev₂.toOrdinaryEvent
+--   → ev₁.po.variant = ev₂.po.variant
+--   → ev₁ = ev₂ :=
+--   by
+--     intros Heq Hvar
+
+--     have ⟨to_event₁,to_variant₁,to_ev_po₁,ni₁⟩ := ev₁
+--     have ⟨to_event₂,to_variant₂,to_ev_po₂,ni₂⟩ := ev₂
+--     simp at Hvar
+--     simp at Heq
+
+--     have h₁ : ni₁ =
+--       by
+--         rw[Heq]
+--         rw[Hvar]
+--         exact ni₂
+--          :=
+--     by
+--       simp
+--     rw[h₁]
+
+--     have h₂ : to_ev_po₁ =
+--       by
+--         rw[Heq]
+--         exact to_ev_po₂
+--       := by simp
+
+--     rw[h₂]
+--     simp
+--     constructor
+--     · exact Heq
+--     have h : to_variant₁ = to_variant₂ := by sorry
+
+
+--     sorry
+
 /-- The specification of a deterministic, anticipated event for machine `M`
 with input type `α` and output type `β`. The non-increasing proof relies
  on a variant type `v` assumed to be a preorder.
@@ -271,6 +315,14 @@ private def ConvergentEvent_fromAnticipated {v} [Preorder v] [WellFoundedLT v] {
     }
   }
 
+
+axiom ConvergentEvent.ext [Preorder v] [WellFoundedLT v] {CTX} {M} [Machine CTX M] {α β} (ev₁ ev₂: ConvergentEvent v M α β):
+  ev₁.toOrdinaryEvent = ev₂.toOrdinaryEvent
+  → ev₁.po.variant = ev₂.po.variant
+  → ev₁ = ev₂
+
+
+
 /-- Variant of `ConvergentEventSpec` with implicit `Unit` output type -/
 structure ConvergentEventSpec' (v) [Preorder v] [WellFoundedLT v] (M) [instM:Machine CTX M] (α)
   extends _Variant v (instM:=instM), EventSpec' M α where
@@ -316,266 +368,3 @@ def ConvergentEventSpec''.toConvergentEventSpec {v} [Preorder v] [WellFoundedLT 
 @[simp]
 def newConvergentEvent'' {v} [Preorder v] [WellFoundedLT v] {M} [Machine CTX M] (ev : ConvergentEventSpec'' v M) : ConvergentEvent v M Unit Unit :=
   newConvergentEvent ev.toConvergentEventSpec
-
-/-!
-## Algebraic properties of events
-
-The following instantiate various algebraic structures for anticipated
-and convergent events (experimental, not documented).
-
--/
-
-@[simp]
-def mapAnticipatedEvent [Preorder v] [Machine CTX M] (f : α → β) (ev : AnticipatedEvent v M γ α) : AnticipatedEvent v M γ β :=
-  newAnticipatedEvent {
-    guard := ev.guard
-    action := fun m x grd => let (y, m') := ev.action m x grd
-                             (f y, m')
-    safety :=  ev.po.safety
-    variant := ev.po.variant
-    nonIncreasing := ev.po.nonIncreasing
-  }
-
-instance [Preorder v] [Machine CTX M] : Functor (AnticipatedEvent v M γ) where
-  map := mapAnticipatedEvent
-
-instance [Preorder v] [Machine CTX M] : LawfulFunctor (AnticipatedEvent v M γ) where
-  map_const := rfl
-  id_map := by intros ; rfl
-  comp_map := by intros ; rfl
-
-def mapConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (f : α → β) (ev : ConvergentEvent v M γ α) : ConvergentEvent v M γ β :=
-  newConvergentEvent {
-    guard := ev.guard
-    action := fun m x grd => let (y, m') := ev.action m x grd
-                             (f y, m')
-    safety :=  ev.po.safety
-    variant := ev.po.variant
-    convergence := ev.po.convergence
-  }
-
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Functor (ConvergentEvent v M γ) where
-  map := mapConvergentEvent
-
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulFunctor (ConvergentEvent v M γ) where
-  map_const := rfl
-  id_map := by intros ; rfl
-  comp_map := by intros ; rfl
-
-/- Contravariant functor -/
-
-abbrev CoAnticipatedEvent (v) [Preorder v] (M) [Machine CTX M] (α) (β) :=
-   AnticipatedEvent v M β α
-
-@[simp]
-def AnticipatedEvent_from_CoAnticipatedEvent [Preorder v] [Machine CTX M] (ev : CoAnticipatedEvent v M α β) : AnticipatedEvent v M β α := ev
-
-@[simp]
-def CoAnticipatedEvent_from_AnticipatedEvent [Preorder v] [Machine CTX M] (ev : AnticipatedEvent v M α β) : CoAnticipatedEvent v M β α := ev
-
-instance [Preorder v] [Machine CTX M]: ContravariantFunctor (CoAnticipatedEvent v M γ) where
-  contramap {α β} (f : β → α) (ev : CoAnticipatedEvent v M γ α) :=
-  let event := let ev' := coEvent_from_Event ev.to_Event
-             let ev'' := ContravariantFunctor.contramap f ev'
-             Event_from_CoEvent ev''
-  {
-    guard := event.guard
-    action := event.action
-    po := {
-      safety := fun m x => by
-        simp [ContravariantFunctor.contramap]
-        intros Hinv Hgrd
-        exact ev.po.safety m (f x) Hinv Hgrd
-      variant := ev.po.variant
-      nonIncreasing := fun m x => by
-        simp
-        intros Hinv Hgrd
-        apply ev.po.nonIncreasing
-        assumption
-    }
-  }
-
-instance [Preorder v] [Machine CTX M] : LawfullContravariantFunctor (CoAnticipatedEvent v M α) where
-  cmap_id _ := by rfl
-  cmap_comp _ _ := by rfl
-
-abbrev CoConvergentEvent (v) [Preorder v] [WellFoundedLT v] (M) [Machine CTX M] (α) (β) :=
-   ConvergentEvent v M β α
-
-@[simp]
-def ConvergentEvent_from_CoConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : CoConvergentEvent v M α β) : ConvergentEvent v M β α := ev
-
-@[simp]
-def CoConvergentEvent_from_ConvergentEvent [Preorder v] [WellFoundedLT v] [Machine CTX M] (ev : ConvergentEvent v M α β) : CoConvergentEvent v M β α := ev
-
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M]: ContravariantFunctor (CoConvergentEvent v M γ) where
-  contramap {α β} (f : β → α) (ev : CoConvergentEvent v M γ α) :=
-  let event := let ev' := coEvent_from_Event ev.to_Event
-             let ev'' := ContravariantFunctor.contramap f ev'
-             Event_from_CoEvent ev''
-  {
-    guard := event.guard
-    action := event.action
-    po := {
-      safety := fun m x => by simp [ContravariantFunctor.contramap]
-                              intros Hinv Hgrd
-                              exact ev.po.safety m (f x) Hinv Hgrd
-      variant := ev.po.variant
-      nonIncreasing := fun m x => by simp
-                                     intros Hinv Hgrd
-                                     apply ev.po.nonIncreasing ; assumption
-      convergence := fun m x => by simp
-                                   intros Hinv Hgrd
-                                   apply ev.po.convergence ; assumption
-    }
-  }
-
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfullContravariantFunctor (CoConvergentEvent v M α) where
-  cmap_id _ := by rfl
-  cmap_comp _ _ := by rfl
-
-/- Profunctor -/
-
-instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedEvent v M) where
-  dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : AnticipatedEvent v M α γ) : AnticipatedEvent v M β δ :=
-    let event := Profunctor.dimap f g ev.to_Event
-    {
-      guard := fun m x => ev.guard m (f x)
-      action := fun m x => event.action m x
-      po := {
-        safety := fun m x => by
-          simp [Profunctor.dimap]
-          intros Hinv Hgrd
-          let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
-          let ev'' := g <$> ev'
-          have Hsafe := ev''.po.safety m x Hinv
-          revert Hsafe ev' ev'' ; simp
-          intro Hsafe
-          exact Hsafe Hgrd
-
-        variant := ev.po.variant
-
-        nonIncreasing := fun m x => by
-          simp
-          intros Hinv Hgrd
-          let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
-          let ev'' := g <$> ev'
-          have Hni := ev''.po.nonIncreasing m x Hinv
-          revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
-          intro Hni
-          apply Hni
-      }
-    }
-
-instance [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedEvent v M) where
-  dimap_id := rfl
-  dimap_comp _ _ _ _ := rfl
-
-instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedEvent v M) where
-  first' {α β γ} (ev : AnticipatedEvent v M α β): AnticipatedEvent v M (α × γ) (β × γ) :=
-    let event := StrongProfunctor.first' ev.to_Event
-    {
-      guard := fun m (x, y) => ev.guard m x ∧ event.guard m (x, y)
-      action := fun m (x, y) grd => event.action m (x, y) grd.2
-      po := {
-        safety := fun m x => by simp
-                                intros Hinv _
-                                apply ev.po.safety ; assumption
-
-        variant := ev.po.variant
-
-        nonIncreasing := fun m (x,y) => by
-          simp
-          intro Hinv _
-          apply ev.po.nonIncreasing m x Hinv
-      }
-    }
-
-instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedEvent v M) where
-  -- XXX : at some point the laws should be demonstrated
-
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (ConvergentEvent v M) where
-  dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : ConvergentEvent v M α γ) : ConvergentEvent v M β δ :=
-    let event := Profunctor.dimap f g ev.to_Event
-    {
-      guard := fun m x => ev.guard m (f x)
-      action := fun m x => event.action m x
-      po := {
-        safety := fun m x => by
-          simp [Profunctor.dimap]
-          intros Hinv Hgrd
-          let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
-          let ev'' := g <$> ev'
-          have Hsafe := ev''.po.safety m x Hinv
-          revert Hsafe ev' ev'' ; simp
-          intro Hsafe
-          exact Hsafe Hgrd
-
-        variant := ev.po.variant
-
-        nonIncreasing := fun m x => by
-          simp
-          intros Hinv Hgrd
-          let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
-          let ev'' := g <$> ev'
-          have Hni := ev''.po.nonIncreasing m x Hinv
-          revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
-          intro Hni
-          apply Hni
-
-        convergence := fun m x => by
-          simp
-          intros Hinv Hgrd
-          let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
-          let ev'' := g <$> ev'
-          have Hni := ev''.po.convergence m x Hinv
-          revert Hni ev' ev'' ; simp [Functor.map, ContravariantFunctor.contramap]
-          intro Hni
-          apply Hni
-      }
-    }
-
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (ConvergentEvent v M) where
-  dimap_id := rfl
-  dimap_comp _ _ _ _ := rfl
-
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (ConvergentEvent v M) where
-  first' {α β γ} (ev : ConvergentEvent v M α β): ConvergentEvent v M (α × γ) (β × γ) :=
-    let event := StrongProfunctor.first' ev.to_Event
-    {
-      guard := fun m (x, y) => ev.guard m x ∧ event.guard m (x, y)
-      action := fun m (x, y) grd => event.action m (x, y) grd.2
-      po := {
-        safety := fun m x => by
-          simp
-          intros Hinv _
-          apply ev.po.safety ; assumption
-
-        variant := ev.po.variant
-
-        nonIncreasing := fun m (x,y) => by
-          simp
-          intro Hinv _
-          apply ev.po.nonIncreasing m x Hinv
-
-        convergence := fun m (x,y) => by
-          simp
-          intro Hinv _
-          apply ev.po.convergence m x Hinv
-
-      }
-    }
-
-instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentEvent v M) where
-  -- XXX : at some point the laws should be demonstrated
-
-/-
-
-There are no Category or Arrow instances
- - for example, Category.id  has no nonIncreasing argument
-   ==> or use a default zero ?
- - Category.comp is maybe possible (but non-trivial combination of variants)
-
-==> probably needs more specific type classes to fix the precise constraints
-
--/
