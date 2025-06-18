@@ -26,7 +26,6 @@ def AbstractSRNDEventSpec.toAbstractFRNDEventSpec  [Machine ACTX AM] [Machine CT
     unlift := fun _ am' m _ => SRefinement.unlift m am'
 
     step_ref := fun m x => by
-      simp
       intros Hinv Hgrd y am' Heff
       have Hlr := lift_ref (AM:=AM) m Hinv
       have Hsafe := refine_safe (self:=instRefinementOfFRefinement) (lift m) m Hinv Hlr
@@ -35,12 +34,10 @@ def AbstractSRNDEventSpec.toAbstractFRNDEventSpec  [Machine ACTX AM] [Machine CT
 
 
     step_safe := fun m x => by
-      simp
       intros Hinv Hgrd _ am' Heff
       exact ev.step_inv m x Hinv Hgrd _ am' Heff
 
     lift_unlift := fun m am am' x => by
-      simp
       intros Hinv Hainv'
       apply lift_unlift (self:=instSR) m am' Hinv Hainv'
   }
@@ -124,7 +121,6 @@ def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Ma
     unlift := fun _ am' m _ => SRefinement.unlift m am'
 
     step_ref := fun x => by
-      simp
       intros Hgrd y am' Heff
       have Hainv := abstract.po.safety x Hgrd y am' Heff
       have Hsi := ev.step_inv x Hgrd y am' Heff
@@ -134,12 +130,10 @@ def AbstractInitSRNDEventSpec.toAbstractInitFRNDEventSpec  [Machine ACTX AM] [Ma
       assumption
 
     step_safe := fun x => by
-      simp
       intros Hgrd _ am' Heff
       exact ev.step_inv x Hgrd _ am' Heff
 
     lift_unlift := fun am am' x => by
-      simp
       apply lu_default
       assumption
   }

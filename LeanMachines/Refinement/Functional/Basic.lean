@@ -41,7 +41,7 @@ instance [Machine ACTX AM] [Machine CTX M] [FRefinement AM M]: Refinement AM M w
   refine (am : AM) (m : M) := am = lift m
 
   refine_safe (am : AM) (m : M) := by
-    simp
+    --simp
     intros Hinv Ham
     rw [Ham]
     exact lift_safe m Hinv

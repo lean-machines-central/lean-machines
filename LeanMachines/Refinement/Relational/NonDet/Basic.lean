@@ -117,6 +117,8 @@ def newRNDEvent [Machine ACTX AM] [Machine CTX M] [Refinement AM M]
   {
     to_NDEvent := ev.to_NDEvent
     po := {
+      lift_in := ev.lift_in
+      lift_out := ev.lift_out
       safety := ev.safety
       feasibility := ev.feasibility
       abstract := abs.to_NDEvent

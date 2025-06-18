@@ -208,7 +208,7 @@ def ConvergentRNDEvent.toConvergentNDEvent [Preorder v] [WellFoundedLT v] [Machi
       feasibility := ev.po.feasibility
       variant := ev.po.variant
       nonIncreasing := fun m x => by
-        simp
+        --simp
         intros Hinv Hgrd y m' Heff
         have Hcv := ev.po.convergence m x Hinv Hgrd y m' Heff
         exact le_of_lt Hcv
@@ -250,6 +250,8 @@ def newConvergentRNDEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mach
   {
     to_NDEvent := ev.to_NDEvent
     po := {
+      lift_in := ev.lift_in
+      lift_out := ev.lift_out
       safety := ev.safety
       feasibility := ev.feasibility
       abstract := abs.to_NDEvent

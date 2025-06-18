@@ -2,8 +2,8 @@
 import LeanMachines.Event.Ordinary
 import LeanMachines.Refinement.Relational.Convergent
 import LeanMachines.Refinement.Relational.NonDet.Det.Basic
-import LeanMachines.Refinement.Relational.NonDet.Convergent
-
+--import LeanMachines.Refinement.Relational.NonDet.Convergent
+import LeanMachines.NonDet.Convergent
 /-!
 
 ## Convergent deterministic refined events
@@ -236,6 +236,9 @@ def newConvergentRDetEvent [Preorder v] [WellFoundedLT v] [Machine ACTX AM] [Mac
   {
     to_Event := ev.to_Event
     po := {
+
+      lift_in := ev.lift_in
+      lift_out := ev.lift_out
       safety := ev.safety
       abstract := abs.to_NDEvent
       strengthening := ev.strengthening
