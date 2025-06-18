@@ -36,9 +36,30 @@ open StrongProfunctor
 def StrongProfunctor.defaultSecond'{α β γ : Type u} (pf) [instPF: StrongProfunctor pf]:=
   dimap swap_fun swap_fun ∘ @first' pf instPF α β γ
 
+
+
+def α_ : ((β × γ ) × δ) → (β × (γ × δ)) :=
+  λ ((b,c),d) => (b,(c,d))
+
+def α_inv :  (β × (γ × δ)) → ((β × γ ) × δ) :=
+  λ (b,(c,d)) => ((b,c),d)
+
 class LawfulStrongProfunctor (pf : Type u → Type u → Type w) [StrongProfunctor pf] extends LawfulProfunctor pf where
-  -- well ... there *are* laws
   -- cf. https://arxiv.org/pdf/1406.4823.pdf
+  dimap_pi_id (a : pf α β) :
+    let lh : pf (α × γ) β := dimap id Prod.fst (first' a)
+    let rh : pf (α × γ) β := dimap Prod.fst id a
+    lh = rh
+  first_first (a : pf α β):
+    let lh : pf ((α × γ)× γ') ((β × γ)× γ') := first' (first' a)
+    let rh : pf ((α × γ)× γ') ((β × γ)× γ') := dimap α_ α_inv (first' a)
+    lh = rh
+  dinaturality (a : pf α β) (f : γ  → δ):
+    let lh : pf (α × γ) (β × δ) := dimap (λ (x,y) => (id x, f y)) id (first' a)
+    let rh : pf (α × γ) (β × δ) := dimap id (λ (x,y) => (id x, f y)) (first' a)
+    lh = rh
+
+
 
 theorem comp_assoc:
   f ∘ g ∘ h = (f ∘ g) ∘ h := rfl
@@ -73,6 +94,18 @@ instance: StrongProfunctor (·→·) where
   first' f := fun (x, y) => (f x, y)
 
 instance: LawfulStrongProfunctor (·→·) where
+  dimap_pi_id a :=
+  by
+    -- simp[dimap,first']
+    rfl
+  first_first a :=
+  by
+    -- simp[dimap,first',α_,α_inv]
+    rfl
+  dinaturality a f :=
+  by
+    -- simp[dimap,first']
+    rfl
 
 end ProFun
 
