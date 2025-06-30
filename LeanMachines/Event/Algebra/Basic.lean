@@ -221,20 +221,57 @@ instance [Machine CTX M]: Arrow (_Event M) where
                            ev₁ ev₂
 -/
 
-instance [Machine CTX M]: Arrow (_Event M) where
+-- instance [Machine CTX M]: Arrow (_Event M) where
+--   arrow {α β} (f : α → β) := {
+--     guard := fun _ _ => True
+--     action := fun m x _ => (f x, m)
+--   }
+
+--   split {α α' β β'} (ev₁ : _Event M α β)  (ev₂ : _Event M α' β') : _Event M (α × α') (β × β') := {
+--     guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
+--     action := fun m (x, y) grd => let (x',m'₁) := ev₁.action m x grd.1
+--                               let (y', _) := ev₂.action m y grd.2
+--                               -- note : we forget the second state change
+--                               ((x', y'), m'₁)
+--   }
+-- instance [Machine CTX M]  : LawfulArrow (_Event M) where
+--   arrow_id := by simp [Arrow.arrow]
+--   arrow_ext _ := by
+--     apply _Event.ext'
+--     simp [Arrow.arrow, Arrow.first]
+
+--   arrow_fun _ _ := by
+--     apply _Event.ext'
+--     simp [Arrow.arrow, Arrow.first]
+--   arrow_xcg _ _ := by
+--     apply _Event.ext'
+--     simp [Arrow.arrow, Arrow.first]
+--   arrow_unit ev := by
+--     apply _Event.ext'
+--     simp [Arrow.arrow, Arrow.first]
+
+--   arrow_assoc {α β γ δ} (f : _Event M α β) := by
+--     apply _Event.ext'
+--     simp [Arrow.arrow, Arrow.first]
+
+instance [Machine CTX M] : Arrow (_Event M) where
   arrow {α β} (f : α → β) := {
     guard := fun _ _ => True
     action := fun m x _ => (f x, m)
   }
 
   split {α α' β β'} (ev₁ : _Event M α β)  (ev₂ : _Event M α' β') : _Event M (α × α') (β × β') := {
-    guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
-    action := fun m (x, y) grd => let (x',m'₁) := ev₁.action m x grd.1
-                              let (y', _) := ev₂.action m y grd.2
-                              -- note : we forget the second state change
-                              ((x', y'), m'₁)
+    guard := fun m (x,y) =>
+      ev₁.guard m x ∧
+        ((hgrd₁ : ev₁.guard m x) → ev₂.guard (ev₁.action m x hgrd₁).2 y)
+    action := fun m (x,y) grd =>
+        let x' := (ev₁.action m x grd.1).1
+        let m'₁ := (ev₁.action m x grd.1).2
+        let (y',m'₂) := ev₂.action m'₁ y (grd.2 grd.1)
+        ((x',y'),m'₂)
   }
-instance [Machine CTX M]  : LawfulArrow (_Event M) where
+
+instance [Machine CTX M] : LawfulArrow (_Event M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext _ := by
     apply _Event.ext'
@@ -249,66 +286,11 @@ instance [Machine CTX M]  : LawfulArrow (_Event M) where
   arrow_unit ev := by
     apply _Event.ext'
     simp [Arrow.arrow, Arrow.first]
-
   arrow_assoc {α β γ δ} (f : _Event M α β) := by
     apply _Event.ext'
     simp [Arrow.arrow, Arrow.first]
 
 
-
-
-class CustomCompo (M : Type u) where
-  comp : M → M → M → M
-class LawfulCustomCompo (M : Type u) extends CustomCompo M where
-  assoc : ∀ a b c d : M, comp d a (comp d b c) = comp d (comp d a b ) c
-  idem : ∀ m d : M, comp d m m = m
-  modif (d : M) : ∀ m : M,  comp d m d = m
--- more explicit alternative
-
-instance customCompo [Machine CTX M] [LawfulCustomCompo M]: Arrow (_Event M) where
-  arrow {α β} (f : α → β) := {
-    guard := fun _ _ => True
-    action := fun m x _ => (f x, m)
-  }
-
-  split {α α' β β'} (ev₁ : _Event M α β)  (ev₂ : _Event M α' β') : _Event M (α × α') (β × β') := {
-    guard := fun m (x, y) => ev₁.guard m x ∧ ev₂.guard m y
-    action := fun m (x, y) grd => let (x',m'₁) := ev₁.action m x grd.1
-                              let (y', m'₂) := ev₂.action m y grd.2
-                              -- note : we forget the second state change
-                              ((x', y'), CustomCompo.comp m m'₁ m'₂)
-  }
-
-
-
-
-instance [Machine CTX M] [LawfulCustomCompo M] : LawfulArrow (_Event M) where
-  arrow_id := by simp [Arrow.arrow]
-  arrow_ext _ := by
-    apply _Event.ext'
-    simp [Arrow.arrow, Arrow.first]
-    intros m' a b
-    exact LawfulCustomCompo.idem m' m'
-  arrow_fun _ _ := by
-    apply _Event.ext'
-    simp [Arrow.arrow, Arrow.first]
-  arrow_xcg _ _ := by
-    apply _Event.ext'
-    simp [Arrow.arrow, Arrow.first]
-  arrow_unit ev := by
-    apply _Event.ext'
-    simp [Arrow.arrow, Arrow.first]
-    intros m a b grd₁ grd₂
-
-    have h := LawfulCustomCompo.modif m (ev.action m a grd₁).2
-    rw[h]
-  arrow_assoc {α β γ δ} (f : _Event M α β) := by
-    apply _Event.ext'
-    simp [Arrow.arrow, Arrow.first]
-    intros m a b d grd₁ grd₂
-    have h := LawfulCustomCompo.modif m (f.action m a grd₁).2
-    rw[h]
-    assumption
 
 /-  ArrowChoice -/
 
@@ -325,11 +307,11 @@ def alt_Event [Machine CTX M] (evl : _Event M α β) (evr : _Event M γ δ)
                                     (Sum.inr y, m')
   }
 
-instance [Machine CTX M] [LawfulCustomCompo M]: ArrowChoice (_Event M) where
+instance [Machine CTX M] : ArrowChoice (_Event M) where
   splitIn := alt_Event
 
 
-instance [Machine CTX M] [LawfulCustomCompo M]: LawfulArrowChoice (_Event M) where
+instance [Machine CTX M]: LawfulArrowChoice (_Event M) where
   left_arr f :=
     by
       apply _Event.ext'
@@ -458,3 +440,32 @@ instance [Machine CTX M] : LawfulStrongProfunctor (_Event M) where
   dinaturality a f :=
   by
     simp[Profunctor.dimap,StrongProfunctor.first']
+
+
+-- instance [Machine CTX M] : CoCartesianProfunctor (_Event M) where
+--   left {α β γ} (ev : _Event M α β) : _Event M (Sum α γ) (Sum β γ) :=
+--     {
+--       guard := fun m x =>
+--         match x with
+--         | .inl l => ev.guard m l
+--         | _ => True
+--       action := fun m x grd =>
+--         match x with
+--         | .inl l =>
+--           let (res,m') := ev.action m l grd
+--           (.inl res, m')
+--         | .inr r => (.inr r,m)
+--     }
+--   right {α β γ} (ev : _Event M α β) : _Event M (Sum γ α ) (Sum γ β) :=
+--     {
+--       guard := fun m x =>
+--         match x with
+--         | .inr l => ev.guard m l
+--         | _ => True
+--       action := fun m x grd =>
+--         match x with
+--         | .inr r =>
+--           let (res,m') := ev.action m r grd
+--           (.inr res, m')
+--         | .inl l => (.inl l,m)
+--     }

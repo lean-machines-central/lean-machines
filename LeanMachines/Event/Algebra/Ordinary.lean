@@ -20,7 +20,7 @@ This part is rather experimental and is thus not fully documented yet.
 -/
 
 /- Functor -/
-
+section Ordinary
 @[simp]
 def funEvent (M) [Machine CTX M] (f : α → β) : OrdinaryEvent M α β :=
   newEvent ((fun_Event M f).toEventSpec
@@ -35,13 +35,15 @@ def mapEvent [Machine CTX M] (f : α → β) (ev : OrdinaryEvent M γ α) : Ordi
   }
 }
 
-instance [Machine CTX M] : Functor (OrdinaryEvent M γ) where
+instance fo [Machine CTX M] : Functor (OrdinaryEvent M γ) where
   map := mapEvent
 
 instance [Machine CTX M] : LawfulFunctor (OrdinaryEvent M γ) where
   map_const := rfl
   id_map := by intros ; rfl
   comp_map := by intros ; rfl
+
+end Ordinary
 
 /- Applicative Functor -/
 
@@ -200,26 +202,28 @@ instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
     po := {
       safety := fun m (x, x') => by
         simp [Arrow.split]
-        intro Hinv ⟨Hgrd₁, _⟩
-        apply ev₁.po.safety m x Hinv Hgrd₁
+        intro Hinv ⟨Hgrd₁, Hgrd₂⟩
+        let m'₁ := (ev₁.action m x Hgrd₁).snd
+        let m'₂ := (ev₂.action m'₁ x' (Hgrd₂ Hgrd₁)).snd
+        exact ev₂.po.safety m'₁ x' (ev₁.po.safety m x Hinv Hgrd₁) (Hgrd₂ Hgrd₁)
     }
   }
 
 
 theorem OrdinaryEvent_lift_arrow [Machine CTX M] (f : α → β):
-  (instArrowOrdinaryEvent.arrow f).to_Event = (instArrow_Event (M:=M)).arrow f :=
+  (instArrowOrdinaryEvent.arrow f).to_Event (M := M) = Arrow.arrow f :=
 by
   simp [Arrow.arrow]
 
 theorem OrdinaryEvent_lift_split [Machine CTX M] {α α' β β'} (ev₁ : OrdinaryEvent M α β) (ev₂ : OrdinaryEvent M α' β'):
   (instArrowOrdinaryEvent.split ev₁ ev₂).to_Event
-  = (instArrow_Event (M:=M)).split ev₁.to_Event ev₂.to_Event :=
+  = Arrow.split ev₁.to_Event ev₂.to_Event :=
 by
   simp [Arrow.split, Arrow.first]
 
 theorem OrdinaryEvent_lift_first [Machine CTX M] {α β} (ev : OrdinaryEvent M α β):
   (instArrowOrdinaryEvent.first ev (γ:=γ)).to_Event
-  = (instArrow_Event (M:=M)).first (ev.to_Event) :=
+  = Arrow.first (ev.to_Event) :=
 by
   exact rfl
 
