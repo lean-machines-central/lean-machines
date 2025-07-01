@@ -259,6 +259,43 @@ instance [Machine CTX M]: LawfulArrow (OrdinaryEvent M) where
     apply OrdinaryEvent.ext
     apply LawfulArrow.arrow_assoc
 
+
+
+instance [Machine CTX M] : ArrowChoice (OrdinaryEvent M) where
+  splitIn ev₁ ev₂ :=
+    {
+      to_Event := alt_Event ev₁.to_Event ev₂.to_Event
+      po := {
+        safety m x hinv hgrd :=
+        match x with
+        | .inl a => ev₁.po.safety m a hinv hgrd
+        | .inr b =>ev₂.po.safety m b hinv hgrd
+      }
+    }
+
+instance [Machine CTX M]: LawfulArrowChoice (OrdinaryEvent M) where
+  left_arr f :=
+    by
+      apply OrdinaryEvent.ext
+      apply LawfulArrowChoice.left_arr
+  left_f_g f g :=
+    by
+      apply OrdinaryEvent.ext
+      apply LawfulArrowChoice.left_f_g
+  arr_inl f :=
+    by
+      apply OrdinaryEvent.ext
+      apply LawfulArrowChoice.arr_inl
+  split f g :=
+    by
+      apply OrdinaryEvent.ext
+      apply LawfulArrowChoice.split
+  assoc f :=
+    by
+      apply OrdinaryEvent.ext
+      apply LawfulArrowChoice.assoc
+
+
 /- Contravariant functor -/
 
 abbrev CoEvent (M) [Machine CTX M] (α) (β) :=
