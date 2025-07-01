@@ -271,6 +271,11 @@ instance [Machine CTX M] : Arrow (_Event M) where
         ((x',y'),m'₂)
   }
 
+def _Event.arrM [Machine CTX M] (f : M → α → β ) : _Event M α β :=
+  {
+    action := fun m x _ => (f m x, m)
+  }
+
 instance [Machine CTX M] : LawfulArrow (_Event M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext _ := by

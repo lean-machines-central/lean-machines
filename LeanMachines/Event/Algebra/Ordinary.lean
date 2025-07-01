@@ -209,6 +209,16 @@ instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
     }
   }
 
+def OrdinaryEvent.arrM [Machine CTX M] (f : M → α → β ) : OrdinaryEvent M α β :=
+  {
+    to_Event := _Event.arrM f
+    po := {
+      safety := fun m x =>
+      by
+        simp[_Event.arrM]
+    }
+  }
+
 
 theorem OrdinaryEvent_lift_arrow [Machine CTX M] (f : α → β):
   (instArrowOrdinaryEvent.arrow f).to_Event (M := M) = Arrow.arrow f :=
