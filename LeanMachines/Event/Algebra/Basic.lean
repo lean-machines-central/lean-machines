@@ -284,7 +284,7 @@ instance [Machine CTX M] : LawfulArrow (_Event M) where
 
   arrow_fun _ _ := by
     apply _Event.ext'
-    simp [Arrow.arrow, Arrow.first]
+    simp [Arrow.arrow]
   arrow_xcg _ _ := by
     apply _Event.ext'
     simp [Arrow.arrow, Arrow.first]
@@ -336,7 +336,7 @@ instance [Machine CTX M]: LawfulArrowChoice (_Event M) where
   left_f_g f g :=
     by
       apply _Event.ext'
-      simp[ArrowChoice.left,Arrow.arrow,alt_Event]
+      simp[ArrowChoice.left,alt_Event]
       intros m x
       constructor
       · cases x

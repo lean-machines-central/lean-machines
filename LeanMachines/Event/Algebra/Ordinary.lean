@@ -229,7 +229,7 @@ theorem OrdinaryEvent_lift_split [Machine CTX M] {α α' β β'} (ev₁ : Ordina
   (instArrowOrdinaryEvent.split ev₁ ev₂).to_Event
   = Arrow.split ev₁.to_Event ev₂.to_Event :=
 by
-  simp [Arrow.split, Arrow.first]
+  simp [Arrow.split]
 
 theorem OrdinaryEvent_lift_first [Machine CTX M] {α β} (ev : OrdinaryEvent M α β):
   (instArrowOrdinaryEvent.first ev (γ:=γ)).to_Event

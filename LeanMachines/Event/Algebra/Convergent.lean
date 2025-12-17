@@ -136,7 +136,6 @@ instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedEvent v M) where
       action := fun m x => event.action m x
       po := {
         safety := fun m x => by
-          simp [Profunctor.dimap]
           intros Hinv Hgrd
           let ev' := AnticipatedEvent_from_CoAnticipatedEvent (ContravariantFunctor.contramap f (CoAnticipatedEvent_from_AnticipatedEvent ev))
           let ev'' := g <$> ev'
@@ -216,7 +215,7 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (Convergent
       action := fun m x => event.action m x
       po := {
         safety := fun m x => by
-          simp [Profunctor.dimap]
+          simp
           intros Hinv Hgrd
           let ev' := ConvergentEvent_from_CoConvergentEvent (ContravariantFunctor.contramap f (CoConvergentEvent_from_ConvergentEvent ev))
           let ev'' := g <$> ev'
