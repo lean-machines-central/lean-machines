@@ -223,23 +223,23 @@ def assocsum : (Sum (Sum α β) γ) → (Sum α (Sum β γ)) :=
     | .inr z => .inr (.inr z)
 
 class LawfulArrowChoice (arr : Type u → Type u → Type v) [ArrowChoice arr] extends LawfulArrow arr where
-  left_arr (f : α → β) : -- left (arr f) = arr (left f)
+  left_arr (f : α → β) : -- left (arr f) = arr (left f) extension
     let lh : arr (Sum α γ) (Sum β γ) := left (arrow f)
     let rh : arr (Sum α γ) (Sum β γ) := arrow (fc.left f)
     lh = rh
-  left_f_g (f : arr α β) (g : arr β γ) :
+  left_f_g (f : arr α β) (g : arr β γ) : -- functor
     let lh : arr (Sum α ω) (Sum γ ω) := left (f (>>>) g)
     let rh : arr (Sum α ω) (Sum γ ω) := (left f) (>>>) (left  g)
     lh = rh
-  arr_inl (f :arr α β) :
+  arr_inl (f :arr α β) : -- unit
     let lh : arr α (Sum β γ ) := f (>>>) (arrow (Sum.inl))
     let rh : arr α (Sum β γ ) := (arrow (Sum.inl)) (>>>) left f
     lh = rh
-  split (f : arr α β) (g : α' →  β'):
+  split (f : arr α β) (g : α' →  β'): --exchange
     let lh := (left  f) (>>>) arrow (fc.splitIn id g)
     let rh : arr (Sum α α') (Sum β β' ):=  arrow (fc.splitIn id g) (>>>) (left f)
     lh = rh
-  assoc (f : arr α β) :
+  assoc (f : arr α β) : --association
     let arrassocsum : arr (Sum (Sum β δ) γ) (Sum β (Sum δ γ)):= arrow assocsum
     let lh := left (left f) (>>>) arrassocsum
     let rh := arrow assocsum (>>>) left f

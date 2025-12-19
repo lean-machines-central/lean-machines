@@ -160,7 +160,7 @@ instance [Machine CTX M]: LawfulMonad (OrdinaryEvent M γ) where
 
 /- Category and Arrow -/
 
-instance [Machine CTX M]: Category (OrdinaryEvent M) where
+instance instCatOrdinary [Machine CTX M]: Category (OrdinaryEvent M) where
   id := funEvent M id
 
   comp {α β γ} (ev₂ : OrdinaryEvent M β γ) (ev₁ : OrdinaryEvent M α β) : OrdinaryEvent M α γ :=
@@ -211,8 +211,12 @@ instance [Machine CTX M]: Arrow (OrdinaryEvent M) where
     (fun m (x, x') =>
       by
         simp [Arrow.split]
-        intro Hinv ⟨Hgrd₁, _⟩
-        apply ev₁.safety m x Hinv Hgrd₁)
+        intro Hinv ⟨Hgrd₁, Hgrd₂⟩
+        --apply ev₁.safety m x Hinv Hgrd₁)
+        have Hsafe₁ := ev₁.safety m x Hinv Hgrd₁
+        apply ev₂.safety (ev₁.action m x Hgrd₁).snd x'
+        exact Hsafe₁
+    )
 
 
 
@@ -389,7 +393,7 @@ instance [Machine CTX M] : LawfullContravariantFunctor (CoEvent M α) where
 
 /- Profunctor -/
 /- Weirdly had to modify proofs compared to the previous version...-/
-instance [Machine CTX M] : Profunctor (OrdinaryEvent M) where
+instance instOrdinaryPF [Machine CTX M] : Profunctor (OrdinaryEvent M) where
   dimap {α β} {γ δ} (f : β → α) (g : γ → δ) (ev : OrdinaryEvent M α γ) : OrdinaryEvent M β δ :=
     let event := Profunctor.dimap f g ev.toEvent
     Event.toOrdinaryEvent

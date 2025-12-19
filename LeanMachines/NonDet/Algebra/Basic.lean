@@ -394,6 +394,8 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (NDEvent M) where
 
 /-  ArrowChoice -/
 
+
+
 def altNDEvent [Machine CTX M] (evl : NDEvent M α β) (evr : NDEvent M γ δ)
   : NDEvent M (Sum α γ) (Sum β δ) :=
   {
@@ -402,15 +404,142 @@ def altNDEvent [Machine CTX M] (evl : NDEvent M α β) (evr : NDEvent M γ δ)
                         | .inr r => evr.guard m r
     effect := fun m x grd (y,m') =>
        match x with
-       | .inl xl => ∀ yl, evl.effect m xl grd (yl, m')
-                          → y = Sum.inl yl
-       | .inr xr => ∀ yr, evr.effect m xr grd (yr, m')
-                          → y = Sum.inr yr
+       | .inl xl => ∃ yl, evl.effect m xl grd (yl, m')
+                          ∧  y = Sum.inl yl
+       | .inr xr => ∃ yr, evr.effect m xr grd (yr, m')
+                          ∧  y = Sum.inr yr
   }
 
 instance [Machine CTX M] [Semigroup M]: ArrowChoice (NDEvent M) where
   splitIn := altNDEvent
 
+instance [Machine CTX M] [Semigroup M] : LawfulArrowChoice (NDEvent M) where
+  left_arr {α β γ} (f : α → β):=
+  by
+    apply NDEvent.ext'
+    simp only [ArrowChoice.left,Arrow.arrow,altNDEvent]
+    intros m x
+    constructor
+    · simp
+      cases x
+      repeat trivial
+    · simp
+      constructor
+      · intros y m'
+        intro hgrd₁
+        cases x
+        case a.right.left.inl l =>
+          simp
+          constructor
+          · intro hyp
+            exact id (And.symm hyp)
+          · intro hyp
+            exact id (And.symm hyp)
+        case a.right.left.inr r =>
+          simp
+      · intros z m' grd₁
+        cases x
+        case a.right.right.inl l =>
+          simp
+        case a.right.right.inr r =>
+          simp
+          exact And.comm
+
+  left_f_g {α β γ ω} (f : NDEvent M α β) (g : NDEvent M β γ) :=
+  by
+    apply NDEvent.ext'
+    simp only [ArrowChoice.left,Category.id,altNDEvent]
+    intros m x
+    cases x
+    case a.inl l =>
+      simp
+    case a.inr r =>
+      simp
+  arr_inl {α β γ} (f : NDEvent M α β):=
+  by
+    apply NDEvent.ext'
+    simp only [Arrow.arrow,ArrowChoice.left,altNDEvent]
+    simp
+    intros m x y m' grd₁ grd₂
+    constructor
+    · intro h
+      have ⟨y',m'',heff⟩ := h
+      rw[←(heff.2 heff.1).2] at heff
+      rw[←(heff.2 heff.1).1] at heff
+      exact heff.1
+    · intro h
+      exists y
+      exists m'
+      apply And.intro h
+      intro _
+      apply And.intro rfl rfl
+  split {α β α' β'} (f : NDEvent M α β)  (g : α' → β') :=
+  by
+    apply NDEvent.ext'
+    simp only [Category.comp,Arrow.arrow,ArrowChoice.left,ArrowChoice.splitIn,altNDEvent]
+    intros m x
+    simp
+    cases x
+    case a.inl l =>
+      simp
+      intros a m' grd₁ grd₂
+      constructor
+      · intro h
+        have ⟨y',m'',heff⟩ := h
+        rw[←(heff.2 heff.1).2] at heff
+        rw[←(heff.2 heff.1).1] at heff
+        exact heff.1
+      · intro h
+        exists a
+        exists m'
+        apply And.intro h
+        intro _
+        apply And.intro rfl rfl
+    case a.inr r =>
+      simp
+      intros a m'
+      constructor
+      · intro h
+        exact And.symm h
+      · intro h
+        exact And.symm h
+  assoc {α β γ δ} (f : NDEvent M α β) :=
+  by
+    apply NDEvent.ext'
+    simp only [Category.comp,Arrow.arrow,ArrowChoice.left,ArrowChoice.splitIn,altNDEvent]
+    simp only [assocsum]
+    intros m x
+    cases x
+    case a.inl l =>
+      cases l
+      case inl l' =>
+        simp
+        intros y m' grd₁ grd₂
+        constructor
+        · intro h
+          cases h
+          case mp.intro y' mheff =>
+            cases mheff
+            case intro m' heff =>
+              rw[←(heff.2 heff.1).2] at heff
+              rw[←(heff.2 heff.1).1] at heff
+              exact heff.1
+
+        · intro h
+          exists y
+          exists m'
+          apply And.intro h
+          intro _
+          apply And.intro rfl rfl
+      case inr r' =>
+
+        sorry
+    case a.inr r =>
+      simp only [Category.id]
+      constructor
+      ·
+        sorry
+      · sorry
 
 /-  Conjoin events -/
 

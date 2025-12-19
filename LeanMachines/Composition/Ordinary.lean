@@ -128,12 +128,15 @@ instance RefinementComposition [Machine CTX₁ M₁] [Machine CTX₂ M₂]
 
 
 
-
+#check ToString
 
 
 structure CountContext where
   max : Nat
   maxProp : max > 0
+
+instance : ToString CountContext where
+  toString ctx := ToString.toString ctx.max
 
 
 structure Counter0 (ctx : CountContext) where
@@ -210,7 +213,7 @@ def somme
   (ev₁ : OrdinaryEvent M₁ α₁ β₁)
   [Machine CTX₂ M₂]
   (ev₂ : OrdinaryEvent M₂ α₂ β₂)
-  : OrdinaryEvent (M₁ ⊕  M₂) (α₁ ⊕ α₂) (β₁ ⊕ β₂) :=
+  : OrdinaryEvent  (M₁ ⊕  M₂) (α₁ ⊕ α₂) (β₁ ⊕ β₂) :=
   {
     guard m x :=
       match m,x with
@@ -255,4 +258,153 @@ def somme
 
   }
 
-infixr:60 "⊕" => somme
+infixr:60 "⊹" => somme
+
+
+instance instSum [Machine CTX₁ M₁] [Machine CTX₂ M₂]
+  (ev₁ : Event M₁ α₁ β₁) (ev₂ : Event M₂ α₂ β₂)
+  [i₁ : SafeEventPO ev₁ (EventKind.TransDet (Convergence.Ordinary))]
+  [i₂ : SafeEventPO ev₂ (EventKind.TransDet (Convergence.Ordinary))]:
+  SafeEventPO (mkOrdinaryEvent ev₁ ⊹ mkOrdinaryEvent ev₂).toEvent (EventKind.TransDet (Convergence.Ordinary))
+  (instM := sum)
+  where
+    safety m x :=
+    by
+      unfold Machine.invariant
+      unfold sum
+      simp[somme,mkOrdinaryEvent]
+      intros hinv hgrd
+      cases m
+      case inl m =>
+          cases x
+          case inl =>
+            simp at hgrd
+            exact hinv
+          case inr =>
+            simp at hgrd
+      case inr m =>
+        cases x
+        case inl =>
+          simp at hgrd
+        case inr =>
+          simp at hgrd
+          exact hinv
+
+instance sumRMachine
+  [Machine CTX₁ M₁] [Machine CTX₂ M₂] [Machine ACTX₁ AM₁] [Machine ACTX₂ AM₂]
+  [ref₁ :Refinement AM₁ M₁] [ref₂ : Refinement AM₂ M₂]
+  : Refinement (Sum AM₁ AM₂) (Sum M₁ M₂) where
+  refine am m :=
+    match m,am with
+    | .inl m1, .inl am1 => Refinement.refine am1 m1
+    | .inr m2, .inr am2 => Refinement.refine am2 m2
+    | _,_ => False
+  refine_safe am m  hinv :=
+  by
+    cases m
+    case inl ml =>
+      cases am
+      case inl aml =>
+        simp
+        intro href
+        simp[Machine.invariant] at hinv
+        simp[Machine.invariant]
+        exact  ref₁.refine_safe aml ml hinv href
+      case inr amr =>
+        simp
+    case inr mr =>
+      cases am
+      case inl aml =>
+        simp
+      case inr amr =>
+        simp
+        intro href
+        simp[Machine.invariant] at hinv
+        simp[Machine.invariant]
+        exact  ref₂.refine_safe amr mr hinv href
+
+
+
+
+
+
+
+
+def SommeCpt.Incr :
+  OrdinaryEvent (Counter0 ctx₁ ⊕ Counter0 ctx₂ ) (Nat ⊕ Nat) (Unit ⊕ Unit) :=
+  (Counter0.Incr (ctx := ctx₁)) ⊹ (Counter0.Incr (ctx := ctx₂))
+
+
+#check (Counter0.Incr (ctx := {max := 3, maxProp := by omega})) ⊹ (Counter0.Incr (ctx := {max := 5, maxProp := by omega}))
+#eval Machine.context $ (Counter0 {max := 3, maxProp := by omega} ) ⊕ (Counter0 {max := 5, maxProp := by omega})
+
+
+
+
+instance RefinementSomme [Machine CTX₁ M₁] [Machine CTX₂ M₂]
+  [Machine ACTX₁ AM₁] [Machine ACTX₂ AM₂]
+  [ref₁ : Refinement AM₁ M₁] [ref₂ : Refinement AM₂ M₂]
+  (ev₁ : OrdinaryEvent M₁ α₁ β₁) (ev₂ : OrdinaryEvent M₂ α₂ β₂)
+  (abs₁ : OrdinaryEvent AM₁ α'₁ β'₁) (abs₂ : OrdinaryEvent AM₂ α'₂ β'₂)
+  [sref₁ : SafeREventPO ev₁.toEvent abs₁.toEvent
+    (instSafeEv := instSafeEventPO_OrdinaryEvent ev₁)
+    (instSafeAbs := instSafeEventPO_OrdinaryEvent abs₁)
+    (instR := ref₁)
+    (valid_kind := by simp)]
+  [sref₂ : SafeREventPO ev₂.toEvent abs₂.toEvent
+    (instSafeEv := instSafeEventPO_OrdinaryEvent ev₂)
+    (instSafeAbs := instSafeEventPO_OrdinaryEvent abs₂)
+    (instR := ref₂)
+    (valid_kind := by simp)]
+  : SafeREventPO (ev₁ ⊹ ev₂).toEvent (abs₁ ⊹ abs₂).toEvent
+    (instSafeEv := instSafeEventPO_OrdinaryEvent (ev₁ ⊹ ev₂))
+    (instSafeAbs := instSafeEventPO_OrdinaryEvent (abs₁ ⊹ abs₂))
+    (instR := sumRMachine (ref₁ := ref₁) (ref₂ := ref₂))
+    (valid_kind := by simp)
+  where
+    lift_in x :=
+    match x with
+    | .inl xl => .inl $ sref₁.lift_in xl
+    | .inr xr => .inr $ sref₂.lift_in xr
+    lift_out x :=
+    match x with
+    | .inl xl => .inl $ sref₁.lift_out xl
+    | .inr xr => .inr $ sref₂.lift_out xr
+    strengthening m x hinv hgrd am href :=
+      match m,x with
+      | .inl ml, .inl xl =>
+        by
+          cases am
+          case inl aml => exact sref₁.strengthening ml xl hinv hgrd aml href
+          case inr amr => simp[Refinement.refine] at href
+      | .inr mr, .inr xr =>
+        by
+          cases am
+          case inl aml => simp[Refinement.refine] at href
+          case inr amr => exact sref₂.strengthening mr xr hinv hgrd amr href
+    simulation m x Hinv Hgrd am Href :=
+      match m,x with
+      | .inl m, .inl x =>
+        match am with
+        | .inl am =>
+          by
+            simp[somme]
+            have h := sref₁.simulation m x Hinv Hgrd am Href
+            constructor
+            · exact h.1
+            · exact Href
+        | .inr am =>
+          by
+            simp[Refinement.refine] at Href
+      | .inr m, .inr x =>
+        match am with
+        | .inl am =>
+          by
+            simp[Refinement.refine] at Href
+        | .inr am =>
+          by
+            simp[somme]
+            have h := sref₂.simulation m x Hinv Hgrd am Href
+            constructor
+            · exact h.1
+            · exact Href

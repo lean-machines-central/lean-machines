@@ -41,7 +41,6 @@ import «LeanMachines».Examples.Multiref.Tank.Counter0
 import «LeanMachines».Examples.Multiref.Tank.Xor0
 import «LeanMachines».Examples.Multiref.Tank.Tank
 
-
 -- Versioning
 
 def LeanMachines.VERSION_MAJ : Nat := 0

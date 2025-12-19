@@ -4,7 +4,7 @@ import LeanMachines.Event.Basic
 import LeanMachines.Event.Ordinary
 import LeanMachines.Composition.Ordinary
 import LeanMachines.Examples.Multiref.Press.Weak_reaction
-
+import LeanMachines.Event.Algebra.Ordinary
 import LeanMachines.Examples.Multiref.Press.Strong_reaction
 
 
@@ -26,11 +26,58 @@ def MP0.push_start_motor_button_c : OrdinaryEvent (MP0 ctx) Unit Unit :=
   (ctx := ctx)
 -/
 
+
+def MP0.push_start_motor_button_old : OrdinaryEvent
+  (instM := prod) ((StrongReaction {}) × (WeakReaction  {}) × (WeakReaction {})) Unit Unit :=
+  newEvent''
+  {
+    guard m       := ¬m.2.1.a
+    action m hgrd := ⟨m.1, ⟨true,m.2.1.r,m.2.1.ca+1,m.2.1.cr⟩,m.2.2⟩
+    safety m      :=
+      by
+        simp[Machine.invariant]
+        intros hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ hinv_btn1₁ hinv_btn1₂ _ _ hgrd
+        constructor
+        -- controller invariants
+        constructor
+        assumption
+        constructor
+        assumption
+        constructor
+        assumption
+        assumption
+        -- first btn invariants
+        constructor -- We can reuse the proof ! (just need some boiler plate...)
+        · have h' := WeakReaction.Action_on.safety m.2.1 ()
+          simp[Machine.invariant] at h'
+          have h'' := h' hinv_btn1₁ hinv_btn1₂
+          simp[WeakReaction.Action_on] at h''
+          exact h'' hgrd
+        -- second btn invariants
+        constructor
+        assumption
+        assumption
+  }
+  (instM := prod)
+
 def MP0.push_start_motor_button
   : OrdinaryEvent ((StrongReaction {}) × (WeakReaction  {}) × (WeakReaction {}))
-  (Unit × Unit × Unit) (Unit × Unit × Unit)
+  Unit Unit
   :=
+  Profunctor.dimap (λ () => ((), (), ())) (λ ((), () ,()) => ()) $
   skip_strong {} × (WeakReaction.Action_on ) × skip_weak {}
+
+
+example :  MP0.push_start_motor_button
+  = MP0.push_start_motor_button_old
+  :=
+  by
+    apply OrdinaryEvent.ext'
+    intros m x
+    simp[MP0.push_start_motor_button,Profunctor.dimap]
+    simp[MP0.push_start_motor_button_old]
+    simp[composition]
+    simp[skip_strong,WeakReaction.Action_on,skip_weak,mkOrdinaryEvent]
 
 
 /-
@@ -90,24 +137,60 @@ def MP0.release_stop_motor_button :
   skip_strong ctx.1 × skip_weak ctx.2.1 × WeakReaction.Action_off
 
 
-/-
-def MP0.treat_push_start_motor_button : OrdinaryEvent (MP0 ctx) Unit Unit :=
+
+def MP0.treat_push_start_motor_button_old : OrdinaryEvent
+  (instM := prod) ((StrongReaction {}) × (WeakReaction  {}) × (WeakReaction {})) Unit Unit :=
   newEvent''
   {
     guard m       :=
-      (WeakReaction.Reaction_on).guard m.btn1 () ∧
-      (StrongReaction.Action_on).guard m.motor_controller ()
+      (WeakReaction.Reaction_on).guard m.2.1 () ∧
+      (StrongReaction.Action_on).guard m.1 ()
     action m hgrd :=
-      ⟨((StrongReaction.Action_on).action m.motor_controller () hgrd.2).2
-      ,((WeakReaction.Reaction_on).action m.btn1 () hgrd.1).2
-      ,m.btn2⟩
--/
+      ⟨((StrongReaction.Action_on).action m.1 () hgrd.2).2
+      ,((WeakReaction.Reaction_on).action m.2.1 () hgrd.1).2
+      ,m.2.2⟩
+    safety :=
+    by
+      simp[Machine.invariant]
+      intros motor btn1 btn2 hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ hinv_btn1₁ hinv_btn1₂ _ _ hgrd
+      constructor
+      · have h' := StrongReaction.Action_on.safety motor ()
+        simp[Machine.invariant] at h'
+        have h'' := h' hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄
+        exact h'' hgrd.2
+      constructor
+      · have h' := WeakReaction.Reaction_on.safety btn1 ()
+        simp[Machine.invariant] at h'
+        have h'' := h' hinv_btn1₁ hinv_btn1₂
+        exact h'' hgrd.1
+      · constructor
+        assumption
+        assumption
+  }
+
 def MP0.treat_push_start_motor_button :
-  OrdinaryEvent (MP0 ctx)
+  OrdinaryEvent ((StrongReaction {}) × (WeakReaction  {}) × (WeakReaction {}))
   (instM := prod )
-  (Unit × Unit × Unit) (Unit × Unit × Unit)
+  Unit Unit
   :=
-  StrongReaction.Action_on.toOrdinaryEvent × WeakReaction.Reaction_on × skip_weak ctx.2.2
+  Profunctor.dimap
+  (λ () => ((),(),()))
+  (λ ((),(),()) => ())
+  $
+  StrongReaction.Action_on.toOrdinaryEvent × WeakReaction.Reaction_on × skip_weak {}
+
+example :  MP0.treat_push_start_motor_button
+  = MP0.treat_push_start_motor_button_old
+  :=
+  by
+    apply OrdinaryEvent.ext'
+    intros m x
+    simp[MP0.treat_push_start_motor_button,Profunctor.dimap]
+    simp[MP0.treat_push_start_motor_button_old]
+    simp[composition]
+    simp[WeakReaction.Action_on,skip_weak,mkOrdinaryEvent]
+    exact And.comm
+
 
 /-
 def MP0.treat_push_stop_motor_button : OrdinaryEvent (MP0 ctx) Unit Unit :=
