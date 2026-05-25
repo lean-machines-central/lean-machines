@@ -7,9 +7,9 @@ assistant dedicated to the formal modeling of stateful systems.
 The main objective is to support a stepwise refinement methodology 
 inspired by the Event-B formal method but in the context of a functional
 programming environment. The implementation provides the
-principal Event-B constructions such as contexts, machines, events
+construction inspired by Event-B constructions such as contexts, machines, events
 and, most importantly, the associated refinement principles. It also
-introduce extensions such as event combinators and
+introduces extensions such as event combinators and
 functional variants of the (relational) refinement principles of
 Event-B. Most importantly, the framework enforces the fundamental principle of
 correctness-by-construction: machine states, events structures
@@ -90,9 +90,11 @@ All the examples are developed in the Examples/ directory.
 ## Authors and acknowledgment
 
 The main author is Frederic Peschanski,  Sorbonne University
+Contributors (thanks !):
+  - Danael Carbonneau
+  - Pietro Monticone
 
 ## License
 
-The software is licensed (C) 2024 Frédéric Peschanski
+The software is licensed (C) 2024-2026 Frédéric Peschanski
 under the Apache License 2.0  (the same as Lean4 and Mathlib4). Please see the `LICENSE` file.
-
