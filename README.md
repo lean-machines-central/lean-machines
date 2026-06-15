@@ -90,6 +90,7 @@ All the examples are developed in the Examples/ directory.
 ## Authors and acknowledgment
 
 The main author is Frederic Peschanski,  Sorbonne University
+
 Contributors (thanks !):
   - Danael Carbonneau
   - Pietro Monticone
