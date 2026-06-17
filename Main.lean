@@ -20,12 +20,14 @@ where
   hdecide m _ := m.size.decLt ctx.maxSize
 
 
-instance Decidable_from_hdecide [Machine ctx M] (ev : Event M α β)
+@[reducible]
+def Decidable_from_hdecide [Machine ctx M] (ev : Event M α β)
   (hdecide :∀ (m : M) (x : α), Decidable (ev.guard m x)) : DecidableEvent ev
-where
+:= {
   hdecide := hdecide
+}
 
-#check Decidable_from_hdecide B0.Put.toEvent
+-- #check Decidable_from_hdecide B0.Put.toEvent
 
 
 def main : IO Unit :=

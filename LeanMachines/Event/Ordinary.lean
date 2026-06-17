@@ -276,4 +276,4 @@ def newInitEvent'' [Machine CTX M] (ev : InitEvent'' M) : InitEvent M Unit Unit 
 instance instSkip [Machine CTX M ]: SafeEventPO (skip_Event (M) α) (EventKind.TransDet (Convergence.Ordinary))where
   safety :=
     by
-      simp[Machine.invariant]
+      simp only [skip_Event, forall_const, imp_self, implies_true]

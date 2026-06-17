@@ -81,7 +81,6 @@ instance inst1 : SafeInitEventPO (Tank1.init (ctx:= ctx)) where
 
 
 /- and also a refinement of the initialisation of the counter -/
-#check instSafeEventPO_OrdinaryEvent
 instance : SafeInitREventPO
     (Tank1.init (ctx:= ctx)) (Counter0.Init (ctx:= ctx)).to_InitEvent
     where
@@ -261,7 +260,8 @@ instance instDrain : ConvergentEventPO Nat (Tank1.drain (ctx:=ctx)) where
     variant := fun m => m.cpt
     convergence := fun m x =>
         by
-            simp[Machine.invariant, Variant.variant,Tank1.drain]
+            simp only [Machine.invariant, gt_iff_lt, Tank1.drain, tsub_pos_iff_lt, tsub_lt_self_iff,
+              and_imp]
             intros hinv₁ hinv₂ hinv₃ hgrd₁ hgrd₂ hgrd₃
             exact And.intro (hinv₃ hgrd₁) hgrd₃
 
@@ -313,7 +313,7 @@ instance instDrainAll : ConvergentEventPO Nat (Tank1.drainAll (ctx := ctx))  whe
     convergence :=
         fun m x =>
             by
-                simp[Machine.invariant,Variant.variant,Tank1.drainAll]
+                simp[Machine.invariant,Tank1.drainAll]
 
 
 instance : SafeREventPO

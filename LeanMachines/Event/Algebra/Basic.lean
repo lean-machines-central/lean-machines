@@ -78,13 +78,13 @@ instance [Machine CTX M]: LawfulApplicative (Event M γ) where
   seqRight_eq := by intros ; rfl
   pure_seq := by
     intros α β g ev
-    simp [pure, Seq.seq, Functor.map]
+    simp only [pure, Seq.seq, Functor.map]
     apply Pure_seq_aux
 
   map_pure := by intros α β g x ; rfl
   seq_pure := by
     intros α β ev x
-    simp [Seq.seq, Functor.map, pure]
+    simp only [Seq.seq, Functor.map, pure]
     apply Event.ext'
     simp [apply_Event, map_Event]
 
@@ -241,11 +241,12 @@ instance [Machine CTX M]  : LawfulArrow (Event M) where
   arrow_id := by simp [Arrow.arrow]
   arrow_ext _ := by
     apply Event.ext'
-    simp [Arrow.arrow, Arrow.first]
+    simp only [Arrow.first, Arrow.arrow, Category.id, fun_Event, id_eq, imp_self, and_self,
+      fun_split, implies_true]
 
   arrow_fun _ _ := by
     apply Event.ext'
-    simp [Arrow.arrow, Arrow.first]
+    simp [Arrow.arrow]
   arrow_xcg _ _ := by
     apply Event.ext'
     simp [Arrow.arrow, Arrow.first]
@@ -300,7 +301,8 @@ instance [Machine CTX M]: LawfulArrowChoice (Event M) where
   left_f_g f g :=
     by
       apply Event.ext'
-      simp[ArrowChoice.left,Arrow.arrow,altEvent]
+      simp only [ArrowChoice.left, altEvent, Category.rcomp, Category.comp, Category.id, fun_Event,
+        id_eq, eq_iff_iff]
       intros m x
       constructor
       · cases x
@@ -317,7 +319,9 @@ instance [Machine CTX M]: LawfulArrowChoice (Event M) where
   split f g :=
     by
       apply Event.ext'
-      simp[ArrowChoice.left,Arrow.arrow,ArrowChoice.splitIn,altEvent]
+      simp only [Category.rcomp, Category.comp, ArrowChoice.left, altEvent, Category.id, fun_Event,
+        id_eq, ArrowChoice.splitIn, Arrow.arrow, implies_true, and_true, forall_const, true_and,
+        eq_iff_iff]
       intros m x
       constructor
       · cases x
@@ -330,18 +334,19 @@ instance [Machine CTX M]: LawfulArrowChoice (Event M) where
   assoc f :=
     by
       apply Event.ext'
-      simp[ArrowChoice.left,Arrow.arrow,altEvent,assocsum]
+      simp only [Category.rcomp, Category.comp, ArrowChoice.left, altEvent, Category.id, fun_Event,
+        id_eq, Arrow.arrow, assocsum, implies_true, and_true, forall_const, true_and, eq_iff_iff]
       intros m x
       constructor
       · cases x
-        case a.left.inl val =>
+        case left.inl val =>
           cases val
           · simp
           · simp
         · simp
       · intro grd₁
         cases x
-        case a.right.inl val =>
+        case right.inl val =>
           cases val
           · simp
           · simp

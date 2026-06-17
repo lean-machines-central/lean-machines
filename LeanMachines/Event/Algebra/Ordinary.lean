@@ -275,7 +275,6 @@ def altOrdinaryEvent [Machine CTX M] (evl : OrdinaryEvent M α β) (evr : Ordina
                                     (Sum.inr y, m')
     safety := fun m x hinv grd =>
       by
-        simp[Machine.invariant]
         cases x
         case inl val =>
           simp
@@ -311,7 +310,9 @@ instance [Machine CTX M] : LawfulArrowChoice (OrdinaryEvent M) where
   left_f_g f g :=
     by
       apply OrdinaryEvent.ext'
-      simp[ArrowChoice.left,Arrow.arrow,altOrdinaryEvent]
+      simp only [ArrowChoice.left, altOrdinaryEvent, Category.rcomp, Category.comp,
+        OrdinaryEvent.toEvent, Category.id, funEvent, Event.toOrdinaryEvent, fun_Event, id_eq,
+        eq_iff_iff]
       intros m x
       constructor
       · cases x
@@ -345,14 +346,14 @@ instance [Machine CTX M] : LawfulArrowChoice (OrdinaryEvent M) where
       intros m x
       constructor
       · cases x
-        case a.left.inl val =>
+        case left.inl val =>
           cases val
           · simp
           · simp
         · simp
       · intro grd₁
         cases x
-        case a.right.inl val =>
+        case right.inl val =>
           cases val
           · simp
           · simp

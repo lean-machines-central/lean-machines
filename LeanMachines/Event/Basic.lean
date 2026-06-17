@@ -104,14 +104,15 @@ structure Event (M) [Machine CTX M] (α : Type) (β : Type)
   extends _EventRoot M α where
   action (m : M) (x : α) (grd : guard m x): (β × M)
 
--- XXX: is this class needed ?
-class _Event (M) [Machine CTX M] (α : Type) (β : Type) where
-  guard (m : M) (x : α) : Prop
-  action (m : M) (x : α) (grd : guard m x): (β × M)
+-- -- XXX: is this class needed ?
+-- class _Event (M) [Machine CTX M] (α : Type) (β : Type) where
+--   guard (m : M) (x : α) : Prop
+--   action (m : M) (x : α) (grd : guard m x): (β × M)
 
-instance [Machine CTX M] (ev : Event M α β): _Event M α β where
-  guard := ev.guard
-  action := ev.action
+
+-- instance [Machine CTX M] (ev : Event M α β): _Event M α β where
+--   guard := ev.guard
+--   action := ev.action
 
 theorem _Guard_ext [Machine CTX M] (guard₁ : M → α → Prop) (guard₂ : M → α → Prop):
   (∀ m x, guard₁ m x = guard₂ m x)

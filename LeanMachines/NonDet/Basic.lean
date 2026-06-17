@@ -35,13 +35,13 @@ instance [Machine CTX M]: Coe (Event M α β) (NDEvent M α β) where
                 (y, m') = ev.action  m x grd
   }
 
-class _NDEvent (M) [Machine CTX M] (α : Type) (β : Type) where
-  guard (m : M) (x : α) : Prop
-  effect (m : M) (x : α) (grd : guard m x) (eff : β × M): Prop
+-- class _NDEvent (M) [Machine CTX M] (α : Type) (β : Type) where
+--   guard (m : M) (x : α) : Prop
+--   effect (m : M) (x : α) (grd : guard m x) (eff : β × M): Prop
 
-instance [Machine CTX M] (ev : NDEvent M α β): _NDEvent M α β where
-  guard := ev.guard
-  effect := ev.effect
+-- instance [Machine CTX M] (ev : NDEvent M α β): _NDEvent M α β where
+--   guard := ev.guard
+--   effect := ev.effect
 
 /- XXX : does this axiom breaks something ?
          (I don't think it's provable because of HEq) -/

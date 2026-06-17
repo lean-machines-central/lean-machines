@@ -48,7 +48,6 @@ structure OrdinaryREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refi
         let (z, am') := abs.action am (lift_in x) (strengthening m x Hinv Hgrd am Href)
         lift_out y = z ∧ refine am' m'
 
-#check SafeREventPO
 
 instance [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (abs : OrdinaryEvent AM α' β') (ev : OrdinaryREvent AM M abs α β):

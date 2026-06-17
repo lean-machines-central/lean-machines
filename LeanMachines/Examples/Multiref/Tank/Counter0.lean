@@ -65,7 +65,7 @@ def Counter0.Incr : AnticipatedEvent Nat (Counter0 ctx) Nat Unit :=
     variant := fun m => ctx.max - m.cpt
     nonIncreasing := fun m x hinv hgrd =>
       by
-        simp
+        simp only [tsub_le_iff_right]
         omega
   }
 
@@ -82,7 +82,7 @@ def Counter0.Decr : ConvergentEvent Nat (Counter0 ctx) Nat Unit :=
     variant := fun m => m.cpt
     convergence :=
     by
-      simp[Machine.invariant,Variant.variant]
+      simp only [Machine.invariant, ge_iff_le, gt_iff_lt, tsub_lt_self_iff, and_imp]
       intros m x hinv hgrd₁ hgrd₂
       omega
   }
