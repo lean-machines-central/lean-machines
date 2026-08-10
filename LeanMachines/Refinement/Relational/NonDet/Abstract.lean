@@ -287,7 +287,6 @@ def newAbstractInitRNDEvent [Machine ACTX AM] [Machine CTX M] [instR:Refinement 
         intros Hagrd
         obtain ⟨y, am', Hafeas⟩ := abs.po.feasibility x Hagrd
         exists y
-        exists (ev.unlift default am' default x)
         exists am'
 
       abstract := abs.to_InitNDEvent
