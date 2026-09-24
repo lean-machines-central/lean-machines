@@ -22,6 +22,7 @@ structure B1 (ctx : BufContext) (α : Type) where
 instance: Machine BufContext (B1 ctx α) where
   context := ctx
   invariant b1 := (List.length b1.buf) ≤ ctx.maxSize
+  default := {buf := []}
 
 instance : Refinement (B0 ctx) (B1 ctx α) where
   refine b0 b1 := b0.size = List.length b1.buf
@@ -58,8 +59,6 @@ def B1.Put : OrdinaryREvent (B0 ctx) (B1 ctx α) B0.Put α Unit :=
   safety b1 x :=
   by
     simp[Machine.invariant]
-    intros hinv hgrd
-    exact hgrd
   lift_in := λ _ => ()
   lift_out := id
   strengthening m x :=

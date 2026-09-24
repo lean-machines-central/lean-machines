@@ -36,6 +36,7 @@ structure Counter0 (ctx : CountContext) where
 instance : Machine CountContext (Counter0 ctx) where
   context := ctx
   invariant c0 := c0.cpt ≤ ctx.max
+  default := {cpt := 0}
 
 
 

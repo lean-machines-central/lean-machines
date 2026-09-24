@@ -33,6 +33,7 @@ instance : Machine CountContext (Tank1 ctx) where
     invariant := fun m => (m.cpt ≤ ctx.max)
         ∧ (m.st = status.OPEN_IN → m.cpt < ctx.max)
         ∧ (m.st = status.OPEN_OUT → m.cpt > 0)
+    default := {cpt := 0, st := .CLOSED}
 
 /- Refinement of the counter -/
 instance : Refinement (Counter0 ctx) (Tank1 ctx) where

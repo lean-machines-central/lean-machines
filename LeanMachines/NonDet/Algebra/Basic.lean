@@ -21,24 +21,7 @@ instance [Machine CTX M] : LawfulFunctor (NDEvent M γ) where
   id_map ev := by simp [Functor.map]
 
   comp_map g h ev := by
-    simp [Functor.map]
-    funext m x grd (y,m')
-    apply propext
-    constructor
-    · intro Hz
-      cases Hz
-      case _ z H =>
-        simp at H
-        simp
-        exists (g z)
-        constructor
-        · exists z
-          simp [H]
-        simp [H]
-    simp
-    intros z t Heff Heq₁ Heq₂
-    exists t
-    simp [Heff, Heq₁, Heq₂]
+    simp only [Functor.map, ↓existsAndEq, Function.comp_apply, and_true]
 
 
 -- There are two possible, distinct ContravariantFunctor functors
@@ -89,27 +72,7 @@ instance [Machine CTX M] : LawfulProfunctor (NDEvent M) where
   dimap_comp f f' g g' := by
     simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map]
     funext ev
-    simp
-    funext m x grd (y,m')
-    simp
-    constructor
-    · intro Heff
-      cases Heff
-      case _ u Heff =>
-        exists (g' u)
-        simp [Heff]
-        exists u
-        simp [Heff]
-    intro Heff
-    cases Heff
-    case _ t Heff =>
-      simp at Heff
-      cases Heff
-      case _ Heff Hy =>
-        cases Heff
-        case _ u Heff =>
-          exists u
-          simp [Heff, Hy]
+    simp only [Function.comp_apply, ↓existsAndEq, and_true]
 
 instance [Machine CTX M] : StrongProfunctor (NDEvent M) where
   first' {α β γ} (ev : NDEvent M α β): NDEvent M (α × γ) (β × γ) :=
@@ -121,13 +84,13 @@ instance [Machine CTX M] : StrongProfunctor (NDEvent M) where
 instance [Machine CTX M] : LawfulStrongProfunctor (NDEvent M) where
   dimap_pi_id :=
     by
-      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
-      simp[ContravariantFunctor.contramap,Functor.map]
+      simp [Profunctor.dimap, StrongProfunctor.first']
+      simp [ContravariantFunctor.contramap,Functor.map]
   first_first :=
     by
-      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
-      simp[ContravariantFunctor.contramap,Functor.map]
-      simp[α_,α_inv]
+      simp only [Profunctor.dimap, StrongProfunctor.first',ContravariantFunctor.contramap,
+        Functor.map,α_, ↓existsAndEq, α_inv, and_true, Prod.exists, Prod.mk.injEq, true_and,
+        NDEvent.mk.injEq, heq_eq_eq]
       intros α β γ γ' a
       funext m x grd (y,m')
       simp
@@ -192,8 +155,7 @@ by
   simp
   constructor
   · simp
-    intro Hgrd₃
-    intro Hgrd₂''
+    intro Hgrd₃ Hgrd₂''
     have Hgrd₂' := Hgrd₂'' Hgrd₃ ; clear Hgrd₂''
     intro H'
     simp [Hgrd₃] at *
@@ -201,15 +163,13 @@ by
     have H := H' Hgrd₂' ; clear H'
     have Hgrd₂ := Hgrd₂' y m' Heff₃
     simp [Hgrd₂]
-    intros z mm'
-    intro Heff₂
+    intros z mm' Heff₂
     have Hgrd₁'' := H z mm' y m' Heff₃
     apply Hgrd₁''
     intro Heff₃'
     assumption
   · simp
-    intro Hgrd₃
-    intro Hgrd₁'''
+    intro Hgrd₃ Hgrd₁'''
     have Hgrd₁'' := Hgrd₁''' Hgrd₃ ; clear Hgrd₁'''
     simp [Hgrd₃]
     constructor
@@ -232,8 +192,9 @@ instance [Machine CTX M]: LawfulCategory (NDEvent M) where
 
   id_left ev := by
     apply NDEvent.ext'
-    simp
-    intros m x y m' grd₁ grd₂
+    simp only [Category.comp, Category.id, Prod.mk.eta, implies_true, and_true,
+      Subsingleton.forall₂_iff, true_and]
+    intros m x y m' hgrd
     constructor
     · intro ⟨yy,⟨mm',H₁,H₂'⟩⟩
       have H₂ := H₂' H₁
@@ -242,6 +203,7 @@ instance [Machine CTX M]: LawfulCategory (NDEvent M) where
       exists y
       exists m'
       simp [Heff₁]
+
 
   id_assoc ev₁ ev₂ ev₃ := by
     apply NDEvent.ext
@@ -262,21 +224,21 @@ instance [Machine CTX M]: LawfulCategory (NDEvent M) where
           exists yy ; exists mm'
           simp [Heff₃] at *
           exists z ; exists m''
-          simp [Heff₂]
+          simp only [Heff₂, forall_true_left, true_and]
           have Heff₁' := H₂ yy mm'
           apply Heff₁'
-          constructor
-          · assumption
-          · intro Heff₃_bis
-            assumption
+          · exact Heff₃
+          · intro _
+            exact Heff₂
         · intro ⟨yy, mm', ⟨Heff₃,H⟩⟩
           obtain ⟨z, m'', ⟨Heff₂, Heff₁'⟩⟩ := H Heff₃
           exists z ; exists m''
           constructor
           · exists yy ; exists mm'
             simp [Heff₂, Heff₃]
-          · intros yyy mmm' H
+          · intros yyy mmm' _ _
             exact Heff₁' Heff₂
+
     -- QED  (a big one!)
 
 
@@ -351,46 +313,50 @@ instance [Machine CTX M] [Semigroup M]: LawfulArrow (NDEvent M) where
 
   arrow_xcg ev g := by
     apply NDEvent.ext'
-    simp [Arrow.arrow, Arrow.first]
-    intros m x y yy xx m' grd₁ grd₂
+    simp only [Category.rcomp, Category.comp, Arrow.arrow, fun_split, id_eq, Arrow.first,
+      first_NDEvent, Prod.mk.eta, forall_and_index, ↓existsAndEq, and_true, forall_true_left,
+      exists_eq_left, forall_eq_apply_imp_iff, forall_eq, forall_const, true_and,
+      Prod.exists, implies_true, Subsingleton.forall₂_iff, Prod.forall, Prod.mk.injEq]
+    intros m x y yy xx m' grd₁
     constructor
-    · intro ⟨Heff, Hg⟩
-      exists yy ; exists y ; exists m'
-      simp [Heff, Hg]
-    · simp
-      intros z₁ z₂ mm' Heff Hz₂
-      simp [Heff, Hz₂]
-      intros H₁ H₂ H₃
-      simp [*]
+    · intro ⟨Heff,Hg⟩
+      exists yy ; exists m'
+      simp only [Heff,Hg,and_self, imp_self]
+    · intro ⟨yyy,⟨mm',⟨Heff,Heqs⟩⟩⟩
+      have Heqs' := Heqs Heff
+      rw[←Heqs'.1.1,← Heqs'.2] at Heff
+      exact ⟨Heff,Heqs'.1.2⟩
+
 
   arrow_unit ev := by
     apply NDEvent.ext'
     intro m (x, x')
     simp [Arrow.arrow, Arrow.first]
-    intros y m' Hgrd Hgrd'
+    intros y m' Hgrd
     constructor
-    case a.mp =>
-      intro ⟨y₁, y₂, mm, ⟨H', H⟩⟩
-      simp [H'] at H
-      simp [*]
-    case a.mpr =>
-      intro Heff
-      exists y ; exists x' ; exists m'
-      simp [Heff]
+    · intro ⟨yy,⟨mm,⟨Heff, Heqs⟩⟩⟩
+      specialize Heqs Heff
+      rw[Heqs.1,Heqs.2]
+      exact Heff
+    · intro Heff
+      exists y ; exists m'
+      simp only [Heff]
+      simp only [and_self, imp_self]
+
 
   arrow_assoc ev := by
     apply NDEvent.ext'
     intro m ((x, z), t)
     simp [Arrow.first, Arrow.arrow]
-    intros y zz tt m' grd₁ grd₂
+    intros y zz tt m' grd
     constructor
-    case a.mp =>
-      intro ⟨yy,zzz,ttt,mm',⟨H₁,H₂⟩⟩
-      simp [H₁, H₂]
-    case a.mpr =>
-      intro ⟨Heff, Hzz, Htt⟩
-      exists y ; exists z ; exists t ; exists m'
-      simp [*]
+    · intro ⟨yy,mm,Heff,Heqs⟩
+      specialize Heqs Heff
+      simp only[Heqs,Heff,and_self]
+    · intro ⟨Heff,Hzz,Htt⟩
+      exists y ; exists m'
+      simp only [Heff,Hzz,Htt,and_self,imp_self]
+
 
 /-  ArrowChoice -/
 
@@ -425,23 +391,22 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowChoice (NDEvent M) where
       repeat trivial
     · simp
       constructor
-      · intros y m'
-        intro hgrd₁
+      · intros y m' hgrd₁
         cases x
-        case a.right.left.inl l =>
+        case right.left.inl l =>
           simp
           constructor
           · intro hyp
             exact id (And.symm hyp)
           · intro hyp
             exact id (And.symm hyp)
-        case a.right.left.inr r =>
+        case right.left.inr r =>
           simp
       · intros z m' grd₁
         cases x
-        case a.right.right.inl l =>
+        case right.right.inl l =>
           simp
-        case a.right.right.inr r =>
+        case right.right.inr r =>
           simp
           exact And.comm
 
@@ -451,16 +416,20 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowChoice (NDEvent M) where
     simp only [ArrowChoice.left,Category.id,altNDEvent]
     intros m x
     cases x
-    case a.inl l =>
+    case inl l =>
       simp
-    case a.inr r =>
+    case inr r =>
       simp
   arr_inl {α β γ} (f : NDEvent M α β):=
   by
     apply NDEvent.ext'
     simp only [Arrow.arrow,ArrowChoice.left,altNDEvent]
-    simp
-    intros m x y m' grd₁ grd₂
+    simp only [Category.rcomp, Category.comp, implies_true, and_true, Category.id, ↓existsAndEq,
+      true_and, forall_and_index, forall_true_left, exists_eq_left,
+      forall_eq_apply_imp_iff, forall_eq, forall_const, Subsingleton.forall₂_iff, Sum.forall,
+      Sum.inl.injEq, exists_eq_right', reduceCtorEq, false_and, imp_false, and_not_self,
+      exists_const, exists_false, and_false]
+    intros m x y m' grd₁
     constructor
     · intro h
       have ⟨y',m'',heff⟩ := h
@@ -473,16 +442,17 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowChoice (NDEvent M) where
       apply And.intro h
       intro _
       apply And.intro rfl rfl
+
   split {α β α' β'} (f : NDEvent M α β)  (g : α' → β') :=
   by
     apply NDEvent.ext'
-    simp only [Category.comp,Arrow.arrow,ArrowChoice.left,ArrowChoice.splitIn,altNDEvent]
+    simp only [Arrow.arrow,ArrowChoice.left,ArrowChoice.splitIn,altNDEvent]
     intros m x
     simp
     cases x
-    case a.inl l =>
+    case inl l =>
       simp
-      intros a m' grd₁ grd₂
+      intros a m' grd₁
       constructor
       · intro h
         have ⟨y',m'',heff⟩ := h
@@ -495,7 +465,7 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowChoice (NDEvent M) where
         apply And.intro h
         intro _
         apply And.intro rfl rfl
-    case a.inr r =>
+    case inr r =>
       simp
       intros a m'
       constructor
@@ -506,15 +476,15 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowChoice (NDEvent M) where
   assoc {α β γ δ} (f : NDEvent M α β) :=
   by
     apply NDEvent.ext'
-    simp only [Category.comp,Arrow.arrow,ArrowChoice.left,ArrowChoice.splitIn,altNDEvent]
+    simp only [Arrow.arrow,ArrowChoice.left,altNDEvent]
     simp only [assocsum]
     intros m x
     cases x
-    case a.inl l =>
+    case inl l =>
       cases l
       case inl l' =>
         simp
-        intros y m' grd₁ grd₂
+        intros y m' grd₁
         constructor
         · intro h
           cases h
@@ -524,7 +494,6 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowChoice (NDEvent M) where
               rw[←(heff.2 heff.1).2] at heff
               rw[←(heff.2 heff.1).1] at heff
               exact heff.1
-
         · intro h
           exists y
           exists m'
@@ -532,14 +501,39 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowChoice (NDEvent M) where
           intro _
           apply And.intro rfl rfl
       case inr r' =>
-
-        sorry
-    case a.inr r =>
+        simp only [Category.rcomp, Category.comp, Category.id, ↓existsAndEq, true_and, Sum.exists,
+          Sum.inl.injEq, exists_eq_right', reduceCtorEq, and_false, exists_false, Sum.inr.injEq,
+          or_false, false_or, or_self, implies_true, and_true, forall_and_index, forall_true_left,
+          exists_eq_left, forall_eq_apply_imp_iff, forall_eq, forall_const,
+          IsEmpty.forall_iff, false_and, Sum.forall]
+        intros a m'
+        constructor
+        · intro ⟨heq₁,heq₂⟩
+          rw[heq₁,heq₂]
+          exact And.intro rfl rfl
+        · intro ⟨heq₁,heq₂⟩
+          rw[heq₁,heq₂]
+          exact And.intro rfl rfl
+    case inr r =>
       simp only [Category.id]
       constructor
-      ·
-        sorry
-      · sorry
+      · simp only [Category.rcomp, Category.comp, ↓existsAndEq, true_and, Sum.exists,
+        Sum.inl.injEq, exists_eq_right', reduceCtorEq, and_false, exists_false, Sum.inr.injEq,
+        or_false, false_or, or_self, implies_true, and_true, forall_and_index, forall_true_left,
+        exists_eq_left, forall_eq_apply_imp_iff, forall_eq, forall_const]
+      · simp only [Category.rcomp, Category.comp, ↓existsAndEq, true_and, Sum.exists,
+        Sum.inl.injEq, exists_eq_right', reduceCtorEq, and_false, exists_false, Sum.inr.injEq,
+        or_false, false_or, or_self, implies_true, and_true, forall_and_index, forall_true_left,
+        exists_eq_left, forall_eq_apply_imp_iff, forall_eq, forall_const,
+        IsEmpty.forall_iff, Sum.forall, false_and]
+        intros r' m'
+        constructor
+        · intro ⟨h₁,h₂⟩
+          rw[h₁,h₂]
+          exact And.intro rfl rfl
+        · intro ⟨h₁,h₂⟩
+          rw[h₁,h₂]
+          exact And.intro rfl rfl
 
 /-  Conjoin events -/
 
@@ -578,8 +572,7 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowPlus (NDEvent M) where
           exact or_assoc.mp h
         · intro h
           exact or_assoc.mpr h
-      · intros y m'
-        intros grd₁ grd₂
+      · intros y m' grd₁ grd₂
         constructor
         · simp
           intros effectₗ effectᵣ
@@ -590,9 +583,9 @@ instance [Machine CTX M] [Semigroup M] : LawfulArrowPlus (NDEvent M) where
           · intro grd₂'
             constructor
             · cases grd₂'
-              case a.right.mp.right.left.inl l =>
+              case right.mp.right.left.inl l =>
                 exact (effectₗ (Or.inr l)).2
-              case a.right.mp.right.left.inr r =>
+              case right.mp.right.left.inr r =>
                 intro grd₂'
                 exact (effectₗ (Or.inr grd₂')).2 grd₂'
             · assumption

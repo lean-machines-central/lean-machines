@@ -28,6 +28,7 @@ structure Xor0 (ctx : XorContext) where
 instance : Machine XorContext (Xor0 ctx) where
   context := ctx
   invariant d0 := ¬ (d0.x ∧ d0.y)
+  default := {x := false, y := false}
 
 
 
