@@ -8,8 +8,9 @@ import LeanMachines.Refinement.Relational.Ordinary
 open Refinement
 
 
--- ### Anticipated transitionnal events
-
+/-!
+### Anticipated refined events
+-/
 
 structure AnticipatedREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] (v) [Preorder v]
   {α' β'} (abs : OrdinaryEvent AM α' β') (α) (β) extends AnticipatedEvent v M α β, OrdinaryREvent AM M abs α β where
@@ -115,7 +116,9 @@ def newAnticipatedREvent'' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (
 
 
 
--- ### Convergent transitionnal events
+/-!
+### Convergent refined events
+-/
 
 structure ConvergentREvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR : Refinement AM M] (v) [Preorder v] [WellFoundedLT v]
   {α' β'} (abs : OrdinaryEvent AM α' β') (α) (β) extends ConvergentEvent v M α β, OrdinaryREvent AM M abs α β
