@@ -70,7 +70,7 @@ instance : Machine Bank_Ctx (Bank ctx) where
       t.transferOK →
       Π (hf : IsElem t.c_from m.balance)
       , (t.c_from ≠ t.c_to ∧ t.amount ≤ Lean.AssocList.search t.c_from m.balance hf)
-
+  default := sorry
 
 
 
@@ -159,12 +159,13 @@ newEvent
       )
     safety m x :=
     by
-      simp[Machine.invariant]
-      intros hinv hgrd₁
-      intros ok₁ ok₂ hf
+      simp only [Machine.invariant, ne_eq, ge_iff_le, Bool.decide_and, decide_not, Bool.and_eq_true,
+        decide_eq_true_eq, Bool.not_eq_eq_eq_not, Bool.not_true, decide_eq_false_iff_not, and_imp,
+        forall_and_index]
+      intros hinv hgrd₁ ok₁ ok₂ hf₁ hf₂
       constructor
       · assumption
-      · assumption -- works because of proof irrelevance !
+      · assumption
   }
 
 def findSome (o : Option α)
@@ -174,7 +175,7 @@ def findSome (o : Option α)
 
 def Bank.transferExecTrue : OrdinaryEvent (Bank ctx) Unit Unit :=
 newEvent''
-{
+  {
   guard m := m.bankState = Bank_State.Trans ∧
     match m.transfer with
     | none => False
@@ -230,7 +231,7 @@ newEvent''
 
 def Bank.transferExecFalse : OrdinaryEvent (Bank ctx) Unit Unit :=
 newEvent''
-{
+  {
   guard m := m.bankState = Bank_State.Trans ∧
     match m.transfer with
     | none => False
@@ -243,13 +244,12 @@ newEvent''
 
 
 def Bank.Check_balance : OrdinaryEvent (Bank ctx) String Nat :=
-newEvent
-{
-  guard m x := m.bankState = Op ∧ IsElem x m.balance
-  action m x hgrd := (Lean.AssocList.search x m.balance hgrd.right,m)
-  safety m x :=
-    by
-      simp
-      intros
-      assumption
-}
+  newEvent {
+    guard m x := m.bankState = Op ∧ IsElem x m.balance
+    action m x hgrd := (Lean.AssocList.search x m.balance hgrd.right,m)
+    safety m x :=
+      by
+        simp
+        intros
+        assumption
+  }

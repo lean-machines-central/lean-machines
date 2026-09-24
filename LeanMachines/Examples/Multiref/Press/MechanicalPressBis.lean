@@ -31,6 +31,7 @@ instance : Machine MP0_ctx (MP0 ctx) where
     Machine.invariant (m.motor_controller)
     ∧ Machine.invariant (m.btn1)
     ∧ Machine.invariant (m.btn2)
+  default := sorry
 
 
 def skip_strong := mkOrdinaryEvent (skip_Event (StrongReaction {}) Unit)
@@ -56,21 +57,22 @@ def MP0.composeEvent
     safety m x      :=
       by
         simp[Machine.invariant]
-        intros hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ hinv_btn1₁ hinv_btn1₂ hinv_btn2₁ hinv_btn2₂ hgrd
+        intros hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ hinv_btn1₁ hinv_btn1₂ hinv_btn2₁ hinv_btn2₂
+          hgrd₁ hgrd₂ hgrd₃
         constructor
         · have h' := ev_ctrl.safety m.motor_controller x.1
           simp[Machine.invariant] at h'
           have h'' := h' hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄
-          exact h'' hgrd.1
+          exact h'' hgrd₁
         constructor
         · have h' := ev_btn1.safety m.btn1 x.2.1
           simp[Machine.invariant] at h'
           have h'' := h' hinv_btn1₁ hinv_btn1₂
-          exact h'' hgrd.2.1
+          exact h'' hgrd₂
         · have h' := ev_btn2.safety m.btn2 x.2.2
           simp[Machine.invariant] at h'
           have h'' := h' hinv_btn2₁ hinv_btn2₂
-          exact h'' hgrd.2.2
+          exact h'' hgrd₃
   }
 
 instance [Machine CTX M]: Coe (OrdinaryEvent M α (Unit × Unit × Unit)) (OrdinaryEvent M α Unit) where
@@ -262,17 +264,17 @@ def MP0.treat_push_start_motor_button : OrdinaryEvent (MP0 ctx) Unit Unit :=
     safety m      :=
       by
         simp[Machine.invariant]
-        intros hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ hinv_btn1₁ hinv_btn1₂ _ _ hgrd
+        intros hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ hinv_btn1₁ hinv_btn1₂ _ _ hgrd₁ hgrd₂
         constructor
         · have h' := StrongReaction.Action_on.safety m.motor_controller ()
           simp[Machine.invariant] at h'
           have h'' := h' hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄
-          exact h'' hgrd.2
+          exact h'' hgrd₂
         constructor
         · have h' := WeakReaction.Reaction_on.safety m.btn1 ()
           simp[Machine.invariant] at h'
           have h'' := h' hinv_btn1₁ hinv_btn1₂
-          exact h'' hgrd.1
+          exact h'' hgrd₁
         · constructor
           assumption
           assumption
@@ -292,12 +294,12 @@ def MP0.treat_push_stop_motor_button : OrdinaryEvent (MP0 ctx) Unit Unit :=
     safety m      :=
       by
         simp[Machine.invariant]
-        intros hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ _ _ hinv_btn2₁ hinv_btn2₂ hgrd
+        intros hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ _ _ hinv_btn2₁ hinv_btn2₂ hgrd₁ hgrd₂
         constructor
         · have h' := StrongReaction.Action_off.safety m.motor_controller ()
           simp[Machine.invariant] at h'
           have h'' := h' hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄
-          exact h'' hgrd.2
+          exact h'' hgrd₂
         constructor
         · constructor
           assumption
@@ -305,7 +307,7 @@ def MP0.treat_push_stop_motor_button : OrdinaryEvent (MP0 ctx) Unit Unit :=
         · have h' := WeakReaction.Reaction_on.safety m.btn2 ()
           simp[Machine.invariant] at h'
           have h'' := h' hinv_btn2₁ hinv_btn2₂
-          exact h'' hgrd.1
+          exact h'' hgrd₁
   }
 
 
@@ -476,20 +478,15 @@ def MP0.treat_push_start_motor_button_false : OrdinaryEvent (MP0 ctx) Unit Unit 
     safety m        :=
     by
       simp[Machine.invariant]
-      intros _ _ _ _ hinv_btn1₁ hinv_btn1₂ _ _ hgrd
+      intros _ _ _ _ hinv_btn1₁ hinv_btn1₂ _ _ hgrd₁ hgrd₂
       constructor
-      · constructor
-        assumption
-        constructor
-        assumption
-        constructor
-        assumption
+      · repeat (constructor ; assumption)
         assumption
       constructor
       · have h' := WeakReaction.Reaction_on.safety m.btn1 ()
         simp[Machine.invariant] at h'
         have h'' := h' hinv_btn1₁ hinv_btn1₂
-        exact h'' hgrd.1
+        exact h'' hgrd₁
       · constructor
         assumption
         assumption

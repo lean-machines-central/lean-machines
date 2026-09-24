@@ -17,6 +17,7 @@ instance : Machine WrCtxt (StrongReaction ctx) where
     ∧ (m.a ∧ ¬ m.r → m.cr < m.ca) -- pat0_6
     ∧ (m.ca ≤ m.cr + 1) -- pat1_1
     ∧ ((¬ m.a ∨ m.r) → m.ca = m.cr) -- pat1_4
+  default := ⟨false,false,0,0⟩
 
 
 instance : Refinement (WeakReaction ctx) (StrongReaction ctx) where

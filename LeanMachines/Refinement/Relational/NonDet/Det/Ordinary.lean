@@ -114,7 +114,8 @@ def newRDetEvent' [Machine ACTX AM] [Machine CTX M] [Refinement AM M] (abs : Ord
 
 
 
-structure OrdinaryRDetEvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
+structure OrdinaryRDetEvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M]
+  [instR: Refinement AM M]
   (abs : OrdinaryNDEvent AM Unit Unit)
   extends OrdinaryEvent'' M  where
 
@@ -127,7 +128,7 @@ structure OrdinaryRDetEvent'' (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR:
       → abs.guard am ()
 
   /-- Proof obligation: action simulation. -/
-  simulation (m : M) (x : α):
+  simulation (m : M) (x : Unit):
     (Hinv : Machine.invariant m)
     → (Hgrd : guard m )
     → ∀ am, (Href : refine am m)

@@ -33,6 +33,7 @@ structure B0 (ctx : BufContext) where
 instance: Machine BufContext (B0 ctx) where
   context := ctx
   invariant b0 := b0.size ≤ ctx.maxSize
+  default := {size := 0}
 
 /-- Initialization event (no parameter, empty buffer)-/
 def B0.Init : InitEvent (B0 ctx) Unit Unit :=
@@ -49,10 +50,7 @@ def B0.Put : OrdinaryEvent (B0 ctx) Unit Unit :=
     action := fun b0 _ => { size := b0.size + 1 }
     safety := fun b0 =>
       by
-        simp[Machine.invariant]
-        intros hinv hgrd
-        exact hgrd
-
+        simp only [Machine.invariant, Order.add_one_le_iff, imp_self, implies_true]
   }
 
 /-- Event : fetching (retrieving) an element.
@@ -92,6 +90,7 @@ structure B1 (ctx : BufContext) (α : Type u) where
 instance : Machine BufContext (B1 ctx α) where
   context := ctx
   invariant b1 := b1.stack.length ≤ ctx.maxSize
+  default := {stack := []}
 
 
 def B1.Init : InitEvent (B1 ctx α) Unit Unit :=
@@ -117,18 +116,15 @@ def B1.Put : OrdinaryREvent (B0 ctx) (B1 ctx α) B0.Put α Unit :=
     guard m _ := m.stack.length < ctx.maxSize
     action m x hgrd := {stack := x::m.stack}
     safety m x hgrd :=
-      by
-        simp[Machine.invariant]
-        intros
-        assumption
+      by simp only [Machine.invariant, List.length_cons, Order.add_one_le_iff, imp_self]
+
 
     lift_in := λx => ()
     strengthening m x :=
       by
         intros Hinv Hgrd am href
         simp[B0.Put]
-        rw[href]
-        assumption
+        rwa[href]
     simulation m x :=
       by
         simp[Refinement.refine]
@@ -145,6 +141,7 @@ structure Button where
 instance: Machine Unit Button where
   context := ()
   invariant _ := True
+  default := {pushed := false}
 
 def Button.Init : InitEvent Button Unit Unit :=
   newInitEvent''
@@ -186,7 +183,7 @@ Of course the machine itself merges the invariants.
 instance: Machine BufContext (PushBuffer ctx α ) where
   context := ctx
   invariant := fun pb => pb.stack.length ≤ ctx.maxSize
-
+  default := ⟨⟨false⟩,[]⟩
 
 instance: Refinement (B0 ctx) (PushBuffer ctx α) where
   refine b0 pb := b0.size = pb.stack.length
@@ -265,12 +262,13 @@ instance : SafeREventPO
     lift_out := id
     simulation m x hinv hgrd :=
       by
-        simp[Machine.invariant,Refinement.refine]
-        simp[PushBuffer.PushAdd,Button.Push]
+        simp only [Refinement.refine, PushBuffer.PushAdd, newEvent', OrdinaryEvent.toEvent, id_eq,
+          Button.Push, newEvent'', and_self, implies_true]
     strengthening m x :=
       by
-        simp[Machine.invariant,Refinement.refine]
-        simp[PushBuffer.PushAdd,Button.Push]
+        simp only [Machine.invariant, OrdinaryEvent.toEvent, PushBuffer.PushAdd, newEvent',
+          Bool.not_eq_true, Order.add_one_le_iff, Refinement.refine, Button.Push, newEvent'',
+          forall_eq', and_imp]
         intros
         assumption
 
@@ -289,16 +287,9 @@ instance : SafeREventPO
         simp[Machine.invariant,Refinement.refine]
         simp[PushBuffer.PushAdd,B0.Put]
         intros hinv hgrd₁ hgrd₂ am href
-        rw[href]
-        assumption
+        rwa[href]
     simulation m x hinv hgrd :=
       by
-        simp[Machine.invariant,Refinement.refine]
-        simp[PushBuffer.PushAdd,B0.Put]
-
-
-/-
-
-
-
--/
+        simp only [Refinement.refine, PushBuffer.PushAdd, newEvent', OrdinaryEvent.toEvent, id_eq,
+          B0.Put, newEvent'', List.length_cons, Nat.add_right_cancel_iff, true_and, imp_self,
+          implies_true]

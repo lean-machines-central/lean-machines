@@ -75,9 +75,9 @@ instance : Machine MP0_ctx MP0 where
 
     ∧ (m.stop_cr ≤ m.stop_ca)                 -- pat0_5
     ∧ (m.stop_motor_btn ∧ ¬ m.stop_motor_impulse → m.stop_cr < m.stop_ca) -- pat0_6
+  default := sorry
 
-
-instance : Refinement StrongReaction MP0 where
+instance : Refinement (StrongReaction ctx) MP0 where
   refine am m :=
     am.ca = m.motor_ca ∧ am.cr = m.motor_cr
     -- correspondance between the type Status and the type Bool
@@ -88,8 +88,7 @@ instance : Refinement StrongReaction MP0 where
   refine_safe am m :=
     by
       simp[Machine.invariant]
-      intros pat0_5 pat0_6 pat1_1 pat1_4 _ _ _ _
-      intros hr₁ hr₂ hr₃ hr₄ hr₅ hr₆
+      intros pat0_5 pat0_6 pat1_1 pat1_4 _ _ _ _ hr₁ hr₂ hr₃ hr₄ hr₅ hr₆
       rw[hr₁,hr₂,hr₃,hr₄]
       constructor
       · assumption
@@ -114,7 +113,7 @@ instance : Refinement StrongReaction MP0 where
               exact (pat1_4 (Or.inr (Eq.symm hr₆)))
 
 
-instance btn1 : Refinement WeakReaction MP0 where
+instance btn1 : Refinement (WeakReaction ctx) MP0 where
   refine am m :=
     am.ca = m.start_ca ∧ am.cr = m.start_cr
     ∧ am.a = m.start_motor_btn
@@ -129,7 +128,7 @@ instance btn1 : Refinement WeakReaction MP0 where
     assumption
     assumption
 
-instance btn2 : Refinement WeakReaction MP0 where
+instance btn2 : Refinement (WeakReaction ctx) MP0 where
   refine am m :=
     am.ca = m.stop_ca ∧ am.cr = m.stop_cr
     ∧ am.a = m.stop_motor_btn
@@ -137,8 +136,7 @@ instance btn2 : Refinement WeakReaction MP0 where
   refine_safe am m :=
   by
     simp[Machine.invariant]
-    intros _ _ _ _ pat0_5 pat0_6 _ _
-    intros hr₁ hr₂ hr₃ hr₄
+    intros _ _ _ _ pat0_5 pat0_6 _ _ hr₁ hr₂ hr₃ hr₄
     rw[hr₁,hr₂,hr₃,hr₄]
     constructor
     assumption
@@ -170,9 +168,8 @@ def MP0.treat_start_button : OrdinaryEvent MP0 Unit Unit :=
     safety m :=
     by
       simp[Machine.invariant]
-      intros m_pat0_5 m_pat0_6 m_pat1_1 m_pat1_4
-      intros start_pat0_5 start_pat0_6 _ _
-      intro hgrd₁ hgrd₂ hgrd₃ hgrd₄
+      intros m_pat0_5 m_pat0_6 m_pat1_1 m_pat1_4 start_pat0_5 start_pat0_6 _ _
+        hgrd₁ hgrd₂ hgrd₃ hgrd₄
       constructor
       · exact Nat.le_add_right_of_le m_pat0_5
       constructor

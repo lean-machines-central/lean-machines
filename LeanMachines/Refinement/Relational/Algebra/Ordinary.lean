@@ -16,7 +16,9 @@ import LeanMachines.Refinement.Relational.NonDet.Ordinary
 #check OrdinaryREvent
 
 
-instance RefinementMap [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+
+@[instance_reducible]
+def RefinementMap [Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
   (abs : OrdinaryEvent AM α' β')
   (ev : OrdinaryREvent AM M abs α β)
   (f : β → γ)
@@ -28,23 +30,25 @@ instance RefinementMap [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M
     ((f <$> (ev.toOrdinaryEvent)).toEvent) ((f' <$> abs).toEvent)
     (instSafeAbs := instSafeEventPO_OrdinaryEvent (f' <$> abs))
     (instSafeEv := instSafeEventPO_OrdinaryEvent (f <$> ev.toOrdinaryEvent))
-    (valid_kind := by simp)
-  where
+    (valid_kind := by simp) :=
+  {
     lift_in := ev.lift_in
     lift_out := lift_f
     strengthening := ev.strengthening
     simulation m x hinv hgrd am Href :=
       by
-        simp[Functor.map,map_Event,_root_.mapEvent]
+        simp only [Functor.map, mapEvent, OrdinaryEvent.toEvent]
         constructor
         · have h := (ev.simulation m x hinv hgrd am Href).1
           specialize hlift (ev.toOrdinaryEvent.2 m x hgrd).fst
           rw[hlift]
           rw[h]
         · exact (ev.simulation m x hinv hgrd am Href).2
+  }
 
-
-instance RefinementDimap [Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
+@[instance_reducible]
+def RefinementDimap [Machine ACTX AM]
+  [Machine CTX M] [instR : Refinement AM M]
   (abs : OrdinaryEvent AM α' β')
   (ev : OrdinaryREvent AM M abs α β)
   (f : β → γ)
@@ -74,7 +78,7 @@ instance RefinementDimap [Machine ACTX AM] [Machine CTX M] [instR : Refinement A
         exact (ev.strengthening m (g x))
     simulation m x hinv hgrd am Href :=
       by
-        simp[Profunctor.dimap,map_Event,_root_.mapEvent]
+        simp only [Profunctor.dimap, Event.toOrdinaryEvent, OrdinaryEvent.toEvent]
         constructor
         ·
           have h := (ev.simulation m (g x) hinv hgrd am Href).1
@@ -89,8 +93,8 @@ instance RefinementDimap [Machine ACTX AM] [Machine CTX M] [instR : Refinement A
 
 
 
-
-instance RefinementDimap'[Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
+@[instance_reducible]
+def RefinementDimap'[Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
   (abs : OrdinaryEvent AM α' β')
   (ev : OrdinaryREvent AM M abs α β)
   (f : β → γ)
@@ -132,7 +136,9 @@ instance RefinementDimap'[Machine ACTX AM] [Machine CTX M] [instR : Refinement A
         · simp[hlift_g]
           exact (ev.simulation m (g x) hinv hgrd am Href).2
 
-instance RefinementCategory [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
+@[instance_reducible]
+def RefinementCategory [Machine ACTX AM]
+   [Machine CTX M][instR : Refinement AM M]
   (abs₁ : OrdinaryEvent AM α' β')
   (abs₂ : OrdinaryEvent AM β' γ')
   (ev₁ : OrdinaryREvent AM M abs₁ α β)
@@ -172,27 +178,27 @@ instance RefinementCategory [Machine ACTX AM] [Machine CTX M][instR : Refinement
         assumption
     simulation m x hinv :=
       by
-        simp[Category.comp]
-        intros Hgrd am Href
-        have hsim₁ := ev₁.simulation m x hinv Hgrd.1 am Href
+        simp only [OrdinaryEvent.toEvent, Category.rcomp, Category.comp, forall_and_index]
+        intros Hgrd₁ Hgrd₂ am Href
+        have hsim₁ := ev₁.simulation m x hinv Hgrd₁ am Href
         simp at hsim₁
-        have hsim₂ := ev₂.simulation (ev₁.action m x Hgrd.1).2 (ev₁.action m x Hgrd.1).1
-        specialize hsim₂ (ev₁.safety m x hinv Hgrd.1) (Hgrd.2 Hgrd.1)
-        specialize hsim₂ (abs₁.2 am (ev₁.lift_in x) (ev₁.strengthening m x hinv Hgrd.1 am Href)).2
+        have hsim₂ := ev₂.simulation (ev₁.action m x Hgrd₁).2 (ev₁.action m x Hgrd₁).1
+        specialize hsim₂ (ev₁.safety m x hinv Hgrd₁) (Hgrd₂ Hgrd₁)
+        specialize hsim₂ (abs₁.2 am (ev₁.lift_in x) (ev₁.strengthening m x hinv Hgrd₁ am Href)).2
         specialize hsim₂ hsim₁.2
         simp at hsim₂
         have ⟨lhsim₂,rhsim₂⟩ := hsim₂
         have ⟨lhsim₁,rhsim₁⟩ := hsim₁
         clear hsim₂ hsim₁
-        have hsequence := hseq (ev₁.action m x Hgrd.1).1
+        have hsequence := hseq (ev₁.action m x Hgrd₁).1
         constructor
         · rw[lhsim₂]
           rw[hsequence] at lhsim₁
           simp[lhsim₁]
         ·
           have h :
-            (abs₁.action am (ev₁.lift_in x) (ev₁.strengthening m x hinv Hgrd.1 am Href)).1
-            = (ev₂.lift_in (ev₁.action m x Hgrd.1).1)
+            (abs₁.action am (ev₁.lift_in x) (ev₁.strengthening m x hinv Hgrd₁ am Href)).1
+            = (ev₂.lift_in (ev₁.action m x Hgrd₁).1)
             :=
             by
               rw[←hsequence]
@@ -200,8 +206,8 @@ instance RefinementCategory [Machine ACTX AM] [Machine CTX M][instR : Refinement
           simp[h]
           assumption
 
-
-instance RefinementSplit[Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
+@[instance_reducible]
+def RefinementSplit[Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
   (abs₁ : OrdinaryEvent AM α' β')
   (abs₂ : OrdinaryEvent AM γ' δ')
   (ev₁ : OrdinaryREvent AM M abs₁ α β)
@@ -230,22 +236,22 @@ instance RefinementSplit[Machine ACTX AM] [Machine CTX M][instR : Refinement AM 
     simulation m x hinv :=
     by
       simp[Arrow.split]
-      intros Hgrd am Href
+      intros Hgrd₁ Hgrd₂ am Href
       have hsim₂ :=
           ev₂.simulation
-            ((ev₁.action m x.1 Hgrd.1).2) x.2
-            (ev₁.safety m x.1 hinv Hgrd.1) (Hgrd.2 Hgrd.1)
-            (abs₁.action am (ev₁.lift_in x.1) (ev₁.strengthening m x.1 hinv Hgrd.1 am Href)).2
-            (ev₁.simulation m x.1 hinv Hgrd.1 am Href).2
+            ((ev₁.action m x.1 Hgrd₁).2) x.2
+            (ev₁.safety m x.1 hinv Hgrd₁) (Hgrd₂ Hgrd₁)
+            (abs₁.action am (ev₁.lift_in x.1) (ev₁.strengthening m x.1 hinv Hgrd₁ am Href)).2
+            (ev₁.simulation m x.1 hinv Hgrd₁ am Href).2
       simp at hsim₂
       repeat (apply And.intro)
-      · exact (ev₁.simulation m x.1 hinv Hgrd.1 am Href).1
+      · exact (ev₁.simulation m x.1 hinv Hgrd₁ am Href).1
       · exact hsim₂.1
       · exact hsim₂.2
 
 
-
-instance RefinementSplitIn [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
+@[instance_reducible]
+def RefinementSplitIn [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
   (abs₁ : OrdinaryEvent AM α' β')
   (abs₂ : OrdinaryEvent AM γ' δ')
   (ev₁ : OrdinaryREvent AM M abs₁ α β)
@@ -282,8 +288,8 @@ instance RefinementSplitIn [Machine ACTX AM] [Machine CTX M][instR : Refinement 
         simp
         exact ev₂.simulation m r hinv Hgrd am Href
 
-
-instance RefinementNDMap [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
+@[instance_reducible]
+def RefinementNDMap [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM M]
   (abs : OrdinaryNDEvent AM α' β')
   (ev : OrdinaryRNDEvent AM M α β α' β' abs)
   (f : β → γ)
@@ -302,7 +308,7 @@ instance RefinementNDMap [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM
     strengthening := ev.strengthening
     simulation m x hinv hgrd y m' :=
     by
-      simp[Functor.map,map_Event,_root_.mapEvent]
+      simp only [Functor.map, ↓existsAndEq, and_true, forall_exists_index, and_imp]
       intros yβ hef heqyyβ am Href
       have ⟨am',h⟩ := (ev.simulation m x hinv hgrd yβ m' hef am Href)
       exists am'
@@ -315,8 +321,8 @@ instance RefinementNDMap [Machine ACTX AM] [Machine CTX M] [instR: Refinement AM
           exact hz
       · exact h.2
 
-
-instance RefinementNDDimap [Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
+@[instance_reducible]
+def RefinementNDDimap [Machine ACTX AM] [Machine CTX M] [instR : Refinement AM M]
   (abs : OrdinaryNDEvent AM α' β')
   (ev :  OrdinaryRNDEvent AM M α β α' β' abs)
   (f : β → γ)
@@ -348,7 +354,7 @@ instance RefinementNDDimap [Machine ACTX AM] [Machine CTX M] [instR : Refinement
     simulation m x hinv hgrd y m':=
       by
         simp[Profunctor.dimap]
-        simp only [Functor.map,map_Event,_root_.mapEvent]
+        simp only [Functor.map]
         simp only [ContravariantFunctor.contramap]
         intros hef am Href
         replace ⟨yβ,m'',hef⟩ := hef
@@ -369,7 +375,12 @@ instance RefinementNDDimap [Machine ACTX AM] [Machine CTX M] [instR : Refinement
         · rw[hef.2.2]
           exact hyp.2
 
-instance RefinementNDCategory [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
+
+
+-- Non determinism + arrows/categories refinement pas ok ?
+
+@[instance_reducible]
+def RefinementNDCategory [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
   (abs₁ : OrdinaryNDEvent AM α' β')
   (abs₂ : OrdinaryNDEvent AM β' γ')
   (ev₁ : OrdinaryRNDEvent AM M α β α' β' abs₁)
@@ -392,9 +403,7 @@ instance RefinementNDCategory [Machine ACTX AM] [Machine CTX M][instR : Refineme
       constructor
       · exact ev₁.strengthening m x hinv hgrd₁ am href
       ·
-        intro abs_grd₁
-        intros y' am'
-        intro hef₁
+        intro abs_grd₁ y' am' hef₁
         specialize hgrd₂ hgrd₁
         have ⟨y,m',hef⟩ := ev₁.feasibility m x hinv hgrd₁
         specialize hgrd₂ y m' hef
@@ -410,7 +419,9 @@ instance RefinementNDCategory [Machine ACTX AM] [Machine CTX M][instR : Refineme
     simulation m x hinv hgrd y m':= sorry
 
 
-instance RefinementNDSplit [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
+-- Ne marche pas ?
+@[instance_reducible]
+def RefinementNDSplit [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
   [ParallelMachine M] [ParallelMachine AM]
   (abs₁ : OrdinaryNDEvent AM α' β')
   (abs₂ : OrdinaryNDEvent AM β' γ')
@@ -428,33 +439,42 @@ instance RefinementNDSplit [Machine ACTX AM] [Machine CTX M][instR : Refinement 
     lift_out := λ (x,y) => (ev₁.lift_out x, ev₂.lift_out y)
     strengthening m x hinv :=
     by
-      simp[Arrow.split]
+      simp only [Arrow.split, exists_and_left, and_imp]
       intros grd₁ grd₂ am href
       apply And.intro
         (ev₁.strengthening m x.1 hinv grd₁ am href)
         (ev₂.strengthening m x.2 hinv grd₂ am href)
     simulation m x hinv hgrd y m':=
     by
-      simp[Arrow.split]
+      simp only [Arrow.split, exists_and_left, ↓existsAndEq, and_true, forall_exists_index, and_imp]
       intros m'' hef₁ m''' hef₂ hmul am href
-      have ⟨y',am',hef_abs₁⟩ := abs₁.feasibility am (ev₁.lift_in x.1) (instR.refine_safe am m hinv href) (ev₁.strengthening m x.1 hinv hgrd.1 am href)
-      have ⟨y'',am'',hef_abs₂⟩ := abs₂.feasibility am (ev₂.lift_in x.2) (instR.refine_safe am m hinv href) (ev₂.strengthening m x.2 hinv hgrd.2 am href)
+      have ⟨y',am',hef_abs₁⟩ := abs₁.feasibility am (ev₁.lift_in x.1)
+        (instR.refine_safe am m hinv href) (ev₁.strengthening m x.1 hinv hgrd.1 am href)
+      have ⟨y'',am'',hef_abs₂⟩ := abs₂.feasibility am (ev₂.lift_in x.2)
+        (instR.refine_safe am m hinv href) (ev₂.strengthening m x.2 hinv hgrd.2 am href)
+
       exists (am' * am'')
-      constructor
-      · exists am'
-        have hyp : y' = ev₁.lift_out y.1 := by sorry
-        have hyp' : y'' = ev₂.lift_out y.2 := by sorry
-        rw[←hyp]
-        apply And.intro hef_abs₁
-        exists am''
-        rw[←hyp']
-        apply And.intro hef_abs₂ rfl
-      · rw[hmul]
-
+      exists am'
+      repeat constructor
+      ·
         sorry
+      · sorry
+      · sorry
+      -- constructor
+      -- · exists am'
+      --   have hyp : y' = ev₁.lift_out y.1 := by sorry
+      --   have hyp' : y'' = ev₂.lift_out y.2 := by sorry
+      --   rw[←hyp]
+      --   apply And.intro hef_abs₁
+      --   exists am''
+      --   rw[←hyp']
+      --   apply And.intro hef_abs₂ rfl
+      -- · rw[hmul]
 
+      --   sorry
 
--- instance RefinementNDSplitIn [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
+-- @[instance_reducible]
+-- def RefinementNDSplitIn [Machine ACTX AM] [Machine CTX M][instR : Refinement AM M]
 --   [ParallelMachine M] [ParallelMachine AM]
 --   (abs₁ : OrdinaryNDEvent AM α' β')
 --   (abs₂ : OrdinaryNDEvent AM β' γ')

@@ -19,6 +19,7 @@ instance : Machine WrCtxt (WeakReaction (ctx : WrCtxt)) where
   invariant m :=
     (m.cr ≤ m.ca)                 -- pat0_5
     ∧ (m.a ∧ ¬ m.r → m.cr < m.ca) -- pat0_6
+  default := ⟨false,false,0,0⟩
 
 def WeakReaction.Init : InitEvent (WeakReaction ctx) Unit Unit :=
   newInitEvent''

@@ -28,10 +28,10 @@ def composition
     safety m x  :=
       by
         simp[Machine.invariant]
-        intros hinv₁ hinv₂ hgrd
+        intros hinv₁ hinv₂ hgrd₁ hgrd₂
         constructor
-        · exact ev₁.safety m.1 x.1 hinv₁ hgrd.1
-        · exact ev₂.safety m.2 x.2 hinv₂ hgrd.2
+        · exact ev₁.safety m.1 x.1 hinv₁ hgrd₁
+        · exact ev₂.safety m.2 x.2 hinv₂ hgrd₂
   }
 
 infixr:60 " × " => composition
@@ -49,10 +49,10 @@ instance instCompo [Machine CTX₁ M₁] [Machine CTX₂ M₂]
       unfold Machine.invariant
       unfold prod
       simp[composition,mkOrdinaryEvent]
-      intros hinv₁ hinv₂ hgrd
+      intros hinv₁ hinv₂ hgrd₁ hgrd₂
       constructor
-      · exact i₁.safety m.1 x.1 hinv₁ hgrd.1
-      · exact i₂.safety m.2 x.2 hinv₂ hgrd.2
+      · exact i₁.safety m.1 x.1 hinv₁ hgrd₁
+      · exact i₂.safety m.2 x.2 hinv₂ hgrd₂
 
 
 
@@ -98,18 +98,17 @@ instance RefinementComposition [Machine CTX₁ M₁] [Machine CTX₂ M₂]
     strengthening m x :=
       by
         simp[composition,Machine.invariant,Refinement.refine]
-        intros hinv₁ hinv₂ hgrd₁ hgrd₂
-        intros a b href₁ href₂
+        intros hinv₁ hinv₂ hgrd₁ hgrd₂ a b href₁ href₂
         constructor
         · exact sref₁.strengthening m.1 x.1 hinv₁ hgrd₁ a href₁
         · exact sref₂.strengthening m.2 x.2 hinv₂ hgrd₂ b href₂
     simulation m x :=
        by
         simp[composition,Machine.invariant,Refinement.refine]
-        intros hinv hgrd a b href
-        have hsim₁ := sref₁.simulation m.1 x.1 hinv.1 hgrd.1 a href.1
+        intros hinv₁ hinv₂ hgrd₁ hgrd₂ a b href₁ href₂
+        have hsim₁ := sref₁.simulation m.1 x.1 hinv₁ hgrd₁ a href₁
         simp at hsim₁
-        have hsim₂ := sref₂.simulation m.2 x.2 hinv.2 hgrd.2 b href.2
+        have hsim₂ := sref₂.simulation m.2 x.2 hinv₂ hgrd₂ b href₂
         simp at hsim₂
         constructor
         · constructor
@@ -146,6 +145,7 @@ structure Counter0 (ctx : CountContext) where
 instance : Machine CountContext (Counter0 ctx) where
   context := ctx
   invariant c0 := c0.cpt ≤ ctx.max
+  default := {cpt := 0}
 
 def Counter0.Incr : OrdinaryEvent (Counter0 ctx) Nat Unit :=
   newEvent'
@@ -174,6 +174,7 @@ instance coed : Coe  (Counter0 ctx.1 × Counter0 ctx.2 ) (DoubleCpt ctx) where
 instance : Machine (CountContext × CountContext) (DoubleCpt ctx) where
   context := ctx
   invariant m := Machine.invariant m.1 ∧ Machine.invariant m.2
+  default := ⟨Machine.toInhabited.default, Machine.toInhabited.default⟩
 
 def DoubleCpt.OrdinaryOfProd (ev : OrdinaryEvent (Counter0 ctx₁ × Counter0 ctx₂) α β )
   : OrdinaryEvent (DoubleCpt (ctx₁,ctx₂)) α β :=

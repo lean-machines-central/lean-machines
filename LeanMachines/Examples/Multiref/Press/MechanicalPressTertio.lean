@@ -152,17 +152,17 @@ def MP0.treat_push_start_motor_button_old : OrdinaryEvent
     safety :=
     by
       simp[Machine.invariant]
-      intros motor btn1 btn2 hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ hinv_btn1₁ hinv_btn1₂ _ _ hgrd
+      intros motor btn1 btn2 hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄ hinv_btn1₁ hinv_btn1₂ _ _ hgrd₁ hgrd₂
       constructor
       · have h' := StrongReaction.Action_on.safety motor ()
         simp[Machine.invariant] at h'
         have h'' := h' hinv_m₁ hinv_m₂ hinv_m₃ hinv_m₄
-        exact h'' hgrd.2
+        exact h'' hgrd₂
       constructor
       · have h' := WeakReaction.Reaction_on.safety btn1 ()
         simp[Machine.invariant] at h'
         have h'' := h' hinv_btn1₁ hinv_btn1₂
-        exact h'' hgrd.1
+        exact h'' hgrd₁
       · constructor
         assumption
         assumption
@@ -200,9 +200,9 @@ def MP0.treat_push_stop_motor_button : OrdinaryEvent (MP0 ctx) Unit Unit :=
       (WeakReaction.Reaction_on).guard m.btn2 () ∧
       (StrongReaction.Action_off).guard m.motor_controller ()
     action m hgrd :=
-      ⟨((StrongReaction.Action_off).action m.motor_controller () hgrd.2).2
+      ⟨((StrongReaction.Action_off).action m.motor_controller () hgrd₂).2
       , m.btn1
-      ,((WeakReaction.Reaction_on).action m.btn2 () hgrd.1).2
+      ,((WeakReaction.Reaction_on).action m.btn2 () hgrd₁).2
       ⟩
 -/
 def MP0.treat_push_stop_motor_button :
@@ -314,11 +314,11 @@ def MP0.treat_push_start_motor_button_false : OrdinaryEvent (MP0 ctx) (instM := 
       unfold Machine.invariant
       unfold prod
       simp
-      intros hinv₁ hinv₂ hinv₃ hgrd
+      intros hinv₁ hinv₂ hinv₃ hgrd₁ hgrd₂
       constructor
       · assumption
       constructor
-      · exact WeakReaction.Reaction_on.safety m.2.1 () hinv₂ hgrd.1
+      · exact WeakReaction.Reaction_on.safety m.2.1 () hinv₂ hgrd₁
       · assumption
   }
 
@@ -349,10 +349,10 @@ def MP0.treat_push_stop_motor_button_false : OrdinaryEvent (MP0 ctx) (instM := p
       unfold Machine.invariant
       unfold prod
       simp
-      intros hinv₁ hinv₂ hinv₃ hgrd
+      intros hinv₁ hinv₂ hinv₃ hgrd₁ hgrd₂
       constructor
       · assumption
       constructor
       · assumption
-      · exact WeakReaction.Reaction_on.safety m.2.2 () hinv₃ hgrd.1
+      · exact WeakReaction.Reaction_on.safety m.2.2 () hinv₃ hgrd₁
   }

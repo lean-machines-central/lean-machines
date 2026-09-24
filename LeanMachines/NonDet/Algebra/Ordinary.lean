@@ -28,7 +28,6 @@ instance [Machine CTX M] : Functor (OrdinaryNDEvent M γ) where
         intros Hinv Hgrd
         have Hfeas := event.feasibility m z Hinv Hgrd
         obtain ⟨y, m', Hfeas⟩ := Hfeas
-        exists (f y)
         exists m'
         exists y
   }
@@ -40,12 +39,7 @@ instance [Machine CTX M] : LawfulFunctor (OrdinaryNDEvent M γ) where
 
   comp_map g h ev := by
     simp [Functor.map]
-    cases ev
-    case mk _ev _safe _feas =>
-      simp
-      have Hcm := LawfulFunctor.comp_map g h _ev
-      simp [Functor.map] at Hcm
-      assumption
+
 
 /- XXX:
 --  The output contravariant functor not provable, because we would
@@ -129,9 +123,8 @@ instance [Machine CTX M] : LawfulProfunctor (OrdinaryNDEvent M) where
       exact congrFun Hdc' event.toNDEvent
     cases event
     case _ ev safe feas =>
-      simp at *
+      simp only [Function.comp_apply] at *
       simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
-      simp [*]
 
 instance [Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
   first' {α β γ} (event : OrdinaryNDEvent M α β): OrdinaryNDEvent M (α × γ) (β × γ) :=
@@ -158,11 +151,11 @@ instance [Machine CTX M] : StrongProfunctor (OrdinaryNDEvent M) where
 instance [Machine CTX M] : LawfulStrongProfunctor (OrdinaryNDEvent M) where
   dimap_pi_id :=
     by
-      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
+      simp [Profunctor.dimap, StrongProfunctor.first']
       simp[ContravariantFunctor.contramap,Functor.map]
   first_first :=
     by
-      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
+      simp [Profunctor.dimap, StrongProfunctor.first']
       simp[ContravariantFunctor.contramap,Functor.map]
       simp[α_,α_inv]
       intros α β γ γ' a
@@ -223,15 +216,15 @@ instance [Machine CTX M]: Category (OrdinaryNDEvent M) where
           have Hsafe₁ := ev₁.safety m x Hinv
           have Hsafe₂ := ev₂.safety
           simp [ev] at *
-          intro ⟨Hgrd₁,Hgrd₂'⟩ z m'' y m' Heff₁ Heff₂'
+          intros Hgrd₁ Hgrd₂' z m'' y m' Heff₁ Heff₂'
           have Hsafe₁ := Hsafe₁ Hgrd₁ y m' Heff₁
           have Hgrd₂ := Hgrd₂' Hgrd₁ y m' Heff₁
           have Heff₂ := Heff₂' Heff₁
           apply Hsafe₂ m' y Hsafe₁ <;> assumption
 
       feasibility := fun m x => by
-          simp [ev]
-          intro Hinv ⟨Hgrd₁,Hgrd₂'⟩
+          simp only [Category.comp, Prod.mk.eta, forall_and_index, ev]
+          intro Hinv  Hgrd₁ Hgrd₂'
           have Hfeas₁ := ev₁.feasibility m x Hinv Hgrd₁
           obtain ⟨y, m', Heff₁⟩ := Hfeas₁
           have Hsafe₁ := ev₁.safety m x Hinv Hgrd₁ y m' Heff₁
@@ -245,7 +238,8 @@ instance [Machine CTX M]: Category (OrdinaryNDEvent M) where
 
 instance [Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
   id_right ev := by
-    simp
+    simp only [Category.comp, Category.id, Prod.mk.eta, forall_and_index, ↓existsAndEq, and_true,
+      forall_true_left, exists_eq_left]
     have Hir := LawfulCategory.id_right ev.toNDEvent
     simp at Hir
     cases ev
@@ -254,14 +248,15 @@ instance [Machine CTX M]: LawfulCategory (OrdinaryNDEvent M) where
 
   id_left ev := by
     have Hil := LawfulCategory.id_left ev.toNDEvent
-    simp at Hil
+    simp only [Category.comp, Category.id, Prod.mk.eta] at Hil
     cases ev
     case mk _ po =>
       simp [Hil]
 
   id_assoc ev₁ ev₂ ev₃ := by
     have Hia := LawfulCategory.id_assoc ev₁.toNDEvent ev₂.toNDEvent ev₃.toNDEvent
-    simp [*] at *
+    simp only [Category.comp, Prod.mk.eta, forall_exists_index, forall_and_index, NDEvent.mk.injEq,
+      _EventRoot.mk.injEq, OrdinaryNDEvent.mk.injEq] at *
     cases ev₁
     cases ev₂
     cases ev₃
@@ -299,8 +294,9 @@ instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
       guard := event.guard
       effect := event.effect
       safety := fun m (x₁,x₂) => by
-          simp [event, Arrow.split]
-          intro Hinv ⟨Hgrd₁, Hgrd₂⟩ y₁ y₂ m' m'₁ Heff₁ m'₂ Heff₂ Hm'
+          simp only [Arrow.split, exists_and_left, forall_exists_index, and_imp, Prod.forall,
+            forall_and_index, event]
+          intro Hinv Hgrd₁ Hgrd₂ y₁ y₂ m' m'₁ Heff₁ m'₂ Heff₂ Hm'
           have Hsafe₁ := ev₁.safety m x₁ Hinv Hgrd₁ y₁ m'₁ Heff₁
           have Hsafe₂ := ev₂.safety m x₂ Hinv Hgrd₂ y₂ m'₂ Heff₂
           rw [Hm']
@@ -308,18 +304,16 @@ instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
 
       -- this could be called "weak feasibility"
       feasibility := fun m (x₁, x₂) => by
-          simp [Arrow.split, event]
-          intro Hinv ⟨Hgrd₁, Hgrd₂⟩
+          simp only [Arrow.split, exists_and_left, ↓existsAndEq, and_true, exists_and_right,
+            Prod.exists, forall_and_index, event]
+          intro Hinv Hgrd₁ Hgrd₂
           have Hfeas₁ := ev₁.feasibility m x₁ Hinv Hgrd₁
           have Hfeas₂ := ev₂.feasibility m x₂ Hinv Hgrd₂
           obtain ⟨y₁, m'₁, Hfeas₁⟩ := Hfeas₁
           obtain ⟨y₂, m'₂, Hfeas₂⟩ := Hfeas₂
-          exists y₁ ; exists y₂
-          exists (m'₁ * m'₂)
-          exists m'₁
           constructor
-          · assumption
-          exists m'₂
+          · exists y₁ ; exists m'₁
+          · exists y₂ ; exists m'₂
       }
 
 
@@ -332,8 +326,7 @@ instance [Machine CTX M] [ParallelMachine M]: Arrow (OrdinaryNDEvent M) where
     effect := event.effect
     safety := fun m (x,y) => by
         simp [event, Arrow.first]
-        intros Hinv Hgrd
-        intros u _ m' Heff _
+        intros Hinv Hgrd u _ m' Heff _
         apply ev.safety m x Hinv Hgrd u m' Heff
 
     feasibility := fun m (x,y) => by
@@ -351,7 +344,7 @@ instance [Machine CTX M] [ParallelMachine M]: LawfulArrow (OrdinaryNDEvent M) wh
   arrow_id := by simp [Arrow.arrow]
 
   arrow_ext {α β γ } f :=
-      by simp [Arrow.arrow, Arrow.first, Arrow.split]
+      by simp [Arrow.arrow, Arrow.first]
          funext m (x₁, x₂) grd ((y₁, y₂), m')
          simp
          constructor <;> (intros ; simp [*])
