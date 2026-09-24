@@ -43,7 +43,7 @@ This comprises:
 
 -/
 
-class Machine (CTX : outParam (Type u)) (M) where
+class Machine (CTX : outParam (Type u)) (M) extends Inhabited M where
   /-- The context (i.e. parameters) of the machine. -/
   context : CTX
   /-- The invariant property that must be satisfied
