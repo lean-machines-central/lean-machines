@@ -273,3 +273,15 @@ instance [Machine CTX M]: Coe (InitNDEvent'' M) (InitNDEvent M Unit Unit) where
 /-- Variant of `newInitNDEvent` with implicit `Unit` input and output types -/
 @[simp]
 def newInitNDEvent'' [Machine CTX M] (ev : InitNDEvent'' M) : InitNDEvent M Unit Unit := ev
+
+
+-- Non deterministic Skip event that does nothing on the machine's state
+
+@[simp]
+def skip_NDEvent [Machine CTX M] : OrdinaryNDEvent M Unit Unit :=
+  {
+    guard _ _ := True
+    effect := fun m _ _ (_, m') => m' = m
+    safety m _ hinv _ _ m' heff := by rwa[heff]
+    feasibility m _ _ _ := ⟨(),m,rfl⟩
+  }

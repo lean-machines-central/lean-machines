@@ -117,11 +117,3 @@ def prop_NDEvent (M) [Machine CTX M] (p : α → β → Prop) : NDEvent M α β 
     guard _ _ := True
     effect m x _ := fun (y, m') => (m' = m) ∧ p x y
   }
-
-
-@[simp]
-def skip_NDEvent [Machine CTX M] : NDEvent M α β :=
-  {
-    guard _ _ := True
-    effect := fun m _ _ (_, m') => m' = m
-  }
