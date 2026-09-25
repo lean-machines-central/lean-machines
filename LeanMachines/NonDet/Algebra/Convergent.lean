@@ -14,21 +14,21 @@ instance [Preorder v] [Machine CTX M] : Functor (AnticipatedNDEvent v M γ) wher
   map f ev := {
     toNDEvent := f <$> ev.toNDEvent
     safety := fun m x => by
-        simp [Functor.map]
+        simp only [Functor.map, ↓existsAndEq, and_true, forall_exists_index, and_imp]
         intros Hinv Hgrd _ m' x' Heff _
         apply ev.safety m x Hinv Hgrd x' m' Heff
 
     feasibility := fun m x => by
-        simp [Functor.map]
+        simp only [Functor.map, ↓existsAndEq, and_true]
         intros Hinv Hgrd
         have Hfeas := ev.feasibility m x Hinv Hgrd
         obtain ⟨y, m', Heff⟩ := Hfeas
-        exists (f y) ; exists m' ; exists y
+        exists m' ; exists y
 
     variant := ev.variant
 
     nonIncreasing := fun m x => by
-        simp [Functor.map]
+        simp only [Functor.map, ↓existsAndEq, and_true, forall_exists_index, and_imp]
         intros Hinv Hgrd _ m' x' Heff _
         have Hni := ev.nonIncreasing m x Hinv Hgrd x' m'
         apply Hni ; assumption
@@ -63,21 +63,21 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Functor (ConvergentNDE
   map f ev := {
     toNDEvent := f <$> ev.toNDEvent
     safety := fun m x => by
-        simp [Functor.map]
+        simp only [Functor.map, ↓existsAndEq, and_true, forall_exists_index, and_imp]
         intros Hinv Hgrd _ m' x' Heff _
         apply ev.safety m x Hinv Hgrd x' m' Heff
 
     feasibility := fun m x => by
-        simp [Functor.map]
+        simp only [Functor.map, ↓existsAndEq, and_true]
         intros Hinv Hgrd
         have Hfeas := ev.feasibility m x Hinv Hgrd
         obtain ⟨y, m', Heff⟩ := Hfeas
-        exists (f y) ; exists m' ; exists y
+        exists m' ; exists y
 
     variant := ev.variant
 
     convergence := fun m x => by
-        simp [Functor.map]
+        simp only [Functor.map, ↓existsAndEq, and_true, forall_exists_index, and_imp]
         intros Hinv Hgrd _ m' x' Heff _
         have Hcv := ev.convergence m x Hinv Hgrd x' m'
         apply Hcv ; assumption
@@ -177,7 +177,9 @@ instance [Preorder v] [Machine CTX M] : Profunctor (AnticipatedNDEvent v M) wher
 instance  [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedNDEvent v M) where
   dimap_id :=
     by
-      simp[Profunctor.dimap,ContravariantFunctor.contramap,Functor.map]
+      simp only [Profunctor.dimap, Functor.map, CoAnticipatedNDEvent_from_AnticipatedNDEvent,
+        ContravariantFunctor.contramap, id_eq, AnticipatedNDEvent_from_CoAnticipatedNDEvent,
+        ↓existsAndEq, Prod.mk.eta, and_true, exists_eq_right']
       exact λ{α β} => rfl
   dimap_comp f f' g g' :=
     by
@@ -187,9 +189,10 @@ instance  [Preorder v] [Machine CTX M] : LawfulProfunctor (AnticipatedNDEvent v 
                                exact congrFun Hdc' event.toNDEvent
       cases event
       case _ ev safe feas =>
-        simp at *
-        simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
-        simp [*]
+        simp only [Profunctor.dimap, Functor.map, ContravariantFunctor.contramap,
+          Function.comp_apply, ↓existsAndEq, Prod.mk.eta, and_true,
+          CoAnticipatedNDEvent_from_AnticipatedNDEvent,
+          AnticipatedNDEvent_from_CoAnticipatedNDEvent] at *
 
 instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M) where
   first' {α β γ} (event : AnticipatedNDEvent v M α β): AnticipatedNDEvent v M (α × γ) (β × γ) :=
@@ -198,14 +201,14 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M
       guard := ev.guard
       effect := ev.effect
       safety := fun m (x, z) => by
-          simp [ev, StrongProfunctor.first']
+          simp only [StrongProfunctor.first', and_imp, Prod.forall, ev]
           intros Hinv Hgrd
           have Hsafe := event.safety m x Hinv Hgrd
           intros y _ m' _ Heff
           apply Hsafe y m' Heff
 
       feasibility := fun m (x, z) => by
-          simp [ev, StrongProfunctor.first']
+          simp only [StrongProfunctor.first', exists_and_left, Prod.exists, exists_eq_left, ev]
           intro Hinv Hgrd
           have Hfeas := event.feasibility m x Hinv Hgrd
           obtain ⟨y, m', Hfeas⟩ := Hfeas
@@ -215,9 +218,8 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M
       variant := event.variant
 
       nonIncreasing := fun m (x, z) => by
-          simp [ev, StrongProfunctor.first']
-          intros Hinv Hgrd
-          intros y _ m' _ Heff
+          simp only [StrongProfunctor.first', and_imp, Prod.forall, ev]
+          intros Hinv Hgrd y _ m' _ Heff
           have Hni := event.nonIncreasing m x Hinv Hgrd y m'
           apply Hni
           assumption
@@ -230,16 +232,20 @@ instance [Preorder v] [Machine CTX M] : StrongProfunctor (AnticipatedNDEvent v M
 instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedNDEvent v M) where
   dimap_pi_id :=
     by
-      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
-      simp[ContravariantFunctor.contramap,Functor.map]
+      simp only [Profunctor.dimap, Functor.map, StrongProfunctor.first',
+        CoAnticipatedNDEvent_from_AnticipatedNDEvent, ContravariantFunctor.contramap, id_eq,
+        AnticipatedNDEvent_from_CoAnticipatedNDEvent, ↓existsAndEq, Prod.mk.eta, and_true,
+        Prod.exists, exists_and_right, true_and, exists_eq_right', implies_true]
   first_first :=
     by
-      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
-      simp[ContravariantFunctor.contramap,Functor.map]
-      simp[α_,α_inv]
+      simp only [StrongProfunctor.first', Profunctor.dimap, Functor.map,
+        CoAnticipatedNDEvent_from_AnticipatedNDEvent, ContravariantFunctor.contramap, α_,
+        AnticipatedNDEvent_from_CoAnticipatedNDEvent, ↓existsAndEq, Prod.mk.eta, α_inv, and_true,
+        Prod.exists, Prod.mk.injEq, true_and, AnticipatedNDEvent.mk.injEq, OrdinaryNDEvent.mk.injEq,
+        NDEvent.mk.injEq, heq_eq_eq]
       intros α β γ γ' a
       funext m x grd (y,m')
-      simp
+      simp only [eq_iff_iff]
       constructor
       · intro h
         exists y.1.1
@@ -257,11 +263,14 @@ instance [Preorder v] [Machine CTX M] : LawfulStrongProfunctor (AnticipatedNDEve
             exact hw₁
   dinaturality :=
   by
-    simp[Profunctor.dimap,StrongProfunctor.first']
-    simp[ContravariantFunctor.contramap,Functor.map]
+    simp only [Profunctor.dimap, Functor.map, id_eq, StrongProfunctor.first',
+      CoAnticipatedNDEvent_from_AnticipatedNDEvent, ContravariantFunctor.contramap,
+      AnticipatedNDEvent_from_CoAnticipatedNDEvent, ↓existsAndEq, Prod.mk.eta, and_true,
+      exists_eq_right', Prod.exists, true_and, AnticipatedNDEvent.mk.injEq,
+      OrdinaryNDEvent.mk.injEq, NDEvent.mk.injEq, heq_eq_eq]
     intros α β γ δ a f
     funext m x grd (y,m')
-    simp
+    simp only [eq_iff_iff]
     constructor
     · intro h
       exists y.1
@@ -284,7 +293,9 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : Profunctor (Convergent
 instance  [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (ConvergentNDEvent v M) where
   dimap_id :=
     by
-      simp[Profunctor.dimap,ContravariantFunctor.contramap,Functor.map]
+      simp only [Profunctor.dimap, Functor.map, CoConvergentNDEvent_from_ConvergentNDEvent,
+        ContravariantFunctor.contramap, id_eq, ConvergentNDEvent_from_CoConvergentNDEvent,
+        ↓existsAndEq, Prod.mk.eta, and_true, exists_eq_right']
       exact λ{α β} => rfl
   dimap_comp f f' g g' :=
     by
@@ -294,9 +305,10 @@ instance  [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulProfunctor (Con
                                exact congrFun Hdc' event.toNDEvent
       cases event
       case _ ev safe feas =>
-        simp at *
-        simp [Profunctor.dimap, ContravariantFunctor.contramap, Functor.map] at *
-        simp [*]
+        simp only [Profunctor.dimap, Functor.map, ContravariantFunctor.contramap,
+          Function.comp_apply, ↓existsAndEq, Prod.mk.eta, and_true,
+          CoConvergentNDEvent_from_ConvergentNDEvent,
+          ConvergentNDEvent_from_CoConvergentNDEvent] at *
 
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (ConvergentNDEvent v M) where
   first' {α β γ} (event : ConvergentNDEvent v M α β): ConvergentNDEvent v M (α × γ) (β × γ) :=
@@ -305,14 +317,14 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
       guard := ev.guard
       effect := ev.effect
       safety := fun m (x, z) => by
-          simp [ev, StrongProfunctor.first']
+          simp only [StrongProfunctor.first', and_imp, Prod.forall, ev]
           intros Hinv Hgrd
           have Hsafe := event.safety m x Hinv Hgrd
           intros y _ m' _ Heff
           apply Hsafe y m' Heff
 
       feasibility := fun m (x, z) => by
-          simp [ev, StrongProfunctor.first']
+          simp only [StrongProfunctor.first', exists_and_left, Prod.exists, exists_eq_left, ev]
           intro Hinv Hgrd
           have Hfeas := event.feasibility m x Hinv Hgrd
           obtain ⟨y, m', Hfeas⟩ := Hfeas
@@ -322,9 +334,8 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
       variant := event.variant
 
       convergence := fun m (x, z) => by
-          simp [ev, StrongProfunctor.first']
-          intros Hinv Hgrd
-          intros y _ m' _ Heff
+          simp only [StrongProfunctor.first', and_imp, Prod.forall, ev]
+          intros Hinv Hgrd y _ m' _ Heff
           have Hcv := event.convergence m x Hinv Hgrd y m'
           apply Hcv
           assumption
@@ -336,16 +347,20 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : StrongProfunctor (Conv
 instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor (ConvergentNDEvent v M) where
   dimap_pi_id :=
     by
-      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
-      simp[ContravariantFunctor.contramap,Functor.map]
+      simp only [Profunctor.dimap, Functor.map, StrongProfunctor.first',
+        CoConvergentNDEvent_from_ConvergentNDEvent, ContravariantFunctor.contramap, id_eq,
+        ConvergentNDEvent_from_CoConvergentNDEvent, ↓existsAndEq, Prod.mk.eta, and_true,
+        Prod.exists, exists_and_right, true_and, exists_eq_right', implies_true]
   first_first :=
     by
-      simp[Profunctor.dimap,Prod.fst,StrongProfunctor.first']
-      simp[ContravariantFunctor.contramap,Functor.map]
-      simp[α_,α_inv]
+      simp only [StrongProfunctor.first', Profunctor.dimap, Functor.map,
+        CoConvergentNDEvent_from_ConvergentNDEvent, ContravariantFunctor.contramap, α_,
+        ConvergentNDEvent_from_CoConvergentNDEvent, ↓existsAndEq, Prod.mk.eta, α_inv, and_true,
+        Prod.exists, Prod.mk.injEq, true_and, ConvergentNDEvent.mk.injEq, OrdinaryNDEvent.mk.injEq,
+        NDEvent.mk.injEq, heq_eq_eq]
       intros α β γ γ' a
       funext m x grd (y,m')
-      simp
+      simp only [eq_iff_iff]
       constructor
       · intro h
         exists y.1.1
@@ -363,8 +378,11 @@ instance [Preorder v] [WellFoundedLT v] [Machine CTX M] : LawfulStrongProfunctor
             exact hw₁
   dinaturality :=
   by
-    simp[Profunctor.dimap,StrongProfunctor.first']
-    simp[ContravariantFunctor.contramap,Functor.map]
+    simp only [Profunctor.dimap, Functor.map, id_eq, StrongProfunctor.first',
+      CoConvergentNDEvent_from_ConvergentNDEvent, ContravariantFunctor.contramap,
+      ConvergentNDEvent_from_CoConvergentNDEvent, ↓existsAndEq, Prod.mk.eta, and_true,
+      exists_eq_right', Prod.exists, true_and, ConvergentNDEvent.mk.injEq, OrdinaryNDEvent.mk.injEq,
+      NDEvent.mk.injEq, heq_eq_eq]
     intros α β γ δ a f
     funext m x grd (y,m')
     simp
