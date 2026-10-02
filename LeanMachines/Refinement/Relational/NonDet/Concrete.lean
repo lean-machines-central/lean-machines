@@ -24,6 +24,21 @@ open Refinement
 /-!
 ## Concrete ordinary events
 -/
+class SafeConcreteRNDEventPO {α β} [Machine ACTX AM]
+  [Machine CTX M] [instR: Refinement AM M]
+  (ev : NDEvent M α β)
+  [instSafeEv : SafeNDEventPO ev kev]
+  {valid_kind : kev.canRefine? kabs = true} where
+
+  simulation (m : M) (x : α):
+    Machine.invariant m
+    → (grd : ev.guard m x)
+    → ∀ y, ∀ m', ev.effect m x grd (y, m')
+                   → ∀ am, refine am m
+                           → refine (self:=instR) am m'
+
+
+
 
 /-- The specification of a concrete (ordinary) non-deterministic event, refining (non-deterministic) Skip.-/
 structure ConcreteRNDEvent (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M] (α) (β)

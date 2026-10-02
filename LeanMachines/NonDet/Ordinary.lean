@@ -278,10 +278,10 @@ def newInitNDEvent'' [Machine CTX M] (ev : InitNDEvent'' M) : InitNDEvent M Unit
 -- Non deterministic Skip event that does nothing on the machine's state
 
 @[simp]
-def skip_NDEvent [Machine CTX M] : OrdinaryNDEvent M Unit Unit :=
+def skip_NDEvent [Machine CTX M] : OrdinaryNDEvent M α α :=
   {
     guard _ _ := True
     effect := fun m _ _ (_, m') => m' = m
     safety m _ hinv _ _ m' heff := by rwa[heff]
-    feasibility m _ _ _ := ⟨(),m,rfl⟩
+    feasibility m x _ _ := ⟨x,m,rfl⟩
   }

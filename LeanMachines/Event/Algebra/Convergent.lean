@@ -79,7 +79,6 @@ instance [Preorder v] [Machine CTX M]: ContravariantFunctor (CoAnticipatedEvent 
       exact ev.safety m (f x) Hinv Hgrd
     variant := ev.variant
     nonIncreasing := fun m x => by
-      simp
       intros Hinv Hgrd
       apply ev.nonIncreasing
       assumption

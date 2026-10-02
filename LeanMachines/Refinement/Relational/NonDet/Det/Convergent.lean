@@ -29,19 +29,7 @@ open Refinement
 
 
 
--- class AnticipatedRDetEventPO (v) [Preorder v]  [Machine ACTX AM]
---   [instM:Machine CTX M] [instR: Refinement AM M]
---   (ev : Event M α β) (abs : NDEvent AM α' β')
---   [instSafeAbs : SafeNDEventPO abs kabs]
---   [instSafeEv : AnticipatedEventPO v ev kev]
---   {valid_kind : kev.canRefine? kabs = true}
---   where
 
---   nonIncreasing (m : M) (x : α):
---     Machine.invariant m
---     → (grd : ev.guard m x)
---     → let (_, m') := ev.action m x grd
---       variant m' ≤ variant m
 
 
 structure AnticipatedRDetEvent (v) [Preorder v] (AM) [Machine ACTX AM] (M) [Machine CTX M] [instR: Refinement AM M]
