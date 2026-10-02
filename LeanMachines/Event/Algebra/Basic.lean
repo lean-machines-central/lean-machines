@@ -370,19 +370,18 @@ instance [Machine CTX M]: LawfulArrowChoice (_Event M) where
       intros m x
       constructor
       · cases x
-        case a.left.inl val =>
+        case left.inl val =>
           cases val
           · simp
           · simp
         · simp
       · intro grd₁
         cases x
-        case a.right.inl val =>
+        case right.inl val =>
           cases val
           · simp
           · simp
         · simp
-
 
 /- ContravariantFunctor functor -/
 
